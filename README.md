@@ -1,6 +1,6 @@
 # triMesh Library
 
-TriMesh is a simple triangular mesh package. It was built as a foundation for VulkanQuickStart and other applications under development at Dark Sky Innovative solutions. It is a simpler and cheaper altrnative to other triangular mesh libraries.
+TriMesh is a simple triangular mesh package. It was built as a foundation for [VulkanQuickStart](https://github.com/btipton-ds/VulkanQuickStart) and other applications under development at Dark Sky Innovative solutions. It is a simpler and cheaper altrnative to other triangular mesh libraries.
 
 ## Getting Started
 
