@@ -29,12 +29,12 @@ This file is part of the TriMesh library.
 
 */
 
-#include <defines.h>
+#include <tm_defines.h>
 #include <vector>
 #include <ostream>
 #include <iomanip>
 
-#include <em_math.h>
+#include <tm_math.h>
 
 namespace TriMesh {
 

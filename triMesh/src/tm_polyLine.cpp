@@ -27,10 +27,10 @@ This file is part of the TriMesh library.
 
 */
 
-#include <polyLine.h>
+#include <tm_polyLine.h>
 
 #include <string>
-#include <em_math.h>
+#include <tm_math.h>
 #include <triMesh.h>
 
 namespace TriMesh {

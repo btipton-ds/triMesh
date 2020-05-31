@@ -30,7 +30,7 @@ This file is part of the TriMesh library.
 */
 
 #include <iostream>
-#include <spatialSearch.h>
+#include <tm_spatialSearch.h>
 
 #define CSSB_TMPL template <class BOX_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
 #define CSSB_DCL CSpatialSearchBase<BOX_TYPE, INDEX_TYPE, ENTRY_LIMIT>

@@ -29,15 +29,15 @@ This file is part of the TriMesh library.
 
 */
 
-#include <defines.h>
+#include <tm_defines.h>
 #include <map>
 #include <vector>
 #include <iostream>
 
-#include <em_math.h>
-#include <spatialSearch.h>
-#include <edge.h>
-#include <vertex.h>
+#include <tm_math.h>
+#include <tm_spatialSearch.h>
+#include <tm_edge.h>
+#include <tm_vertex.h>
 
 namespace TriMesh {
 

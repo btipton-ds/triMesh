@@ -30,7 +30,7 @@ This file is part of the TriMesh library.
 // enerMesh.cpp : Defines the entry point for the application.
 //
 
-#include <defines.h>
+#include <tm_defines.h>
 #include <tests.h>
 
 

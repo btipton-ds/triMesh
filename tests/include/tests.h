@@ -29,7 +29,7 @@ This file is part of the TriMesh library.
 
 #pragma once
 
-#include <defines.h>
+#include <tm_defines.h>
 
 #define TEST_TRUE(FUNC, MESSAGE) \
 { \

@@ -27,9 +27,9 @@ This file is part of the TriMesh library.
 
 */
 
-#include <defines.h>
+#include <tm_defines.h>
 
-#include <em_math.h>
+#include <tm_math.h>
 
 double LineSegment::distanceToPoint(const Vector3d& pt) const {
 	double t;

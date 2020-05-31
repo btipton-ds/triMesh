@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 
 This file is part of the TriMesh library.
@@ -27,24 +29,57 @@ This file is part of the TriMesh library.
 
 */
 
-#include <defines.h>
+#include <tm_defines.h>
 
-#include <iomanip>
+#include <vector>
+#include <iostream>
 
-#include <vertex.h>
+#include <triMesh.h>
 
 namespace TriMesh {
 
-	using namespace std;
+	class CEdge;
 
-	void CVertex::save(ostream& out) const {
-		out << fixed << setprecision(filePrecision) << "v " << _pt[0] << " " << _pt[1] << " " << _pt[2] << "\n";
+	class CPolyLine {
+	public:
+		using BoundingBox = CMesh::BoundingBox;
+
+		CPolyLine();
+
+		void save(std::ostream& out) const;
+		bool read(std::istream& in);
+
+		bool addEdgeToLine(const CEdge& edge);
+
+		inline bool isClosed() const {
+			return _isClosed;
+		}
+
+		inline bool isValidIndex(size_t idx) const {
+			return idx < _vertIdx.size();
+		}
+
+		const std::vector<size_t>& getVerts() const;
+
+		BoundingBox calcBoundingBox(const CMesh& mesh) const;
+		LineSegment getSegment(const CMesh& mesh, size_t idx) const;
+		bool findClosestPointOnPolyline(const CMesh& mesh, const Vector3d& testPt, size_t& plIdx, double& dist, double& param) const;
+		
+	private:
+		bool _isClosed = false;
+		std::vector<size_t> _vertIdx;
+	};
+
+	inline const std::vector<size_t>& CPolyLine::getVerts() const {
+		return _vertIdx;
 	}
 
-	bool CVertex::read(istream& in) {
-		string str;
-		in >> str >> _pt[0] >> _pt[1] >> _pt[2];
-		return (str == "v");
+	inline CPolyLine::BoundingBox CPolyLine::calcBoundingBox(const CMesh& mesh) const {
+		BoundingBox result;
+		for (size_t i : _vertIdx) {
+			result.merge(mesh.getVert(i)._pt);
+		}
+		return result;
 	}
 
 }

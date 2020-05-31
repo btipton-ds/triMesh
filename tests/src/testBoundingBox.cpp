@@ -31,7 +31,7 @@ This file is part of the TriMesh library.
 #include <iostream>
 #include <string>
 
-#include <boundingBox.h>
+#include <tm_boundingBox.h>
 
 using namespace std;
 

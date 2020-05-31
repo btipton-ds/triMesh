@@ -27,7 +27,7 @@ This file is part of the TriMesh library.
 
 */
 
-#include <vector3.h>
+#include <tm_vector3.h>
 
 #include <math.h>
 #include <cfloat>

@@ -14,11 +14,11 @@ include
 
 add_library (
 triMesh 
-"src/em_math.cpp" 
-"src/polyLine.cpp" 
+"src/tm_math.cpp" 
+"src/tm_polyLine.cpp" 
 "src/triMesh.cpp" 
-"src/vertex.cpp" 
-"src/vector3.cpp"
+"src/tm_vertex.cpp" 
+"src/tm_vector3.cpp"
 )
 
 

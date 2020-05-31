@@ -27,12 +27,12 @@ This file is part of the TriMesh library.
 
 */
 
-#include <defines.h>
+#include <tm_defines.h>
 #include <tests.h>
 
 #include <iostream>
 #include <string>
-#include <em_math.h>
+#include <tm_math.h>
 
 using namespace std;
 int testDistToPlane() {

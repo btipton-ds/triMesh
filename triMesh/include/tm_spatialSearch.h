@@ -29,12 +29,12 @@ This file is part of the TriMesh library.
 
 */
 
-#include <defines.h>
+#include <tm_defines.h>
 #include <vector>
 #include <memory>
 
-#include <em_math.h>
-#include <boundingBox.h>
+#include <tm_math.h>
+#include <tm_boundingBox.h>
 
 template <class BOX_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
 class CSpatialSearchBase {
@@ -103,4 +103,4 @@ using CSpatialSearchST = CSpatialSearch<BOX_TYPE, size_t>;
 
 using CSpatialSearchSTd = CSpatialSearchST<CBoundingBox3D<Vector3d>>;
 
-#include <spatialSearch.hpp>
+#include <tm_spatialSearch.hpp>

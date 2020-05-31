@@ -29,14 +29,14 @@ This file is part of the TriMesh library.
 
 */
 
-#include <defines.h>
+#include <tm_defines.h>
 
 #include  <cmath>
 #include <climits>
 #include <cfloat>
 
 #if !USE_EIGEN_VECTOR3
-#include <vector3.h>
+#include <tm_vector3.h>
 #else
 #include <Eigen/Dense>
 #endif

@@ -34,7 +34,7 @@ This file is part of the TriMesh library.
 	At one time a 1-1 substiution was possible. It is desired to retain this feature.
 */
 
-#include <defines.h>
+#include <tm_defines.h>
 
 #include <limits>
 #include <iostream>

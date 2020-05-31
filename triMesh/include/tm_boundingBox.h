@@ -29,8 +29,8 @@ This file is part of the TriMesh library.
 
 */
 
-#include <defines.h>
-#include <em_math.h>
+#include <tm_defines.h>
+#include <tm_math.h>
 
 template <class SCALAR_TYPE>
 class CBoundingBox3D {
