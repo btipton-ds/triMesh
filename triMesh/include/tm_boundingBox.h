@@ -61,6 +61,10 @@ public:
 		_max = POINT_TYPE(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 	}
 
+	bool empty() const {
+		return (_min[0] > _max[0]);
+	}
+
 	void merge(const POINT_TYPE& pt) {
 		for (int i = 0; i < 3; i++) {
 			if (pt[i] < _min[i])
@@ -71,8 +75,10 @@ public:
 	}
 
 	void merge(const CBoundingBox3D& bboxIn) {
-		merge(bboxIn._min);
-		merge(bboxIn._max);
+		if (!bboxIn.empty()) {
+			merge(bboxIn._min);
+			merge(bboxIn._max);
+		}
 	}
 
 	inline const POINT_TYPE& getMin() const {
