@@ -5,7 +5,6 @@ cmake_minimum_required (VERSION 3.10)
 
 if (UNIX)
     list(APPEND CMAKE_CXX_FLAGS "-pthread -fPIC")
-    message( "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}" )
 endif(UNIX)
 
 include_directories(

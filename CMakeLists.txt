@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.10)
 
-project ("enerMesh")
+project ("triMesh")
 
 # Include sub-projects.
 add_subdirectory ("stlReader" )

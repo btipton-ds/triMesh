@@ -10,15 +10,15 @@ include
 )
 
 # Add source to this project's executable.
-add_library (enerMeshTest 
-"src/enerMeshTest.cxx" 
+add_library (triMeshTest 
+"src/triMeshTest.cxx" 
 "src/tests.cpp" 
 "src/testMesh.cpp" 
 "src/testMath.cpp" 
 "src/testBoundingBox.cpp" 
 "src/testVector3.cpp")
 
-target_link_libraries("enerMeshTest" 
+target_link_libraries("triMeshTest" 
 PUBLIC triMesh
 PUBLIC stlReader
 PUBLIC enerMesh
