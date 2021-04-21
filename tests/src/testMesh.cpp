@@ -51,9 +51,6 @@ void makeSphere(int numSteps, double r, double phiRange, TriMesh::CMesh& mesh) {
 			pts[1] = r * Vector3d(cos(theta1) * cos(phi0), sin(theta1) * cos(phi0), sin(phi0));
 			pts[2] = r * Vector3d(cos(theta1) * cos(phi1), sin(theta1) * cos(phi1), sin(phi1));
 			pts[3] = r * Vector3d(cos(theta0) * cos(phi1), sin(theta0) * cos(phi1), sin(phi1));
-
-			size_t idx0 = mesh.addTriangle(pts[0], pts[1], pts[2]);
-			size_t idx1 = mesh.addTriangle(pts[0], pts[2], pts[3]);
 		}
 	}
 }

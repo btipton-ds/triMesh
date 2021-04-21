@@ -93,7 +93,6 @@ bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit)
 
 	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
-		int k = (i + 2) % 3;
 #if 0
 		v0 = safeNormalize(*(pts[j]) - *(pts[i]));
 		v1 = hit.hitPt - *(pts[i]);
