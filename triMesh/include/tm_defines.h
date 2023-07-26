@@ -34,6 +34,6 @@ This file is part of the TriMesh library.
 #endif
 
 #define _HAS_ITERATOR_DEBUGGING 0
-#define USE_EIGEN_VECTOR3 0
+#define USE_EIGEN_VECTOR3 1
 
 const int filePrecision = 17;

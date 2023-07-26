@@ -36,17 +36,33 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
+#if USE_EIGEN_VECTOR3
+#include <Eigen/Dense>
+#endif
+
 #include <limits>
 #include <iostream>
 
-#if !USE_EIGEN_VECTOR3
+template<typename SCALAR_TYPE>
+SCALAR_TYPE defaultVal();
+
+#if USE_EIGEN_VECTOR3
+
+template <typename T>
+using Vector3 = Eigen::Matrix<T, 1, 3>;
+
+using Vector3d = Vector3<double>;
+using Vector3f = Vector3<float>;
+
+// using size_t allows indexing into stl containers
+using Vector3i = Vector3<size_t>;
+
+#else
 
 template<typename SCALAR_TYPE>
 class Vector3 {
 public:
 	using Scalar = SCALAR_TYPE;
-
-	static SCALAR_TYPE defaultVal();
 
 	Vector3();
 	Vector3(SCALAR_TYPE x, SCALAR_TYPE y, SCALAR_TYPE z);

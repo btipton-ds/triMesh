@@ -32,25 +32,28 @@ This file is part of the TriMesh library.
 #include <math.h>
 #include <cfloat>
 
+#if !USE_EIGEN_VECTOR3
 double EIGEN_PI = 4.0 * atan(1.0);
+#endif
 
 template<>
-size_t Vector3<size_t>::defaultVal() {
+size_t defaultVal<size_t>() {
 	return 0xffffffffffffffff;
 }
 template<>
-float Vector3<float>::defaultVal() {
+float defaultVal<float>() {
 	return FLT_MAX;
 }
 
 template<>
-double Vector3<double>::defaultVal() {
+double defaultVal<double>() {
 	return DBL_MAX;
 }
+#if !USE_EIGEN_VECTOR3
 
 template<typename SCALAR_TYPE>
 Vector3<SCALAR_TYPE>::Vector3() {
-	_val[0] = _val[1] = _val[2] = defaultVal();
+	_val[0] = _val[1] = _val[2] = defaultVal<SCALAR_TYPE>();
 }
 
 template<typename SCALAR_TYPE>
@@ -220,3 +223,5 @@ SCALAR_TYPE& Vector3<SCALAR_TYPE>::operator[](int idx) {
 template class Vector3<double>;
 template class Vector3<float>;
 template class Vector3<size_t>;
+
+#endif

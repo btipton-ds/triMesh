@@ -35,11 +35,7 @@ This file is part of the TriMesh library.
 #include <climits>
 #include <cfloat>
 
-#if !USE_EIGEN_VECTOR3
 #include <tm_vector3.h>
-#else
-#include <Eigen/Dense>
-#endif
 
 #include <set>
 
@@ -53,15 +49,6 @@ constexpr double minNormalizeDivisor = 1.0e-12;
 
 #ifndef stm1
 #define stm1 0xffffffffffffffff
-#endif
-
-#if USE_EIGEN_VECTOR3
-using Eigen::Vector3d;
-using Eigen::Vector3f;
-
-// using size_t allows indexing into stl containers
-using Vector3i = Eigen::Matrix<size_t, 1, 3>;
-
 #endif
 
 template <class SCALAR_TYPE>
@@ -178,7 +165,7 @@ struct LineSegment {
 	}
 
 	inline Vector3d calcDir() const {
-		return safeNormalize(_pts[1] - _pts[0]);
+		return safeNormalize<double>(_pts[1] - _pts[0]);
 	}
 
 	inline Vector3d interpolate(double t) const {
