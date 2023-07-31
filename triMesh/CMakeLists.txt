@@ -7,6 +7,9 @@ if (UNIX)
 	list(APPEND CMAKE_CXX_FLAGS "-mcmodel=large")
 endif (UNIX)
 
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "../${CMAKE_BUILD_TYPE}")
+message(STATUS "CMAKE_ARCHIVE_OUTPUT_DIRECTORY:${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+
 include_directories(
 include 
 ../../ThirdParty/eigen
