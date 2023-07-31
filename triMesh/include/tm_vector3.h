@@ -36,17 +36,14 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
-#if USE_EIGEN_VECTOR3
+#undef Success
 #include <Eigen/Dense>
-#endif
 
 #include <limits>
 #include <iostream>
 
 template<typename SCALAR_TYPE>
 SCALAR_TYPE defaultVal();
-
-#if USE_EIGEN_VECTOR3
 
 template <typename T>
 using Vector3 = Eigen::Matrix<T, 1, 3>;
@@ -57,68 +54,3 @@ using Vector3f = Vector3<float>;
 // using size_t allows indexing into stl containers
 using Vector3i = Vector3<size_t>;
 
-#else
-
-template<typename SCALAR_TYPE>
-class Vector3 {
-public:
-	using Scalar = SCALAR_TYPE;
-
-	Vector3();
-	Vector3(SCALAR_TYPE x, SCALAR_TYPE y, SCALAR_TYPE z);
-	Vector3(const Vector3& src) = default;
-
-	Vector3 operator - () const;
-
-	Vector3 operator - (const Vector3& rhs) const;
-	Vector3 operator + (const Vector3& rhs) const;
-	Vector3 operator * (SCALAR_TYPE rhs) const;
-	Vector3 operator / (SCALAR_TYPE rhs) const;
-
-	Vector3& operator -= (const Vector3& rhs);
-	Vector3& operator += (const Vector3& rhs);
-	Vector3& operator *= (SCALAR_TYPE rhs);
-	Vector3& operator /= (SCALAR_TYPE rhs);
-
-	bool operator < (const Vector3& rhs) const;
-	bool operator == (const Vector3& rhs) const;
-	bool operator != (const Vector3& rhs) const;
-
-	Vector3& operator = (SCALAR_TYPE) = delete;
-
-	Vector3 cross(const Vector3& rhs) const;
-	SCALAR_TYPE dot(const Vector3& rhs) const;
-
-	SCALAR_TYPE norm() const;
-	SCALAR_TYPE squaredNorm() const;
-	Vector3 normalized() const;
-	void normalize();
-
-	const SCALAR_TYPE& operator[](int idx) const;
-	SCALAR_TYPE& operator[](int idx);
-
-private:
-	SCALAR_TYPE _val[3];
-};
-
-extern double EIGEN_PI;
-
-
-template<typename SCALAR_TYPE>
-Vector3<SCALAR_TYPE> operator * (SCALAR_TYPE lhs, const Vector3<SCALAR_TYPE>& rhs) {
-	Vector3<SCALAR_TYPE> result(rhs);
-	result *= lhs;
-	return result;
-}
-
-template<typename SCALAR_TYPE>
-std::ostream& operator << (std::ostream& out, const Vector3<SCALAR_TYPE>& v) {
-	out << "[" << v[0] << ", " << v[1] << ", " << v[2] << "\n";
-	return out;
-}
-
-using Vector3d = Vector3<double>;
-using Vector3f = Vector3<float>;
-using Vector3i = Vector3<size_t>;
-
-#endif // USE_EIGEN_VECTOR3
