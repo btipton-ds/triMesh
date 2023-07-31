@@ -14,10 +14,6 @@ include
 ../../ThirdParty/eigen
 )
 
-link_directories(
-../stlReader
-)
-
 add_library (
 triMesh 
 "src/tm_math.cpp" 
@@ -25,6 +21,10 @@ triMesh
 "src/triMesh.cpp" 
 "src/tm_vertex.cpp" 
 "src/tm_vector3.cpp"
+)
+
+link_directories(
+../${CMAKE_BUILD_TYPE}
 )
 
 target_link_libraries("triMesh" 

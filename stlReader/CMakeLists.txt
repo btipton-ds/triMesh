@@ -7,6 +7,8 @@ if (UNIX)
     list(APPEND CMAKE_CXX_FLAGS "-pthread -fPIC")
 endif(UNIX)
 
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "../${CMAKE_BUILD_TYPE}")
+
 include_directories(
 include 
 ../../ThirdParty/eigen
