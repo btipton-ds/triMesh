@@ -8,11 +8,14 @@ if (UNIX)
 endif (UNIX)
 
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "../${CMAKE_BUILD_TYPE}")
-message(STATUS "CMAKE_ARCHIVE_OUTPUT_DIRECTORY:${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
 include_directories(
 include 
 ../../ThirdParty/eigen
+)
+
+link_directories(
+../stlReader
 )
 
 add_library (
@@ -24,5 +27,8 @@ triMesh
 "src/tm_vector3.cpp"
 )
 
+target_link_libraries("triMesh" 
+PRIVATE stlReader
+)
 
 # TODO: Add tests and install targets if needed.
