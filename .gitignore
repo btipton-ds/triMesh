@@ -1,4 +1,12 @@
 *.obj
+*.a
 out
 .vs
 /build/
+Debug
+Release
+*.cmake
+CMakeFiles
+Makefile
+CMakeCache.txt
+
