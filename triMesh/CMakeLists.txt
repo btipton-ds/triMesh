@@ -28,7 +28,7 @@ triMesh
 )
 
 target_link_libraries("triMesh" 
-PRIVATE stlReader
+PUBLIC stlReader
 )
 
 # TODO: Add tests and install targets if needed.
