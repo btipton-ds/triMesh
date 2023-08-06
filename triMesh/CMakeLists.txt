@@ -7,7 +7,7 @@ if (UNIX)
 	list(APPEND CMAKE_CXX_FLAGS "-mcmodel=large")
 endif (UNIX)
 
-set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "../${CMAKE_BUILD_TYPE}")
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/${CMAKE_BUILD_TYPE}")
 
 include_directories(
 include 
