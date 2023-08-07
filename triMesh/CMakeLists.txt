@@ -5,14 +5,20 @@ cmake_minimum_required (VERSION 3.10)
 
 if (UNIX)
 	list(APPEND CMAKE_CXX_FLAGS "-mcmodel=large")
-endif (UNIX)
+    include_directories(
+    include 
+    "/usr/local/include/eigen3/"
+    "../triMesh/include" 
+    )
+else (UNIX)
+    include_directories(
+    include 
+    "../../ThirdParty/eigen"
+    "../triMesh/include" 
+    )
+endif(UNIX)
 
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/${CMAKE_BUILD_TYPE}")
-
-include_directories(
-include 
-../../ThirdParty/eigen
-)
 
 add_library (
 triMesh 

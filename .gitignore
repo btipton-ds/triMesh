@@ -2,6 +2,9 @@
 *.a
 out
 .vs
+*.vcxproj
+*.filters
+*.sln
 /build/
 /Debug/
 /Release/
