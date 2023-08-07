@@ -27,8 +27,4 @@ link_directories(
 ../${CMAKE_BUILD_TYPE}
 )
 
-target_link_libraries("triMesh" 
-PUBLIC stlReader
-)
-
 # TODO: Add tests and install targets if needed.
