@@ -3,6 +3,8 @@
 #
 cmake_minimum_required (VERSION 3.10)
 
+project ("stlReader")
+
 if (UNIX)
     list(APPEND CMAKE_CXX_FLAGS "-pthread -fPIC")
 
@@ -12,6 +14,11 @@ if (UNIX)
     "../triMesh/include" 
     )
 else (UNIX)
+    if (POLICY CMP0141)
+      cmake_policy(SET CMP0141 NEW)
+      set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+    endif()
+
     include_directories(
     include 
     "../../ThirdParty/eigen"
@@ -19,8 +26,9 @@ else (UNIX)
     )
 endif(UNIX)
 
-set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/${CMAKE_BUILD_TYPE}")
-
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/${CMAKE_BUILD_TYPE}")
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/${CMAKE_BUILD_TYPE}")
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/${CMAKE_BUILD_TYPE}")
 
 link_directories (
 "${GLFW_LIB_DIR}"

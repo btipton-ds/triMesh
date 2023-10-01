@@ -29,10 +29,12 @@ This file is part of the TriMesh library.
 
 */
 
+#if 0
 #ifdef _HAS_ITERATOR_DEBUGGING
 #undef _HAS_ITERATOR_DEBUGGING
 #endif
 
 #define _HAS_ITERATOR_DEBUGGING 0
+#endif
 
 const int filePrecision = 17;
