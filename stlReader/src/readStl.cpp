@@ -34,6 +34,7 @@ This file is part of the TriMesh library.
 #include <sstream>
 
 #include <readStl.h>
+#include <stdint.h>
 
 using namespace std;
 
@@ -52,20 +53,34 @@ CReadSTL::CReadSTL(const TriMesh::CMeshPtr& meshPtr) {
 	_meshPtr = meshPtr;
 }
 
-bool CReadSTL::read(const std::string& path, const std::string& filename) {
-	ifstream in(path + filename);
-	if (!in.good()) {
-		return false;
+bool CReadSTL::read(const std::string& path, const std::string& filename) 
+{
+	std::vector<Vector3f> points;
+	bool readSuccessful = false;
+
+	{
+		ifstream in(path + filename);
+		if (!in.good()) {
+			return false;
+		}
+
+		string key;
+		getline(in, key);
+		if (key == "solid") {
+			readSuccessful = readText(in, points);
+			if (!readSuccessful)
+				return false;
+		}
 	}
 
-	std::vector<Vector3f> points;
-
-	string str;
-	getline(in, str);
-	if (str.find("solid") == 0)
-		readText(in, points);
-	else 
-		readBinary(in, points);
+	if (!readSuccessful) {
+		ifstream in(path + filename, ios_base::binary);
+		if (!in.good()) {
+			return false;
+		}
+		if (!readBinary(in, points))
+			return false;
+	}
 
 	CBoundingBox3Dd modelBBox;
 	for (const auto& pt : points) {
@@ -92,7 +107,60 @@ bool CReadSTL::read(const std::string& path, const std::string& filename) {
 	return true;
 }
 
-void CReadSTL::readText(std::istream& in, std::vector<Vector3f>& points)
+bool CReadSTL::read(const std::wstring& path, const std::wstring& filename) {
+	std::vector<Vector3f> points;
+	bool readSuccessful = false;
+
+	{
+		ifstream in(path + filename);
+		if (!in.good()) {
+			return false;
+		}
+
+		string key;
+		getline(in, key);
+		if (key == "solid") {
+			readSuccessful = readText(in, points);
+			if (!readSuccessful)
+				return false;
+		}
+	}
+
+	if (!readSuccessful) {
+		ifstream in(path + filename, ios_base::binary);
+		if (!in.good()) {
+			return false;
+		}
+		if (!readBinary(in, points))
+			return false;
+	}
+
+	CBoundingBox3Dd modelBBox;
+	for (const auto& pt : points) {
+		modelBBox.merge(toV3d(pt));
+	}
+	cout << "min BBox: " << modelBBox.getMin()[0] << ", " << modelBBox.getMin()[1] << ", " << modelBBox.getMin()[2] << "\n";
+	cout << "max BBox: " << modelBBox.getMax()[0] << ", " << modelBBox.getMax()[1] << ", " << modelBBox.getMax()[2] << "\n";
+
+	modelBBox.grow(1.0e-3);
+	_meshPtr->reset(modelBBox);
+	for (size_t i = 0; i < points.size() - 2; i += 3) {
+		_meshPtr->addTriangle(toV3d(points[i]), toV3d(points[i + 1]), toV3d(points[i + 2]));
+	}
+
+	points.clear();
+
+	//	_meshPtr->verifyFindAllTris();
+
+	cout << "numVertices: " << _meshPtr->numVertices() << "\n";
+	cout << "numEdges: " << _meshPtr->numEdges() << "\n";
+	cout << "numTris: " << _meshPtr->numTris() << "\n";
+	cout << "isClosed: " << (_meshPtr->isClosed() ? "true" : "false") << "\n";
+
+	return true;
+}
+
+bool CReadSTL::readText(std::istream& in, std::vector<Vector3f>& points)
 {
 	while (!in.eof()) {
 		string str;
@@ -109,9 +177,48 @@ void CReadSTL::readText(std::istream& in, std::vector<Vector3f>& points)
 			}
 		}
 	}
+
+	return true;
 }
 
-void CReadSTL::readBinary(std::istream& in, std::vector<Vector3f>& points)
+bool CReadSTL::readBinary(std::istream& in, std::vector<Vector3f>& points)
 {
+	if (!in.good())
+		return false;
 
+	uint8_t header[100];
+	in.read((char*)header, 80 * sizeof(uint8_t));
+
+	if (!in.good())
+		return false;
+
+	uint32_t numTris;
+	in.read((char*)&numTris, sizeof(uint32_t));
+
+	if (!in.good())
+		return false;
+
+	points.reserve(3 * numTris);
+	for (unsigned int i = 0; i < numTris; i++) {
+		Vector3f norm, pt0, pt1, pt2;
+
+		size_t vecSize = sizeof(Vector3f);
+		in.read((char*) &norm, vecSize);
+		in.read((char*) &pt0, vecSize);
+		in.read((char*) &pt1, vecSize);
+		in.read((char*) &pt2, vecSize);
+
+//		points.push_back(norm);
+		points.push_back(pt0);
+		points.push_back(pt1);
+		points.push_back(pt2);
+
+		uint16_t attributes;
+		in.read((char*)&attributes, sizeof(uint16_t));
+
+		if (!in.good())
+			return false;
+	}
+
+	return true;
 }

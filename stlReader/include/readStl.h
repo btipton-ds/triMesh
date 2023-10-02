@@ -43,13 +43,14 @@ public:
 	CReadSTL(const TriMesh::CMeshPtr& meshPtr);
 
 	bool read(const std::string& path, const std::string& filename);
+	bool read(const std::wstring& path, const std::wstring& filename);
 	const std::shared_ptr<TriMesh::CMesh>& getMeshPtr() const {
 		return _meshPtr;
 	}
 
 private:
-	void readText(std::istream& in, std::vector<Vector3f>& points);
-	void readBinary(std::istream& in, std::vector<Vector3f>& points);
+	bool readText(std::istream& in, std::vector<Vector3f>& points);
+	bool readBinary(std::istream& in, std::vector<Vector3f>& points);
 
 	TriMesh::CMeshPtr _meshPtr;
 };
