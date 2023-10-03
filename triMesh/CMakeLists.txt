@@ -18,12 +18,14 @@ if (UNIX)
     include_directories(
     include 
     "/usr/local/include/eigen3/"
+    "../../utilities/include"
     "../triMesh/include" 
     )
 else (UNIX)
     include_directories(
     include 
     "../../ThirdParty/eigen"
+    "../../utilities/include"
     "../triMesh/include" 
     )
 endif(UNIX)
@@ -39,6 +41,7 @@ triMesh
 "src/triMesh.cpp" 
 "src/tm_vertex.cpp" 
 "src/tm_vector3.cpp"
+"../../utilities/src/MultiCoreUtil.cpp"
 )
 
 link_directories(

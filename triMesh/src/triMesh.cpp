@@ -32,6 +32,7 @@ This file is part of the TriMesh library.
 #include <algorithm>
 
 #include <triMesh.h>
+#include <MultiCoreUtil.h>
 
 using namespace std;
 
@@ -219,21 +220,81 @@ namespace TriMesh {
 		return minGap;
 	}
 
-	void CMesh::getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins) const {
-		for (size_t i = 0; i < _tris.size(); i++) {
+	void CMesh::gapHistogramMC(int threadNum, int numThreads) const
+	{
+		auto& bins = _bins[threadNum];
+		for (size_t triIdx = threadNum; triIdx < numTris(); triIdx += numThreads) {
 			vector<RayHit> hits;
-			biDirRayCast(i, hits);
-
-			for (const auto& hit : hits) {
-				for (size_t i = 0; i < binSizes.size(); i++) {
-					if (fabs(hit.dist) < binSizes[i]) {
-						bins[i]++;
-						break;
+			if (biDirRayCast(triIdx, hits) != 0) {
+				for (const RayHit& hit : hits) {
+					if (hit.dist < 0)
+						continue;
+					for (size_t i = 0; i < _pBinSizes->size(); i++) {
+						if (fabs(hit.dist) < (*_pBinSizes)[i]) {
+							bins[i]++;
+							break;
+						}
 					}
 				}
 			}
 		}
 	}
+
+	void CMesh::getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins) const {
+		buildCentroids();
+		buildNormals();
+
+		_pBinSizes = &binSizes;
+		bins.clear();
+		bins.resize(binSizes.size(), 0);
+		_bins.clear();
+		_bins.resize(MultiCore::numThreads());
+		for (auto& bin : _bins) {
+			bin.resize(binSizes.size(), 0);
+		}
+		MultiCore::run(this, &CMesh::gapHistogramMC, true);
+
+		for (auto& bin : _bins) {
+			for (size_t i = 0; i < bins.size(); i++)
+				bins[i] += bin[i];
+		}
+		_bins.clear();
+	}
+
+	void CMesh::buildCentroids() const
+	{
+		if (_centroids.empty()) {
+			_useCentroidCache = false;
+			_centroids.resize(_tris.size());
+			MultiCore::run(this, &CMesh::buildCentroidsMC, true);
+			_useCentroidCache = true;
+		}
+	}
+
+	void CMesh::buildCentroidsMC(int threadNum, int numThreads) const
+	{
+		for (size_t triIdx = threadNum; triIdx < numTris(); triIdx += numThreads) {
+			_centroids[triIdx] = triCentroid(triIdx);
+		}
+	}
+
+	void CMesh::buildNormals() const
+	{
+		if (_normals.empty()) {
+			_useNormalCache = false;
+			_normals.resize(_tris.size());
+			MultiCore::run(this, &CMesh::buildNormalsMC, true);
+			_useNormalCache = true;
+		}
+	}
+
+	void CMesh::buildNormalsMC(int threadNum, int numThreads) const
+	{
+		for (size_t triIdx = threadNum; triIdx < numTris(); triIdx += numThreads) {
+			_normals[triIdx] = triUnitNormal(triIdx);
+		}
+	}
+
 
 	size_t CMesh::findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices) const {
 		return _vertTree.find(bbox, vertIndices);
@@ -248,6 +309,9 @@ namespace TriMesh {
 	}
 
 	Vector3d CMesh::triCentroid(size_t triIdx) const {
+		if (_useCentroidCache && triIdx < _centroids.size())
+			return _centroids[triIdx];
+
 		const auto& tri = _tris[triIdx];
 		const Vector3d& pt0 = _vertices[tri[0]]._pt;
 		const Vector3d& pt1 = _vertices[tri[1]]._pt;
@@ -258,6 +322,9 @@ namespace TriMesh {
 	}
 
 	Vector3d CMesh::triUnitNormal(size_t triIdx) const {
+		if (_useNormalCache && triIdx < _normals.size())
+			return _normals[triIdx];
+
 		const auto& tri = _tris[triIdx];
 		const Vector3d& pt0 = _vertices[tri[0]]._pt;
 		const Vector3d& pt1 = _vertices[tri[1]]._pt;
