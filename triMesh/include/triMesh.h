@@ -53,6 +53,11 @@ namespace TriMesh {
 		void save(std::ostream& out) const;
 		bool read(std::istream& in);
 
+		void dumpTris(const std::wstring& filename) const;
+		bool compareDumpedTris(const std::wstring& filename) const;
+		void dumpTree(const std::wstring& filename) const;
+		bool compareDumpedTree(const std::wstring& filename) const;
+
 		size_t addEdge(size_t vertIdx0, size_t vertIdx1);
 		size_t addTriangle(const Vector3i& tri);
 
@@ -97,9 +102,6 @@ namespace TriMesh {
 
 		bool verifyFindAllTris() const;
 
-		void dumpVertices(std::ostream& out) const;
-		void dumpEdges(std::ostream& out) const;
-		void dumpTris(std::ostream& out) const;
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;
 

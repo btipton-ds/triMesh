@@ -125,6 +125,10 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 
 		// Overload this box
 		_contents.push_back(newEntry);
+		if (_contents.size() >= ENTRY_LIMIT && !_left) {
+			split(depth);
+			return true;
+		}
 		return true;
 	}
 	return false;
@@ -178,6 +182,27 @@ void CSSB_DCL::biDirRayCastRecursive(const Ray& ray, std::vector<INDEX_TYPE>& hi
 		if (_right)
 			_right->biDirRayCastRecursive(ray, hits);
 	}
+}
+
+CSSB_TMPL
+void CSSB_DCL::dump(std::wostream& out, size_t depth) const
+{
+	std::wstring pad = L"";
+	for (size_t i = 0; i < depth; i++)
+		pad += L"  ";
+	out << pad << "Depth: " << depth << "\n";
+	out << pad << _bbox.getMin()[0] << " " << _bbox.getMin()[1] << " " << _bbox.getMin()[2] << "\n";
+	out << pad << _bbox.getMax()[0] << " " << _bbox.getMax()[1] << " " << _bbox.getMax()[2] << "\n";
+	out << pad << _axis << " " << _contents.size() << "\n";
+	for (const auto& entry : _contents) {
+		out << pad << "--" << entry._index << "\n";
+		out << pad << "--" << entry._bbox.getMin()[0] << " " << entry._bbox.getMin()[1] << " " << entry._bbox.getMin()[2] << "\n";
+		out << pad << "--" << entry._bbox.getMax()[0] << " " << entry._bbox.getMax()[1] << " " << entry._bbox.getMax()[2] << "\n";
+	}
+	if (_left)
+		_left->dump(out, depth + 1);
+	if (_right)
+		_right->dump(out, depth + 1);
 }
 
 CSSB_TMPL

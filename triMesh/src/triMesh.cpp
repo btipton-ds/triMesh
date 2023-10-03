@@ -30,6 +30,8 @@ This file is part of the TriMesh library.
 #include <tm_defines.h>
 
 #include <algorithm>
+#include <fstream>
+#include <iomanip>
 
 #include <triMesh.h>
 #include <MultiCoreUtil.h>
@@ -54,6 +56,92 @@ namespace TriMesh {
 		_vertTree.reset(bb);
 		_edgeTree.reset(bb);
 		_triTree.reset(bb);
+	}
+
+	void CMesh::dumpTris(const std::wstring& filename) const
+	{
+		wofstream out(filename);
+		out << setprecision(15);
+		out << numVertices() << "\n";
+		out << numTris() << "\n";
+		out << numEdges() << "\n";
+		for (const auto& vert : _vertices) {
+			out << vert._pt[0] << " " << vert._pt[1] << " " << vert._pt[2] << "\n";
+		}
+		for (const auto& tri : _tris) {
+			out << tri[0] << " " << tri[1] << " " << tri[2] << "\n";
+		}
+		for (const auto& edge : _edges) {
+			out << edge._vertIndex[0] << " " << edge._vertIndex[1] << " " << edge._numFaces << " " << edge._faceIndex[0];
+			if (edge._numFaces == 2)
+				out << " " << edge._faceIndex[1];
+			out << "\n";
+		}
+	}
+
+	bool CMesh::compareDumpedTris(const std::wstring& filename) const
+	{
+		wifstream in(filename);
+		size_t nVerts, nTris, nEdges;
+		in >> nVerts;
+		in >> nTris;
+		in >> nEdges;
+		if (numVertices() != nVerts)
+			return false;
+		if (numTris() != nTris)
+			return false;
+		if (numEdges() != nEdges)
+			return false;
+
+		for (const auto& vert : _vertices) {
+			CVertex v;
+			in >> v._pt[0] >> v._pt[1] >> v._pt[2];
+			if ((vert._pt - v._pt).norm() > 1.0e-15) {
+				return false;
+			}
+		}
+		for (const auto& tri : _tris) {
+			Vector3i t;
+			in >> t[0] >> t[1] >> t[2];
+			if (t != tri) {
+				return false;
+			}
+		}
+		for (const auto& edge : _edges) {
+			CEdge e;
+			size_t a, b, c, d;
+			int numFaces;
+			in >> a >> b >> numFaces >> c;
+			if (numFaces == 2)
+				in >> d;
+
+			if (a != edge._vertIndex[0]) {
+				return false;
+			}
+			if (b != edge._vertIndex[1]) {
+				return false;
+			}
+			if (numFaces != edge._numFaces) {
+				return false;
+			}
+
+			if (numFaces == 2 && d != edge._faceIndex[1])
+				return false;
+		}
+		return true;
+	}
+
+	void CMesh::dumpTree(const std::wstring& filename) const
+	{
+		wofstream out(filename);
+		out << setprecision(15);
+		_triTree.dump(out);
+
+	}
+
+	bool CMesh::compareDumpedTree(const std::wstring& filename) const
+	{
+		return true;
 	}
 
 	size_t CMesh::addEdge(size_t vertIdx0, size_t vertIdx1) {
@@ -378,26 +466,6 @@ namespace TriMesh {
 		}
 
 		return result;
-	}
-
-	void CMesh::dumpVertices(ostream& out) const {
-		out << "Vertices\n";
-		for (const auto& vert : _vertices) {
-			vert.dump(out);
-		}
-	}
-
-	void CMesh::dumpEdges(ostream& out) const {
-		out << "Edge\n";
-		for (const auto& edge : _edges) {
-			edge.dump(out);
-		}
-	}
-
-	void CMesh::dumpTris(ostream& out) const {
-		for (const auto& p : _tris) {
-			out << p[0] << ", " << p[1] << ", " << p[2] << "\n";
-		}
 	}
 
 	void CMesh::dumpObj(std::ostream& out) const {

@@ -73,6 +73,8 @@ public:
 
 	void biDirRayCastRecursive(const Ray& ray, std::vector<INDEX_TYPE>& hits) const;
 
+	void dump(std::wostream& out, size_t depth = 0) const;
+
 private:
 	bool add(const Entry& newEntry, int depth);
 	void split(int depth);
