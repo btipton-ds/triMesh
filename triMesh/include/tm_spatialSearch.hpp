@@ -91,47 +91,33 @@ size_t CSSB_DCL::biDirRayCast(const Ray& ray, std::vector<INDEX_TYPE>& hits) con
 
 CSSB_TMPL
 bool CSSB_DCL::add(const Entry& newEntry, int depth) {
-	if (_bbox.contains(newEntry._bbox)) {
-		for (const auto& curEntry : _contents) {
-			if (curEntry._index == newEntry._index && curEntry._bbox.contains(newEntry._bbox)) {
-				return false;
-			}
+	if (!_bbox.contains(newEntry._bbox))
+		return false;
+
+	for (const auto& curEntry : _contents) {
+		if (curEntry._index == newEntry._index && curEntry._bbox.contains(newEntry._bbox)) {
+			assert(!"duplicate");
+			return false;
 		}
+	}
 
-		if (_left && _left->add(newEntry, depth + 1)) {
-			_numInTree++;
-			return true;
-		} if (_right && _right->add(newEntry, depth + 1)) {
-			_numInTree++;
-			return true;
-		}
-
-		if (_contents.size() < ENTRY_LIMIT) {
-			_contents.push_back(newEntry);
-			_numInTree++;
-			return true;
-		}
-
-		// Split node and add to correct node
-		if (!_left && depth < 25)
-			split(depth);
-
+	if (_left && _left->add(newEntry, depth + 1)) {
 		_numInTree++;
-
-		if (_left && _left->add(newEntry, depth + 1))
-			return true;
-		else if (_right && _right->add(newEntry, depth + 1))
-			return true;
-
-		// Overload this box
-		_contents.push_back(newEntry);
-		if (_contents.size() >= ENTRY_LIMIT && !_left) {
-			split(depth);
-			return true;
-		}
+		return true;
+	} if (_right && _right->add(newEntry, depth + 1)) {
+		_numInTree++;
 		return true;
 	}
-	return false;
+
+	_contents.push_back(newEntry);
+	_numInTree++;
+
+	// Split node and add to correct node
+	if (!_left && _contents.size() > ENTRY_LIMIT)
+		split(depth);
+
+	return true;
+
 }
 
 CSSB_TMPL
@@ -189,15 +175,20 @@ void CSSB_DCL::dump(std::wostream& out, size_t depth) const
 {
 	std::wstring pad = L"";
 	for (size_t i = 0; i < depth; i++)
-		pad += L"  ";
+		pad += L"   ";
+	std::wstring axisStr = L"XAxis";
+	if (_axis == 1)
+		axisStr = L"YAxis";
+	else if (_axis == 2)
+		axisStr = L"ZAxis";
 	out << pad << "Depth: " << depth << "\n";
 	out << pad << _bbox.getMin()[0] << " " << _bbox.getMin()[1] << " " << _bbox.getMin()[2] << "\n";
 	out << pad << _bbox.getMax()[0] << " " << _bbox.getMax()[1] << " " << _bbox.getMax()[2] << "\n";
-	out << pad << _axis << " " << _contents.size() << "\n";
+	out << pad << axisStr << " " << _contents.size() << "\n";
 	for (const auto& entry : _contents) {
-		out << pad << "--" << entry._index << "\n";
-		out << pad << "--" << entry._bbox.getMin()[0] << " " << entry._bbox.getMin()[1] << " " << entry._bbox.getMin()[2] << "\n";
-		out << pad << "--" << entry._bbox.getMax()[0] << " " << entry._bbox.getMax()[1] << " " << entry._bbox.getMax()[2] << "\n";
+		out << pad << "  " << entry._index << "\n";
+		out << pad << "  " << entry._bbox.getMin()[0] << " " << entry._bbox.getMin()[1] << " " << entry._bbox.getMin()[2] << "\n";
+		out << pad << "  " << entry._bbox.getMax()[0] << " " << entry._bbox.getMax()[1] << " " << entry._bbox.getMax()[2] << "\n";
 	}
 	if (_left)
 		_left->dump(out, depth + 1);
@@ -208,7 +199,7 @@ void CSSB_DCL::dump(std::wostream& out, size_t depth) const
 CSSB_TMPL
 void CSSB_DCL::split(int depth) {
 	BOX_TYPE leftBBox, rightBBox;
-	_bbox.split(_axis, leftBBox, rightBBox, 0.025);
+	_bbox.split(_axis, leftBBox, rightBBox, 0.10);
 	int nextAxis = (_axis + 1) % 3;
 	_left = std::make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
 	_right = std::make_shared<CSpatialSearchBase>(rightBBox, nextAxis);

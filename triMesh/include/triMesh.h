@@ -41,6 +41,16 @@ This file is part of the TriMesh library.
 
 namespace TriMesh {
 
+	template<typename T>
+	class ScopedSetVal {
+	public:
+		ScopedSetVal(T& variable, T newVal);
+		~ScopedSetVal();
+	private:
+		T _oldVal;
+		T& _variable;
+	};
+
 	class CMesh {
 	public:
 		using BoundingBox = CBoundingBox3Dd;
@@ -84,8 +94,8 @@ namespace TriMesh {
 		const CEdge& getEdge(size_t idx) const;
 
 		bool isClosed() const;
-		double findMinGap() const;
-		void getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins) const;
+		double findMinGap(bool multiCore = true) const;
+		void getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins, bool multiCore = true) const;
 		size_t biDirRayCast(size_t triIdx, std::vector<RayHit>& hits) const;
 		size_t biDirRayCast(const Ray& ray, std::vector<RayHit>& hits) const;
 		size_t biDirRayCast(const LineSegment& seg, std::vector<RayHit>& hits) const;
@@ -97,17 +107,17 @@ namespace TriMesh {
 		Vector3d triCentroid(size_t triIdx) const;
 		Vector3d triUnitNormal(size_t triIdx) const;
 
-		void buildCentroids() const;
-		void buildNormals() const;
+		void buildCentroids(bool multiCore = true) const;
+		void buildNormals(bool multiCore = true) const;
 
 		bool verifyFindAllTris() const;
 
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;
 
-		void buildCentroidsMC(int threadNum, int numThreads) const;
-		void buildNormalsMC(int threadNum, int numThreads) const;
-		void gapHistogramMC(int threadNum, int numThreads) const;
+		void buildCentroidsMC(size_t triIdx) const;
+		void buildNormalsMC(size_t triIdx) const;
+		void gapHistogramMC(size_t threadNum, size_t numThreads) const;
 	private:
 
 		double findTriMinimumGap(size_t i) const;
@@ -194,6 +204,20 @@ namespace TriMesh {
 
 	inline const CEdge& CMesh::getEdge(size_t idx) const {
 		return _edges[idx];
+	}
+
+	template<typename T>
+	inline ScopedSetVal<T>::ScopedSetVal(T& variable, T newVal)
+		: _variable(variable)
+	{
+		_oldVal = _variable;
+		_variable = newVal;
+	}
+
+	template<typename T>
+	inline ScopedSetVal<T>::~ScopedSetVal()
+	{
+		_variable = _oldVal;
 	}
 
 }

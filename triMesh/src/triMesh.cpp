@@ -294,7 +294,7 @@ namespace TriMesh {
 			return fabs(hits[0].dist);
 	}
 
-	double CMesh::findMinGap() const {
+	double CMesh::findMinGap(bool multiCore) const {
 		double minGap = FLT_MAX;
 		for (size_t i = 0; i < _tris.size(); i++) {
 			vector<RayHit> hits;
@@ -308,7 +308,7 @@ namespace TriMesh {
 		return minGap;
 	}
 
-	void CMesh::gapHistogramMC(int threadNum, int numThreads) const
+	void CMesh::gapHistogramMC(size_t threadNum, size_t numThreads) const
 	{
 		auto& bins = _bins[threadNum];
 		for (size_t triIdx = threadNum; triIdx < numTris(); triIdx += numThreads) {
@@ -328,9 +328,9 @@ namespace TriMesh {
 		}
 	}
 
-	void CMesh::getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins) const {
-		buildCentroids();
-		buildNormals();
+	void CMesh::getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins, bool multiCore) const {
+		buildCentroids(multiCore);
+		buildNormals(multiCore);
 
 		_pBinSizes = &binSizes;
 		bins.clear();
@@ -340,7 +340,7 @@ namespace TriMesh {
 		for (auto& bin : _bins) {
 			bin.resize(binSizes.size(), 0);
 		}
-		MultiCore::run(this, &CMesh::gapHistogramMC, true);
+		MultiCore::run(this, &CMesh::gapHistogramMC, multiCore);
 
 		for (auto& bin : _bins) {
 			for (size_t i = 0; i < bins.size(); i++)
@@ -349,38 +349,35 @@ namespace TriMesh {
 		_bins.clear();
 	}
 
-	void CMesh::buildCentroids() const
+	void CMesh::buildCentroids(bool multiCore) const
 	{
 		if (_centroids.empty()) {
-			_useCentroidCache = false;
+			ScopedSetVal<bool> set(_useCentroidCache, false);
 			_centroids.resize(_tris.size());
-			MultiCore::run(this, &CMesh::buildCentroidsMC, true);
-			_useCentroidCache = true;
+			MultiCore::run(this, &CMesh::buildCentroidsMC, _centroids.size(), multiCore);
 		}
 	}
 
-	void CMesh::buildCentroidsMC(int threadNum, int numThreads) const
+	void CMesh::buildCentroidsMC(size_t triIdx) const
 	{
-		for (size_t triIdx = threadNum; triIdx < numTris(); triIdx += numThreads) {
+		_centroids[triIdx] = triCentroid(triIdx);
+		if (fabs(_centroids[triIdx][0]) > 1.0e10) {
 			_centroids[triIdx] = triCentroid(triIdx);
 		}
 	}
 
-	void CMesh::buildNormals() const
+	void CMesh::buildNormals(bool multiCore) const
 	{
 		if (_normals.empty()) {
-			_useNormalCache = false;
+			ScopedSetVal<bool> set(_useNormalCache, false);
 			_normals.resize(_tris.size());
-			MultiCore::run(this, &CMesh::buildNormalsMC, true);
-			_useNormalCache = true;
+			MultiCore::run(this, &CMesh::buildNormalsMC, _centroids.size(), multiCore);
 		}
 	}
 
-	void CMesh::buildNormalsMC(int threadNum, int numThreads) const
+	void CMesh::buildNormalsMC(size_t triIdx) const
 	{
-		for (size_t triIdx = threadNum; triIdx < numTris(); triIdx += numThreads) {
-			_normals[triIdx] = triUnitNormal(triIdx);
-		}
+		_normals[triIdx] = triUnitNormal(triIdx);
 	}
 
 
