@@ -10,6 +10,7 @@ out
 /Release/
 /x64/
 /build/
+/out/
 *.cmake
 CMakeFiles
 Makefile
