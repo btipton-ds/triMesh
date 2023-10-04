@@ -32,9 +32,9 @@ This file is part of the TriMesh library.
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
+#include <thread>
 
 #include <triMesh.h>
-#include <MultiCoreUtil.h>
 
 using namespace std;
 
@@ -308,45 +308,118 @@ namespace TriMesh {
 		return minGap;
 	}
 
-	void CMesh::gapHistogramMC(size_t threadNum, size_t numThreads) const
+namespace MultiCore {
+
+int getNumCores()
+{
+	return thread::hardware_concurrency();
+}
+
+template<class T, typename M>
+class FuncWrapper {
+public:
+	FuncWrapper()
 	{
-		auto& bins = _bins[threadNum];
-		for (size_t triIdx = threadNum; triIdx < numTris(); triIdx += numThreads) {
-			vector<RayHit> hits;
-			if (biDirRayCast(triIdx, hits) != 0) {
-				for (const RayHit& hit : hits) {
-					if (hit.dist < 0)
-						continue;
-					for (size_t i = 0; i < _pBinSizes->size(); i++) {
-						if (fabs(hit.dist) < (*_pBinSizes)[i]) {
-							bins[i]++;
-							break;
-						}
-					}
-				}
-			}
-		}
 	}
+
+	void start()
+	{
+		_pThread = make_shared<thread>(&func, this);
+	}
+
+	static void func(void* p) {
+		FuncWrapper* pFW = (FuncWrapper*)p;
+		(pFW->_obj->*pFW->_method)(pFW->_threadNum, pFW->_numThreads);
+	}
+
+	T* _obj;
+	M _method;
+	size_t _threadNum;
+	size_t _numThreads;
+	shared_ptr<thread> _pThread = nullptr;
+};
+
+template<class T, class M>
+void runMethod(T* obj, M method, bool multiCore)
+{
+	if (multiCore) {
+		vector<FuncWrapper<T, M>> threads;
+		threads.resize(getNumCores());
+		for (size_t i = 0; i < threads.size(); i++) {
+			threads[i]._obj = obj;
+			threads[i]._method = method;
+			threads[i]._threadNum = i;
+			threads[i]._numThreads = threads.size();
+		}
+
+		for (size_t i = 0; i < threads.size(); i++) {
+			threads[i].start();
+		}
+
+		for (size_t i = 0; i < threads.size(); i++) {
+			threads[i]._pThread->join();
+		}
+
+	}
+	else {
+		(obj->*method)(0, 1);
+	}
+}
+template<class L>
+void runLambda(L fLambda, bool multiCore)
+{
+	if (multiCore) {
+		vector<shared_ptr<thread>> threads;
+		threads.resize(getNumCores());
+		for (size_t i = 0; i < threads.size(); i++) {
+			threads[i] = make_shared<thread>(fLambda, i, threads.size());
+		}
+
+		for (size_t i = 0; i < threads.size(); i++) {
+			threads[i]->join();
+		}
+	} else {
+		fLambda(0, 1);
+	}
+}
+
+}
 
 	void CMesh::getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins, bool multiCore) const {
 		buildCentroids(multiCore);
 		buildNormals(multiCore);
 
-		_pBinSizes = &binSizes;
 		bins.clear();
 		bins.resize(binSizes.size(), 0);
-		_bins.clear();
-		_bins.resize(MultiCore::numThreads());
-		for (auto& bin : _bins) {
+		vector<std::vector<int>> binSet;
+		binSet.resize(MultiCore::getNumCores());
+		for (auto& bin : binSet) {
 			bin.resize(binSizes.size(), 0);
 		}
-		MultiCore::run(this, &CMesh::gapHistogramMC, multiCore);
 
-		for (auto& bin : _bins) {
+		MultiCore::runLambda([this, &binSizes, &binSet](size_t threadNum, size_t numThreads) {
+			auto& bins = binSet[threadNum];
+			for (size_t triIdx = threadNum; triIdx < numTris(); triIdx += numThreads) {
+				vector<RayHit> hits;
+				if (biDirRayCast(triIdx, hits) != 0) {
+					for (const RayHit& hit : hits) {
+						if (hit.dist < 0)
+							continue;
+						for (size_t i = 0; i < binSizes.size(); i++) {
+							if (fabs(hit.dist) < binSizes[i]) {
+								bins[i]++;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}, multiCore);
+
+		for (auto& bin : binSet) {
 			for (size_t i = 0; i < bins.size(); i++)
 				bins[i] += bin[i];
 		}
-		_bins.clear();
 	}
 
 	void CMesh::buildCentroids(bool multiCore) const
@@ -354,15 +427,10 @@ namespace TriMesh {
 		if (_centroids.empty()) {
 			ScopedSetVal<bool> set(_useCentroidCache, false);
 			_centroids.resize(_tris.size());
-			MultiCore::run(this, &CMesh::buildCentroidsMC, _centroids.size(), multiCore);
-		}
-	}
-
-	void CMesh::buildCentroidsMC(size_t triIdx) const
-	{
-		_centroids[triIdx] = triCentroid(triIdx);
-		if (fabs(_centroids[triIdx][0]) > 1.0e10) {
-			_centroids[triIdx] = triCentroid(triIdx);
+			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
+				for (size_t triIdx = threadNum; triIdx < _centroids.size(); triIdx += numThreads)
+					_centroids[triIdx] = triCentroid(triIdx);
+			}, multiCore);
 		}
 	}
 
@@ -371,15 +439,12 @@ namespace TriMesh {
 		if (_normals.empty()) {
 			ScopedSetVal<bool> set(_useNormalCache, false);
 			_normals.resize(_tris.size());
-			MultiCore::run(this, &CMesh::buildNormalsMC, _centroids.size(), multiCore);
-		}
+			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
+				for (size_t triIdx = threadNum; triIdx < _centroids.size(); triIdx += numThreads)
+					_normals[triIdx] = triUnitNormal(triIdx);
+			}, multiCore);
+		}		
 	}
-
-	void CMesh::buildNormalsMC(size_t triIdx) const
-	{
-		_normals[triIdx] = triUnitNormal(triIdx);
-	}
-
 
 	size_t CMesh::findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices) const {
 		return _vertTree.find(bbox, vertIndices);

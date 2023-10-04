@@ -41,7 +41,6 @@ triMesh
 "src/triMesh.cpp" 
 "src/tm_vertex.cpp" 
 "src/tm_vector3.cpp"
-"../../utilities/src/MultiCoreUtil.cpp"
 )
 
 link_directories(

@@ -115,9 +115,6 @@ namespace TriMesh {
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;
 
-		void buildCentroidsMC(size_t triIdx) const;
-		void buildNormalsMC(size_t triIdx) const;
-		void gapHistogramMC(size_t threadNum, size_t numThreads) const;
 	private:
 
 		double findTriMinimumGap(size_t i) const;
@@ -137,9 +134,6 @@ namespace TriMesh {
 		mutable bool _useNormalCache = true;
 		mutable std::vector<Vector3d> _normals;
 		SearchTree _triTree;
-
-		mutable const std::vector<double>* _pBinSizes;
-		mutable std::vector<std::vector<int>> _bins;
 	};
 
 	using CMeshPtr = std::shared_ptr<CMesh>;
