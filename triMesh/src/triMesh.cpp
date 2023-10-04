@@ -32,9 +32,9 @@ This file is part of the TriMesh library.
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
-#include <thread>
 
 #include <triMesh.h>
+#include <MultiCoreUtil.h>
 
 using namespace std;
 
@@ -294,96 +294,33 @@ namespace TriMesh {
 			return fabs(hits[0].dist);
 	}
 
-	double CMesh::findMinGap(bool multiCore) const {
-		double minGap = FLT_MAX;
-		for (size_t i = 0; i < _tris.size(); i++) {
-			vector<RayHit> hits;
-			if (biDirRayCast(i, hits) > 0) {
-				double d = fabs(hits[0].dist);
-				if (d < minGap)
-					minGap = d;
+	double CMesh::findMinGap(double tol, bool multiCore) const {
+		vector<double> minGapVec;
+
+		minGapVec.resize(MultiCore::getNumCores(), DBL_MAX);
+
+		MultiCore::runLambda([this, tol, &minGapVec](size_t threadNum, size_t numThreads) {
+			auto& minGap = minGapVec[threadNum];
+			size_t num = numTris();
+			for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads) {
+				vector<RayHit> hits;
+				if (biDirRayCast(triIdx, hits) > 0) {
+					double d = fabs(hits[0].dist);
+					if (d > tol && d < minGap)
+						minGap = d;
+				}
+			}
+		}, multiCore);
+
+		double minGap = DBL_MAX;
+		for (double d : minGapVec) {
+			if (d < minGap) {
+				minGap = d;
 			}
 		}
 
 		return minGap;
 	}
-
-namespace MultiCore {
-
-int getNumCores()
-{
-	return thread::hardware_concurrency();
-}
-
-template<class T, typename M>
-class FuncWrapper {
-public:
-	FuncWrapper()
-	{
-	}
-
-	void start()
-	{
-		_pThread = make_shared<thread>(&func, this);
-	}
-
-	static void func(void* p) {
-		FuncWrapper* pFW = (FuncWrapper*)p;
-		(pFW->_obj->*pFW->_method)(pFW->_threadNum, pFW->_numThreads);
-	}
-
-	T* _obj;
-	M _method;
-	size_t _threadNum;
-	size_t _numThreads;
-	shared_ptr<thread> _pThread = nullptr;
-};
-
-template<class T, class M>
-void runMethod(T* obj, M method, bool multiCore)
-{
-	if (multiCore) {
-		vector<FuncWrapper<T, M>> threads;
-		threads.resize(getNumCores());
-		for (size_t i = 0; i < threads.size(); i++) {
-			threads[i]._obj = obj;
-			threads[i]._method = method;
-			threads[i]._threadNum = i;
-			threads[i]._numThreads = threads.size();
-		}
-
-		for (size_t i = 0; i < threads.size(); i++) {
-			threads[i].start();
-		}
-
-		for (size_t i = 0; i < threads.size(); i++) {
-			threads[i]._pThread->join();
-		}
-
-	}
-	else {
-		(obj->*method)(0, 1);
-	}
-}
-template<class L>
-void runLambda(L fLambda, bool multiCore)
-{
-	if (multiCore) {
-		vector<shared_ptr<thread>> threads;
-		threads.resize(getNumCores());
-		for (size_t i = 0; i < threads.size(); i++) {
-			threads[i] = make_shared<thread>(fLambda, i, threads.size());
-		}
-
-		for (size_t i = 0; i < threads.size(); i++) {
-			threads[i]->join();
-		}
-	} else {
-		fLambda(0, 1);
-	}
-}
-
-}
 
 	void CMesh::getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins, bool multiCore) const {
 		buildCentroids(multiCore);
@@ -399,7 +336,8 @@ void runLambda(L fLambda, bool multiCore)
 
 		MultiCore::runLambda([this, &binSizes, &binSet](size_t threadNum, size_t numThreads) {
 			auto& bins = binSet[threadNum];
-			for (size_t triIdx = threadNum; triIdx < numTris(); triIdx += numThreads) {
+			size_t num = numTris();
+			for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads) {
 				vector<RayHit> hits;
 				if (biDirRayCast(triIdx, hits) != 0) {
 					for (const RayHit& hit : hits) {
@@ -428,7 +366,8 @@ void runLambda(L fLambda, bool multiCore)
 			ScopedSetVal<bool> set(_useCentroidCache, false);
 			_centroids.resize(_tris.size());
 			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
-				for (size_t triIdx = threadNum; triIdx < _centroids.size(); triIdx += numThreads)
+				size_t num = _centroids.size();
+				for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads)
 					_centroids[triIdx] = triCentroid(triIdx);
 			}, multiCore);
 		}
@@ -440,7 +379,8 @@ void runLambda(L fLambda, bool multiCore)
 			ScopedSetVal<bool> set(_useNormalCache, false);
 			_normals.resize(_tris.size());
 			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
-				for (size_t triIdx = threadNum; triIdx < _centroids.size(); triIdx += numThreads)
+				size_t num = _centroids.size();
+				for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads)
 					_normals[triIdx] = triUnitNormal(triIdx);
 			}, multiCore);
 		}		

@@ -94,7 +94,7 @@ namespace TriMesh {
 		const CEdge& getEdge(size_t idx) const;
 
 		bool isClosed() const;
-		double findMinGap(bool multiCore = true) const;
+		double findMinGap(double tol = 0.0001, bool multiCore = true) const;
 		void getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins, bool multiCore = true) const;
 		size_t biDirRayCast(size_t triIdx, std::vector<RayHit>& hits) const;
 		size_t biDirRayCast(const Ray& ray, std::vector<RayHit>& hits) const;
