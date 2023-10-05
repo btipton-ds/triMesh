@@ -115,6 +115,11 @@ namespace TriMesh {
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;
 
+		const std::vector<float>& getGlPoints();
+		const std::vector<float>& getGlNormals(bool smoothed);
+		const std::vector<float>& getGlParams();
+		const std::vector<unsigned int>& getGlFaceIndices();
+		const std::vector<unsigned int>& getGlEdgeIndices();
 	private:
 
 		double findTriMinimumGap(size_t i) const;
@@ -131,6 +136,8 @@ namespace TriMesh {
 		mutable bool _useCentroidCache = true;
 		mutable std::vector<Vector3d> _centroids;
 
+		std::vector<float> _glPoints, _glNormals, _glParams;
+		std::vector<unsigned int> _glTriIndices, _glEdgeIndices;
 		mutable bool _useNormalCache = true;
 		mutable std::vector<Vector3d> _normals;
 		SearchTree _triTree;

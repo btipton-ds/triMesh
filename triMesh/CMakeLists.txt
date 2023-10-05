@@ -18,14 +18,14 @@ if (UNIX)
     include_directories(
     include 
     "/usr/local/include/eigen3/"
-    "../../utilities/include"
+    "../../utilities/threads/include"
     "../triMesh/include" 
     )
 else (UNIX)
     include_directories(
     include 
     "../../ThirdParty/eigen"
-    "../../utilities/include"
+    "../../utilities/threads/include"
     "../triMesh/include" 
     )
 endif(UNIX)

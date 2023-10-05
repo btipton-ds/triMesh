@@ -379,7 +379,7 @@ namespace TriMesh {
 			ScopedSetVal<bool> set(_useNormalCache, false);
 			_normals.resize(_tris.size());
 			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
-				size_t num = _centroids.size();
+				size_t num = _normals.size();
 				for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads)
 					_normals[triIdx] = triUnitNormal(triIdx);
 			}, multiCore);
@@ -468,6 +468,64 @@ namespace TriMesh {
 		}
 
 		return result;
+	}
+
+	const std::vector<float>& CMesh::getGlPoints()
+	{
+		if (_glPoints.size() != 3 * _vertices.size()) {
+			_glPoints.resize(3 * _vertices.size());
+			for (size_t vertIdx = 0; vertIdx < _vertices.size(); vertIdx++) {
+				for (size_t i = 0; i < 3; i++) {
+					_glPoints[3 * vertIdx + i] = (float) _vertices[vertIdx]._pt[i];
+				}
+			}
+		}
+		return _glPoints;
+	}
+
+	const std::vector<float>& CMesh::getGlNormals(bool smoothed)
+	{
+		buildNormals();
+		if (_glNormals.size() != 3 * _vertices.size()) {
+			_glNormals.resize(3 * _vertices.size());
+			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
+				const auto& vertIndices = _tris[triIdx];
+				const auto& norm = _normals[triIdx];
+				for (size_t i = 0; i < 3; i++) {
+					for (size_t j = 0; j < 3; j++) {
+						size_t vertIdx = 3 * vertIndices[i] + j;
+						_glNormals[vertIdx] = (float) norm[j];
+					}
+				}
+			}
+		}
+		return _glNormals;
+	}
+
+	const std::vector<float>& CMesh::getGlParams()
+	{
+		if (_glParams.size() != 2 * _vertices.size()) {
+			_glParams.resize(2 * _vertices.size(), 0);
+		}
+		return _glParams;
+	}
+
+	const std::vector<unsigned int>& CMesh::getGlFaceIndices()
+	{
+		if (_glTriIndices.size() != 3 * _tris.size()) {
+			_glTriIndices.resize(3 * _tris.size());
+			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
+				for (size_t i = 0; i < 3; i++) {
+					_glTriIndices[3 * triIdx + i] = (unsigned int)_tris[triIdx][i];
+				}
+			}
+		}
+		return _glTriIndices;
+	}
+
+	const std::vector<unsigned int>& CMesh::getGlEdgeIndices()
+	{
+		return _glEdgeIndices;
 	}
 
 	void CMesh::dumpObj(std::ostream& out) const {
