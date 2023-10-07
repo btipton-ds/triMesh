@@ -40,11 +40,17 @@ using namespace std;
 
 namespace TriMesh {
 
-	CMesh::CMesh() {
+	long _statId = 0;
+
+	CMesh::CMesh() 
+		: _id(_statId++)
+		, _changeNumber(0)
+	{
 	}
 
 	CMesh::CMesh(const Vector3d& min, const Vector3d& max)
-		: _vertTree(BoundingBox(min, max))
+		: _id(_statId++)
+		, _vertTree(BoundingBox(min, max))
 		, _edgeTree(BoundingBox(min, max))
 		, _triTree(BoundingBox(min, max))
 	{
@@ -284,6 +290,11 @@ namespace TriMesh {
 				hits.push_back(hit);
 		}
 		return hits.size();
+	}
+
+	void CMesh::changed()
+	{
+		_changeNumber++;
 	}
 
 	double CMesh::findTriMinimumGap(size_t i) const {
