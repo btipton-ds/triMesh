@@ -483,11 +483,16 @@ namespace TriMesh {
 
 	const std::vector<float>& CMesh::getGlPoints()
 	{
-		if (_glPoints.size() != 3 * _vertices.size()) {
-			_glPoints.resize(3 * _vertices.size());
-			for (size_t vertIdx = 0; vertIdx < _vertices.size(); vertIdx++) {
+		if (_glPoints.size() != 3 * 3 * _tris.size()) {
+			_glPoints.resize(3 * 3 * _tris.size());
+			size_t idx = 0;
+			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
+				const auto& vertIndices = _tris[triIdx];
 				for (size_t i = 0; i < 3; i++) {
-					_glPoints[3 * vertIdx + i] = (float) _vertices[vertIdx]._pt[i];
+					const auto& pt = _vertices[vertIndices[i]]._pt;
+					_glPoints[idx++] = (float)pt[0];
+					_glPoints[idx++] = (float)pt[1];
+					_glPoints[idx++] = (float)pt[2];
 				}
 			}
 		}
@@ -497,16 +502,15 @@ namespace TriMesh {
 	const std::vector<float>& CMesh::getGlNormals(bool smoothed)
 	{
 		buildNormals();
-		if (_glNormals.size() != 3 * _vertices.size()) {
-			_glNormals.resize(3 * _vertices.size());
+		if (_glNormals.size() != 3 * 3 * _tris.size()) { // _vertices is a 3 vector, _glNormals is floats
+			_glNormals.resize(3 * 3 * _tris.size());
+			size_t idx = 0;
 			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
-				const auto& vertIndices = _tris[triIdx];
 				const auto& norm = _normals[triIdx];
 				for (size_t i = 0; i < 3; i++) {
-					for (size_t j = 0; j < 3; j++) {
-						size_t vertIdx = 3 * vertIndices[i] + j;
-						_glNormals[vertIdx] = (float) norm[j];
-					}
+					_glNormals[idx++] = (float)norm[0];
+					_glNormals[idx++] = (float)norm[1];
+					_glNormals[idx++] = (float)norm[2];
 				}
 			}
 		}
@@ -515,20 +519,21 @@ namespace TriMesh {
 
 	const std::vector<float>& CMesh::getGlParams()
 	{
-		if (_glParams.size() != 2 * _vertices.size()) {
-			_glParams.resize(2 * _vertices.size(), 0);
+		if (_glParams.size() != 3 * 2 * _tris.size()) {
+			_glParams.resize(3 * 2 * _tris.size(), 0);
 		}
 		return _glParams;
 	}
 
 	const std::vector<unsigned int>& CMesh::getGlFaceIndices()
 	{
-		if (_glTriIndices.size() != 3 * _tris.size()) {
-			_glTriIndices.resize(3 * _tris.size());
+		if (_glTriIndices.size() != 3 * 3 * _tris.size()) { // _vertices is a 3 vector, _glNormals is floats
+			_glTriIndices.resize(3 * 3 * _tris.size());
+			size_t idx = 0;
 			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
-				for (size_t i = 0; i < 3; i++) {
-					_glTriIndices[3 * triIdx + i] = (unsigned int)_tris[triIdx][i];
-				}
+				_glTriIndices[idx] = (unsigned int)idx++;
+				_glTriIndices[idx] = (unsigned int)idx++;
+				_glTriIndices[idx] = (unsigned int)idx++;
 			}
 		}
 		return _glTriIndices;
@@ -536,6 +541,17 @@ namespace TriMesh {
 
 	const std::vector<unsigned int>& CMesh::getGlEdgeIndices()
 	{
+		if (_glEdgeIndices.size() != 3 * 3 * _tris.size()) { // _vertices is a 3 vector, _glNormals is floats
+			_glEdgeIndices.resize(3 * 3 * _edges.size());
+			size_t idx = 0;
+			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
+				for (size_t i = 0; i < 3; i++) {
+					_glEdgeIndices[idx] = (unsigned int)idx++;
+					_glEdgeIndices[idx] = (unsigned int)idx++;
+					_glEdgeIndices[idx] = (unsigned int)idx++;
+				}
+			}
+		}
 		return _glEdgeIndices;
 	}
 
