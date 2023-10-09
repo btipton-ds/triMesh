@@ -527,13 +527,13 @@ namespace TriMesh {
 
 	const std::vector<unsigned int>& CMesh::getGlFaceIndices()
 	{
-		if (_glTriIndices.size() != 3 * 3 * _tris.size()) { // _vertices is a 3 vector, _glNormals is floats
-			_glTriIndices.resize(3 * 3 * _tris.size());
-			size_t idx = 0;
-			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
-				_glTriIndices[idx] = (unsigned int)idx++;
-				_glTriIndices[idx] = (unsigned int)idx++;
-				_glTriIndices[idx] = (unsigned int)idx++;
+		if (_glPoints.empty())
+			getGlPoints();
+
+		if (_glTriIndices.size() != _glPoints.size() / 3) { // _vertices is a 3 vector, _glNormals is floats
+			_glTriIndices.resize(_glPoints.size() / 3);
+			for (size_t idx = 0; idx < _glTriIndices.size(); idx++) {
+				_glTriIndices[idx] = (unsigned int)idx;
 			}
 		}
 		return _glTriIndices;
