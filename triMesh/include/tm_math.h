@@ -122,7 +122,7 @@ struct Ray {
 struct RayHit {
 	size_t triIdx;
 	double dist;
-	Vector3d hitPt;
+	Vector3d hitPt, normal;
 
 	inline RayHit() 
 		: triIdx(stm1)

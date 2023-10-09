@@ -234,6 +234,7 @@ namespace TriMesh {
 	}
 
 	size_t CMesh::biDirRayCast(const Ray& ray, std::vector<RayHit>& hits) const {
+		buildNormals();
 		vector<size_t> hitIndices;
 		if (_triTree.biDirRayCast(ray, hitIndices) > 0) {
 			for (size_t triIdx2 : hitIndices) {
@@ -247,6 +248,7 @@ namespace TriMesh {
 				RayHit hit;
 				if (intersectRayTri(ray, pts, hit)) {
 					hit.triIdx = triIdx2;
+					hit.normal = _normals[hit.triIdx];
 					hits.push_back(hit);
 				}
 			}
