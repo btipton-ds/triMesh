@@ -81,6 +81,15 @@ namespace TriMesh {
 		template<class POINT_TYPE>
 		size_t addVertex(const POINT_TYPE& ptUnk);
 
+		template<class POINT_TYPE>
+		size_t addQuad(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, const POINT_TYPE& pt3);
+
+		// takes a vector of 8 points in {
+		// 0,3,2,1
+		// 4,5,6,7 } order
+		template<class POINT_TYPE>
+		size_t addRectPrism(const std::vector<POINT_TYPE>& pts);
+
 		const BoundingBox& getBBox() const {
 			return _vertTree.getBounds();
 		}
@@ -199,6 +208,36 @@ namespace TriMesh {
 			testResults = _vertTree.find(BoundingBox(pt));
 		}
 		return result;
+	}
+
+	template<class POINT_TYPE>
+	size_t CMesh::addQuad(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, const POINT_TYPE& pt3)
+	{
+		addTriangle(pt0, pt1, pt2);
+		addTriangle(pt0, pt2, pt3);
+
+		return _tris.size();
+	}
+
+	template<class POINT_TYPE>
+	size_t CMesh::addRectPrism(const std::vector<POINT_TYPE>& pts)
+	{
+		if (pts.size() != 8)
+			return -1;
+
+		// add bottom and top
+		addQuad(pts[0], pts[3], pts[2], pts[1]);
+		addQuad(pts[4], pts[5], pts[6], pts[7]);
+
+		// add left and right
+		addQuad(pts[0], pts[4], pts[7], pts[3]);
+		addQuad(pts[1], pts[2], pts[6], pts[5]);
+
+		// add front and back
+		addQuad(pts[0], pts[1], pts[5], pts[4]);
+		addQuad(pts[2], pts[3], pts[7], pts[6]);
+
+		return _tris.size();
 	}
 
 	inline long CMesh::getId() const
