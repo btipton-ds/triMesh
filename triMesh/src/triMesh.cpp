@@ -233,7 +233,7 @@ namespace TriMesh {
 		return numLaminarEdges() == 0;
 	}
 
-	size_t CMesh::biDirRayCast(const Ray& ray, std::vector<RayHit>& hits) const {
+	size_t CMesh::rayCast(const Ray& ray, std::vector<RayHit>& hits, bool biDir) const {
 		buildNormals();
 		vector<size_t> hitIndices;
 		if (_triTree.biDirRayCast(ray, hitIndices) > 0) {
@@ -247,9 +247,11 @@ namespace TriMesh {
 
 				RayHit hit;
 				if (intersectRayTri(ray, pts, hit)) {
-					hit.triIdx = triIdx2;
-					hit.normal = _normals[hit.triIdx];
-					hits.push_back(hit);
+					if (biDir || hit.dist > 0) {
+						hit.triIdx = triIdx2;
+						hit.normal = _normals[hit.triIdx];
+						hits.push_back(hit);
+					}
 				}
 			}
 		}
@@ -257,7 +259,8 @@ namespace TriMesh {
 		return hits.size();
 	}
 
-	size_t CMesh::biDirRayCast(const LineSegment& seg, std::vector<RayHit>& hits) const {
+	size_t CMesh::rayCast(const LineSegment& seg, std::vector<RayHit>& hits) const {
+		auto segLen = seg.calLength();
 		vector<size_t> hitIndices;
 		if (_triTree.biDirRayCast(seg.getRay(), hitIndices) > 0) {
 			for (size_t triIdx2 : hitIndices) {
@@ -270,8 +273,10 @@ namespace TriMesh {
 
 				RayHit hit;
 				if (intersectLineSegTri(seg, pts, hit)) {
-					hit.triIdx = triIdx2;
-					hits.push_back(hit);
+					if ((hit.dist > 0) && (hit.dist <= segLen)) {
+						hit.triIdx = triIdx2;
+						hits.push_back(hit);
+					}
 				}
 			}
 		}
@@ -279,13 +284,13 @@ namespace TriMesh {
 		return hits.size();
 	}
 
-	size_t CMesh::biDirRayCast(size_t triIdx, std::vector<RayHit>& hits) const {
+	size_t CMesh::rayCast(size_t triIdx, std::vector<RayHit>& hits, bool biDir) const {
 		Vector3d ctr = triCentroid(triIdx);
 		Vector3d norm = triUnitNormal(triIdx);
 		Ray ray(ctr, norm);
 
 		vector<RayHit> temp;
-		biDirRayCast(ray, temp);
+		rayCast(ray, temp);
 
 		for (const auto& hit : temp) {
 			if (hit.triIdx != triIdx)
@@ -301,7 +306,7 @@ namespace TriMesh {
 
 	double CMesh::findTriMinimumGap(size_t i) const {
 		vector<RayHit> hits;
-		if (biDirRayCast(i, hits) == 0)
+		if (rayCast(i, hits) == 0)
 			return FLT_MAX;
 		else
 			return fabs(hits[0].dist);
@@ -317,7 +322,7 @@ namespace TriMesh {
 			size_t num = numTris();
 			for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads) {
 				vector<RayHit> hits;
-				if (biDirRayCast(triIdx, hits) > 0) {
+				if (rayCast(triIdx, hits) > 0) {
 					double d = fabs(hits[0].dist);
 					if (d > tol && d < minGap)
 						minGap = d;
@@ -352,7 +357,7 @@ namespace TriMesh {
 			size_t num = numTris();
 			for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads) {
 				vector<RayHit> hits;
-				if (biDirRayCast(triIdx, hits) != 0) {
+				if (rayCast(triIdx, hits) != 0) {
 					for (const RayHit& hit : hits) {
 						if (hit.dist < 0)
 							continue;
