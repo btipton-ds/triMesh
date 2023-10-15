@@ -51,6 +51,9 @@ namespace TriMesh {
 		T& _variable;
 	};
 
+	class CMesh;
+	using CMeshPtr = std::shared_ptr<CMesh>;
+
 	class CMesh {
 	public:
 		using BoundingBox = CBoundingBox3Dd;
@@ -119,6 +122,9 @@ namespace TriMesh {
 		Vector3d triCentroid(size_t triIdx) const;
 		Vector3d triUnitNormal(size_t triIdx) const;
 
+		void merge(const CMeshPtr& src);
+		void merge(const std::vector<CMeshPtr>& src);
+
 		void buildCentroids(bool multiCore = true) const;
 		void buildNormals(bool multiCore = true) const;
 
@@ -184,7 +190,7 @@ namespace TriMesh {
 		BoundingBox box(pt);
 		box.grow(SAME_DIST_TOL);
 		if (!box.intersects(BoundingBox(pt))) {
-			std::cout << "Error\n";
+			std::cout << "CMesh::addVertex box intersects: Error\n";
 		}
 		auto results = _vertTree.find(box);
 		for (const auto& index : results) {
@@ -204,7 +210,7 @@ namespace TriMesh {
 				numFound++;
 		}
 		if (numFound != 1) {
-			std::cout << "Error\n";
+			std::cout << "CMesh::addVertex numFound: Error. numFound: " << numFound << "\n";
 			testResults = _vertTree.find(BoundingBox(pt));
 		}
 		return result;

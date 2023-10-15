@@ -373,6 +373,60 @@ namespace TriMesh {
 		}
 	}
 
+	void CMesh::merge(const CMeshPtr& src)
+	{
+		auto bbox = _triTree.getBounds();
+		bbox.merge(src->getBBox());
+
+		CMeshPtr temp = make_shared<CMesh>(*this);
+		reset(bbox);
+
+		for (const auto& tri : temp->_tris) {
+			CVertex pts[3];
+			for (int i = 0; i < 3; i++) {
+				pts[i] = temp->getVert(tri[i]);
+			}
+			addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
+		}
+
+		for (const auto& tri : src->_tris) {
+			CVertex pts[3];
+			for (int i = 0; i < 3; i++) {
+				pts[i] = src->getVert(tri[i]);
+			}
+			addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
+		}
+	}
+
+	void CMesh::merge(const std::vector<CMeshPtr>& src)
+	{
+		auto bbox = _triTree.getBounds();
+		for (const auto& pMesh : src) {
+			bbox.merge(pMesh->getBBox());
+		}
+
+		CMeshPtr temp = make_shared<CMesh>(*this);
+		reset(bbox);
+
+		for (const auto& tri : temp->_tris) {
+			CVertex pts[3];
+			for (int i = 0; i < 3; i++) {
+				pts[i] = temp->getVert(tri[i]);
+			}
+			addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
+		}
+
+		for (const auto& pMesh : src) {
+			for (const auto& tri : pMesh->_tris) {
+				CVertex pts[3];
+				for (int i = 0; i < 3; i++) {
+					pts[i] = pMesh->getVert(tri[i]);
+				}
+				addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
+			}
+		}
+	}
+
 	void CMesh::buildCentroids(bool multiCore) const
 	{
 		if (_centroids.empty()) {
@@ -435,7 +489,7 @@ namespace TriMesh {
 
 		Vector3d v0 = pt1 - pt0;
 		Vector3d v1 = pt2 - pt0;
-		Vector3d normal = v0.cross(v1).normalized();
+		Vector3d normal = v1.cross(v0).normalized();
 		return normal;
 	}
 
