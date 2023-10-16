@@ -35,16 +35,30 @@ This file is part of the TriMesh library.
 
 namespace TriMesh {
 
-	using namespace std;
+using namespace std;
 
-	void CVertex::save(ostream& out) const {
-		out << fixed << setprecision(filePrecision) << "v " << _pt[0] << " " << _pt[1] << " " << _pt[2] << "\n";
-	}
+void CVertex::save(ostream& out) const {
+	out << fixed << setprecision(filePrecision) << "v " << _pt[0] << " " << _pt[1] << " " << _pt[2] << "\n";
+}
 
-	bool CVertex::read(istream& in) {
-		string str;
-		in >> str >> _pt[0] >> _pt[1] >> _pt[2];
-		return (str == "v");
-	}
+bool CVertex::read(istream& in) {
+	string str;
+	in >> str >> _pt[0] >> _pt[1] >> _pt[2];
+	return (str == "v");
+}
+
+void CVertex::addEdgeIndex(size_t index)
+{
+	auto curIdx = find(_edgeIndices.begin(), _edgeIndices.end(), index);
+	if (curIdx == _edgeIndices.end())
+		_edgeIndices.push_back(index);
+}
+
+void CVertex::addFaceIndex(size_t index)
+{
+	auto curIdx = find(_faceIndices.begin(), _faceIndices.end(), index);
+	if (curIdx == _faceIndices.end())
+		_faceIndices.push_back(index);
+}
 
 }

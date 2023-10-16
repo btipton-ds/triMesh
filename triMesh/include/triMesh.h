@@ -99,6 +99,9 @@ namespace TriMesh {
 		LineSegment getEdgesLineSeg(size_t edgeIdx) const;
 		bool isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const;
 
+		size_t collectSharpEdges(std::vector<size_t>& sharps, double sinEdgeAngle);
+		size_t connectEdges(const std::vector<size_t>& edgeIndices, std::vector<std::vector<size_t>>& connectedEdges);
+
 		size_t numVertices() const;
 		size_t numEdges() const;
 		size_t numTris() const;

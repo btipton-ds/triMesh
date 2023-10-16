@@ -162,6 +162,9 @@ namespace TriMesh {
 		auto& vert0 = _vertices[vertIdx0];
 		auto& vert1 = _vertices[vertIdx1];
 
+		vert0.addEdgeIndex(result);
+		vert1.addEdgeIndex(result);
+
 		BoundingBox edgeBox;
 		edgeBox.merge(vert0._pt);
 		edgeBox.merge(vert1._pt);
@@ -178,6 +181,9 @@ namespace TriMesh {
 			int j = (i + 1) % 3;
 			size_t edgeIdx = addEdge(tri[i], tri[j]);
 
+			auto& vert = _vertices[tri[i]];
+			vert.addFaceIndex(triIdx);
+
 			_edges[edgeIdx].addFace(triIdx);
 			triBox.merge(_vertices[tri[i]]._pt);
 		}
@@ -188,6 +194,8 @@ namespace TriMesh {
 	}
 
 	LineSegment CMesh::getEdgesLineSeg(size_t edgeIdx) const {
+
+		/*TODO, not finished, may not be needed*/
 		const CEdge& edge = _edges[edgeIdx];
 		size_t idx0 = edge._vertIndex[0];
 		size_t idx1 = edge._vertIndex[1];
@@ -206,6 +214,64 @@ namespace TriMesh {
 		Vector3d cp = norm0.cross(norm1);
 		double edgeCross = cp.dot(edgeV);
 		return fabs(edgeCross) > sinEdgeAngle;
+	}
+
+	size_t CMesh::collectSharpEdges(vector<size_t>& sharps, double sinEdgeAngle)
+	{
+		sharps.clear();
+		for (size_t i = 0; i < _edges.size(); i++) {
+			if (isEdgeSharp(i, sinEdgeAngle)) {
+				sharps.push_back(i);
+			}
+		}
+
+		return sharps.size();
+	}
+
+	size_t CMesh::connectEdges(const vector<size_t>& edgeIndices, vector<vector<size_t>>& connectedEdges)
+	{
+		map<size_t, vector<size_t>> vertToEdgeMap;
+		for (size_t i = 0; i < edgeIndices.size(); i++) {
+			const auto& edge = _edges[i];
+			for (int i = 0; i < 2; i++) {
+				size_t vertIdx = edge._vertIndex[i];
+				if (vertIdx != -1) {
+					auto iter = vertToEdgeMap.find(vertIdx);
+					if (iter == vertToEdgeMap.end())
+						iter = vertToEdgeMap.insert(make_pair(vertIdx, vector<size_t>())).first;
+					iter->second.push_back(i);
+				}
+			}
+		}
+
+		vector<size_t> edgeList;
+		while (!vertToEdgeMap.empty()) {
+			if (edgeList.empty()) {
+				auto iter = vertToEdgeMap.begin();
+				vector<size_t>& edgeIndices = iter->second;
+				if (!edgeIndices.empty()) {
+					edgeList.push_back(edgeIndices.back());
+					edgeIndices.pop_back();
+					if (edgeIndices.empty())
+						vertToEdgeMap.erase(iter);
+				}
+			} else {
+				size_t edgeIdx = edgeList.back();
+				for (int i = 0; i < 2; i++) {
+					size_t vertIdx0 = _edges[edgeIdx]._vertIndex[i];
+					auto iter = vertToEdgeMap.find(_edges[edgeIdx]._vertIndex[i]);
+					if (iter != vertToEdgeMap.end()) {
+						const auto& edgeVerts = iter->second;
+						if (_edges[edgeIdx]._vertIndex[0]) {
+
+						}
+						break;
+					}
+				}
+			}
+		}
+
+		return connectedEdges.size();
 	}
 
 	size_t CMesh::numVertices() const {

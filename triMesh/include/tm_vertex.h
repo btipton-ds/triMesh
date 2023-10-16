@@ -38,22 +38,31 @@ This file is part of the TriMesh library.
 
 namespace TriMesh {
 
-	struct CVertex {
-		CVertex() {
-		}
+struct CVertex {
+	CVertex();
+	CVertex(const CVertex& src) = default;
+	CVertex(const Vector3d& pt);
+	void save(std::ostream& out) const;
+	bool read(std::istream& in);
 
-		void save(std::ostream& out) const;
-		bool read(std::istream& in);
+	void addEdgeIndex(size_t index);
+	void addFaceIndex(size_t index);
 
-		CVertex(const Vector3d& pt)
-		: _pt(pt) {
-		}
+	void dump(std::ostream& out) const;
 
-		void dump(std::ostream& out) const {
-			out << std::setprecision(4) << std::fixed << "vert { pt:(" << _pt[0] << ", " << _pt[1] << ", " << _pt[2] << ")}\n";
-		}
+	Vector3d _pt;
+	std::vector<size_t> _faceIndices, _edgeIndices;
+};
 
-		Vector3d _pt;
-	};
+inline CVertex::CVertex() {
+}
+
+inline CVertex::CVertex(const Vector3d& pt)
+	: _pt(pt) {
+}
+
+inline void CVertex::dump(std::ostream& out) const {
+	out << std::setprecision(4) << std::fixed << "vert { pt:(" << _pt[0] << ", " << _pt[1] << ", " << _pt[2] << ")}\n";
+}
 
 }
