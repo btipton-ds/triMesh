@@ -54,6 +54,9 @@ private:
 	};
 
 public:
+	enum class BoxTestType {
+		Contains, Intersects
+	};
 	CSpatialSearchBase(const BOX_TYPE& bbox = BOX_TYPE(), int axis = 0);
 
 	void reset(const BOX_TYPE& bbox);
@@ -61,9 +64,9 @@ public:
 	size_t numInTree() const;
 	const BOX_TYPE& getBounds() const;
 
-	std::vector<INDEX_TYPE> find(const BOX_TYPE& bbox, bool contains = false) const;
+	std::vector<INDEX_TYPE> find(const BOX_TYPE& bbox, BoxTestType contains = BoxTestType::Intersects) const;
 
-	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, bool contains = false) const;
+	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::Intersects) const;
 	size_t biDirRayCast(const Ray& ray, std::vector<INDEX_TYPE>& hits) const;
 
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);

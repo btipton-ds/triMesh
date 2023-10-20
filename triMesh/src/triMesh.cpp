@@ -411,7 +411,7 @@ namespace TriMesh {
 		}
 	}
 
-	void CMesh::merge(const CMeshPtr& src)
+	void CMesh::merge(CMeshPtr& src, bool destructive)
 	{
 		auto bbox = _triTree.getBounds();
 		bbox.merge(src->getBBox());
@@ -434,9 +434,10 @@ namespace TriMesh {
 			}
 			addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
 		}
+		src = nullptr;
 	}
 
-	void CMesh::merge(const std::vector<CMeshPtr>& src)
+	void CMesh::merge(std::vector<CMeshPtr>& src, bool destructive)
 	{
 		auto bbox = _triTree.getBounds();
 		for (const auto& pMesh : src) {
@@ -454,7 +455,7 @@ namespace TriMesh {
 			addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
 		}
 
-		for (const auto& pMesh : src) {
+		for (auto& pMesh : src) {
 			for (const auto& tri : pMesh->_tris) {
 				CVertex pts[3];
 				for (int i = 0; i < 3; i++) {
@@ -462,6 +463,7 @@ namespace TriMesh {
 				}
 				addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
 			}
+			pMesh = nullptr;
 		}
 	}
 
@@ -491,16 +493,16 @@ namespace TriMesh {
 		}		
 	}
 
-	size_t CMesh::findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices) const {
-		return _vertTree.find(bbox, vertIndices);
+	size_t CMesh::findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains) const {
+		return _vertTree.find(bbox, vertIndices, contains);
 	}
 
-	size_t CMesh::findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices) const {
-		return _edgeTree.find(bbox, edgeIndices);
+	size_t CMesh::findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains) const {
+		return _edgeTree.find(bbox, edgeIndices, contains);
 	}
 
-	size_t CMesh::findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices) const {
-		return _triTree.find(bbox, triIndices);
+	size_t CMesh::findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains) const {
+		return _triTree.find(bbox, triIndices, contains);
 	}
 
 	Vector3d CMesh::triCentroid(size_t triIdx) const {
@@ -527,7 +529,7 @@ namespace TriMesh {
 
 		Vector3d v0 = pt1 - pt0;
 		Vector3d v1 = pt2 - pt0;
-		Vector3d normal = v1.cross(v0).normalized();
+		Vector3d normal = v0.cross(v1).normalized();
 		return normal;
 	}
 

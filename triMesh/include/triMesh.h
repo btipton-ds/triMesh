@@ -58,6 +58,7 @@ namespace TriMesh {
 	public:
 		using BoundingBox = CBoundingBox3Dd;
 		using SearchTree = CSpatialSearchST<BoundingBox>;
+		using BoxTestType = SearchTree::BoxTestType;
 
 		CMesh();
 		CMesh(const Vector3d& min, const Vector3d& max);
@@ -117,15 +118,15 @@ namespace TriMesh {
 		size_t rayCast(const Ray& ray, std::vector<RayHit>& hits, bool biDir = true) const;
 		size_t rayCast(const LineSegment& seg, std::vector<RayHit>& hits) const;
 
-		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices) const;
-		size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices) const;
-		size_t findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices) const;
+		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
 
 		Vector3d triCentroid(size_t triIdx) const;
 		Vector3d triUnitNormal(size_t triIdx) const;
 
-		void merge(const CMeshPtr& src);
-		void merge(const std::vector<CMeshPtr>& src);
+		void merge(CMeshPtr& src, bool destructive);
+		void merge(std::vector<CMeshPtr>& src, bool destructive);
 
 		void buildCentroids(bool multiCore = true) const;
 		void buildNormals(bool multiCore = true) const;

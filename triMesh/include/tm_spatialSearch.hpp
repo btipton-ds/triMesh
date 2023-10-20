@@ -57,18 +57,18 @@ void CSSB_DCL::clear() {
 }
 
 CSSB_TMPL
-std::vector<INDEX_TYPE> CSSB_DCL::find(const BOX_TYPE& bbox, bool contains) const {
+std::vector<INDEX_TYPE> CSSB_DCL::find(const BOX_TYPE& bbox, BoxTestType contains) const {
 	std::vector<INDEX_TYPE> result;
 	find(bbox, result, contains);
 	return result;
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, bool contains) const {
-	if (contains ? _bbox.contains(bbox) : _bbox.intersects(bbox)) {
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains) const {
+	if (contains == BoxTestType::Contains ? _bbox.contains(bbox) : _bbox.intersects(bbox)) {
 		for (const auto& entry : _contents) {
 			const auto& bb = entry._bbox;
-			if (contains ? bb.contains(bbox) : bb.intersects(bbox)) {
+			if (contains == BoxTestType::Contains ? bb.contains(bbox) : bb.intersects(bbox)) {
 				result.push_back(entry._index);
 			}
 		}
