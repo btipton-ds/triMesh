@@ -282,7 +282,6 @@ namespace TriMesh {
 				if (intersectRayTri(ray, pts, hit)) {
 					if (biDir || hit.dist > 0) {
 						hit.triIdx = triIdx2;
-						hit.normal = _normals[hit.triIdx];
 						hits.push_back(hit);
 					}
 				}
