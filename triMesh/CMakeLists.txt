@@ -35,13 +35,27 @@ set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/${CMAKE_BUILD_TYPE}
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/${CMAKE_BUILD_TYPE}")
 
 add_library (
-triMesh 
-"src/tm_math.cpp" 
-"src/tm_polyLine.cpp" 
-"src/triMesh.cpp" 
-"src/tm_vertex.cpp" 
-"src/tm_vector3.cpp"
+    triMesh 
+    "src/tm_math.cpp" 
+    "src/tm_polyLine.cpp" 
+    "src/triMesh.cpp" 
+    "src/tm_vertex.cpp" 
+    "src/tm_vector3.cpp"
+    "src/tm_fixedMath.cpp"
 )
+
+add_executable (
+    testTriMesh 
+    "src/mainTest.cpp" 
+    "src/tm_math.cpp" 
+    "src/tm_polyLine.cpp" 
+    "src/triMesh.cpp" 
+    "src/tm_vertex.cpp" 
+    "src/tm_vector3.cpp"
+    "include/tm_fixedMath.h"
+    "src/tm_fixedMath.cpp"
+)
+
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}
