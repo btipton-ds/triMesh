@@ -106,6 +106,7 @@ using CSpatialSearch = CSpatialSearchBase<BOX_TYPE, INDEX_TYPE, 25>;
 template <typename BOX_TYPE>
 using CSpatialSearchST = CSpatialSearch<BOX_TYPE, size_t>;
 
-using CSpatialSearchSTd = CSpatialSearchST<CBoundingBox3D<Vector3d>>;
+using CSpatialSearchSTd = CSpatialSearchST<CBoundingBox3D<double>>;
+using CSpatialSearchSTf = CSpatialSearchST<CBoundingBox3D<float>>;
 
 #include <tm_spatialSearch.hpp>
