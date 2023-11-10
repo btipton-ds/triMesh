@@ -64,7 +64,7 @@ namespace TriMesh {
 		_triTree.reset(bb);
 	}
 
-	void CMesh::dumpTris(const std::wstring& filename) const
+	void CMesh::dumpTris(const wstring& filename) const
 	{
 		wofstream out(filename);
 		out << setprecision(15);
@@ -85,7 +85,7 @@ namespace TriMesh {
 		}
 	}
 
-	bool CMesh::compareDumpedTris(const std::wstring& filename) const
+	bool CMesh::compareDumpedTris(const wstring& filename) const
 	{
 		wifstream in(filename);
 		size_t nVerts, nTris, nEdges;
@@ -137,7 +137,7 @@ namespace TriMesh {
 		return true;
 	}
 
-	void CMesh::dumpTree(const std::wstring& filename) const
+	void CMesh::dumpTree(const wstring& filename) const
 	{
 		wofstream out(filename);
 		out << setprecision(15);
@@ -145,7 +145,7 @@ namespace TriMesh {
 
 	}
 
-	bool CMesh::compareDumpedTree(const std::wstring& filename) const
+	bool CMesh::compareDumpedTree(const wstring& filename) const
 	{
 		return true;
 	}
@@ -220,7 +220,7 @@ namespace TriMesh {
 		return isSharp;
 	}
 
-	const std::vector<size_t>& CMesh::getSharpEdgeIndices(double edgeAngleRadians)
+	const vector<size_t>& CMesh::getSharpEdgeIndices(double edgeAngleRadians)
 	{
 		if (edgeAngleRadians < 1.0e-6) {
 			return _sharpEdgeIndices;
@@ -266,7 +266,7 @@ namespace TriMesh {
 		return numLaminarEdges() == 0;
 	}
 
-	size_t CMesh::rayCast(const Ray& ray, std::vector<RayHit>& hits, bool biDir) const {
+	size_t CMesh::rayCast(const Ray& ray, vector<RayHit>& hits, bool biDir) const {
 		buildNormals();
 		vector<size_t> hitIndices;
 		if (_triTree.biDirRayCast(ray, hitIndices) > 0) {
@@ -291,7 +291,7 @@ namespace TriMesh {
 		return hits.size();
 	}
 
-	size_t CMesh::rayCast(const LineSegment& seg, std::vector<RayHit>& hits) const {
+	size_t CMesh::rayCast(const LineSegment& seg, vector<RayHit>& hits) const {
 		auto segLen = seg.calLength();
 		vector<size_t> hitIndices;
 		if (_triTree.biDirRayCast(seg.getRay(), hitIndices) > 0) {
@@ -316,7 +316,7 @@ namespace TriMesh {
 		return hits.size();
 	}
 
-	size_t CMesh::rayCast(size_t triIdx, std::vector<RayHit>& hits, bool biDir) const {
+	size_t CMesh::rayCast(size_t triIdx, vector<RayHit>& hits, bool biDir) const {
 		Vector3d ctr = triCentroid(triIdx);
 		Vector3d norm = triUnitNormal(triIdx);
 		Ray ray(ctr, norm);
@@ -372,13 +372,13 @@ namespace TriMesh {
 		return minGap;
 	}
 
-	void CMesh::getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins, bool multiCore) const {
+	void CMesh::getGapHistogram(const vector<double>& binSizes, vector<size_t>& bins, bool multiCore) const {
 		buildCentroids(multiCore);
 		buildNormals(multiCore);
 
 		bins.clear();
 		bins.resize(binSizes.size(), 0);
-		vector<std::vector<int>> binSet;
+		vector<vector<int>> binSet;
 		binSet.resize(MultiCore::getNumCores());
 		for (auto& bin : binSet) {
 			bin.resize(binSizes.size(), 0);
@@ -412,32 +412,76 @@ namespace TriMesh {
 
 	void CMesh::merge(CMeshPtr& src, bool destructive)
 	{
-		auto bbox = _triTree.getBounds();
-		bbox.merge(src->getBBox());
-
-		CMeshPtr temp = make_shared<CMesh>(*this);
-		reset(bbox);
-
-		for (const auto& tri : temp->_tris) {
-			CVertex pts[3];
-			for (int i = 0; i < 3; i++) {
-				pts[i] = temp->getVert(tri[i]);
+		if (getBBox().contains(src->getBBox())) {
+			for (const auto& tri : src->_tris) {
+				CVertex pts[3];
+				for (int i = 0; i < 3; i++) {
+					pts[i] = src->getVert(tri[i]);
+				}
+				addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
 			}
-			addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
-		}
+		} else {
+			auto bbox = _triTree.getBounds();
+				bbox.merge(src->getBBox());
 
-		for (const auto& tri : src->_tris) {
-			CVertex pts[3];
-			for (int i = 0; i < 3; i++) {
-				pts[i] = src->getVert(tri[i]);
+				CMeshPtr temp = make_shared<CMesh>(*this);
+				reset(bbox);
+
+				for (const auto& tri : temp->_tris) {
+					CVertex pts[3];
+					for (int i = 0; i < 3; i++) {
+						pts[i] = temp->getVert(tri[i]);
+					}
+					addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
+				}
+
+			for (const auto& tri : src->_tris) {
+				CVertex pts[3];
+				for (int i = 0; i < 3; i++) {
+					pts[i] = src->getVert(tri[i]);
+				}
+				addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
 			}
-			addTriangle(pts[0]._pt, pts[1]._pt, pts[2]._pt);
 		}
-		src = nullptr;
+		if (destructive)
+			src = nullptr;
 	}
 
-	void CMesh::merge(std::vector<CMeshPtr>& src, bool destructive)
+	void CMesh::merge(vector<CMeshPtr>& src, bool destructive, bool multiCore)
 	{
+#if 1
+		while (src.size() > 1) {
+			cout << "Num meshes 0: " << src.size() << "\n";
+			MultiCore::runLambda([this, &src, destructive](size_t threadNum, size_t numThreads) {
+				for (size_t i = threadNum; i < src.size(); i += numThreads) {
+					if (i % 2 == 0) {
+						size_t j = i + 1;
+						if (j < src.size() && src[j]) {
+							auto pSrc = src[j];
+							assert(src[i]->getBBox().contains(pSrc->getBBox()));
+							src[j] = nullptr;
+
+							src[i]->merge(pSrc, destructive);
+						}
+					}
+				}
+			}, multiCore);
+
+			for (size_t i = 2; i < src.size(); i += 2) {
+				src[i / 2] = src[i];
+				src[i] = nullptr;
+			}
+
+			while (!src.back()) {
+				src.pop_back();
+			}
+
+			cout << "Num meshes 1: " << src.size() << "\n";
+		}
+
+		merge(src.back(), destructive);
+
+#else
 		auto bbox = _triTree.getBounds();
 		for (const auto& pMesh : src) {
 			bbox.merge(pMesh->getBBox());
@@ -464,6 +508,7 @@ namespace TriMesh {
 			}
 			pMesh = nullptr;
 		}
+#endif
 	}
 
 	void CMesh::buildCentroids(bool multiCore) const
@@ -492,15 +537,15 @@ namespace TriMesh {
 		}		
 	}
 
-	size_t CMesh::findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains) const {
+	size_t CMesh::findVerts(const BoundingBox& bbox, vector<size_t>& vertIndices, BoxTestType contains) const {
 		return _vertTree.find(bbox, vertIndices, contains);
 	}
 
-	size_t CMesh::findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains) const {
+	size_t CMesh::findEdges(const BoundingBox& bbox, vector<size_t>& edgeIndices, BoxTestType contains) const {
 		return _edgeTree.find(bbox, edgeIndices, contains);
 	}
 
-	size_t CMesh::findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains) const {
+	size_t CMesh::findTris(const BoundingBox& bbox, vector<size_t>& triIndices, BoxTestType contains) const {
 		return _triTree.find(bbox, triIndices, contains);
 	}
 
@@ -576,7 +621,7 @@ namespace TriMesh {
 		return result;
 	}
 
-	const std::vector<float>& CMesh::getGlPoints()
+	const vector<float>& CMesh::getGlPoints()
 	{
 		if (_glPoints.size() != 3 * 3 * _tris.size()) {
 			_glPoints.resize(3 * 3 * _tris.size());
@@ -594,7 +639,7 @@ namespace TriMesh {
 		return _glPoints;
 	}
 
-	const std::vector<float>& CMesh::getGlNormals(bool smoothed)
+	const vector<float>& CMesh::getGlNormals(bool smoothed)
 	{
 		buildNormals();
 		if (_glNormals.size() != 3 * 3 * _tris.size()) { // _vertices is a 3 vector, _glNormals is floats
@@ -612,7 +657,7 @@ namespace TriMesh {
 		return _glNormals;
 	}
 
-	const std::vector<float>& CMesh::getGlParams()
+	const vector<float>& CMesh::getGlParams()
 	{
 		if (_glParams.size() != 3 * 2 * _tris.size()) {
 			_glParams.resize(3 * 2 * _tris.size(), 0);
@@ -620,7 +665,7 @@ namespace TriMesh {
 		return _glParams;
 	}
 
-	const std::vector<unsigned int>& CMesh::getGlFaceIndices()
+	const vector<unsigned int>& CMesh::getGlFaceIndices()
 	{
 		if (_glPoints.empty())
 			getGlPoints();
@@ -634,7 +679,7 @@ namespace TriMesh {
 		return _glTriIndices;
 	}
 
-	const std::vector<unsigned int>& CMesh::getGlEdgeIndices()
+	const vector<unsigned int>& CMesh::getGlEdgeIndices()
 	{
 		if (_glEdgeIndices.size() != 3 * 3 * _tris.size()) { // _vertices is a 3 vector, _glNormals is floats
 			_glEdgeIndices.resize(3 * 3 * _edges.size());
@@ -650,7 +695,7 @@ namespace TriMesh {
 		return _glEdgeIndices;
 	}
 
-	void CMesh::dumpObj(std::ostream& out) const {
+	void CMesh::dumpObj(ostream& out) const {
 		out << "Vertices\n";
 		for (const auto& vert : _vertices) {
 			const auto& p = vert._pt;
@@ -663,7 +708,7 @@ namespace TriMesh {
 		}
 	}
 
-	void CMesh::dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const {
+	void CMesh::dumpModelSharpEdgesObj(ostream& out, double sinAngle) const {
 		out << "Vertices\n";
 		for (const auto& vert : _vertices) {
 			const auto& p = vert._pt;

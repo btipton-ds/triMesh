@@ -126,7 +126,7 @@ namespace TriMesh {
 		Vector3d triUnitNormal(size_t triIdx) const;
 
 		void merge(CMeshPtr& src, bool destructive);
-		void merge(std::vector<CMeshPtr>& src, bool destructive);
+		void merge(std::vector<CMeshPtr>& src, bool destructive, bool multiCore = true);
 
 		void buildCentroids(bool multiCore = true) const;
 		void buildNormals(bool multiCore = true) const;
