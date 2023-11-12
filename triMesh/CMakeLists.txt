@@ -60,3 +60,8 @@ add_executable (
 link_directories(
 ../${CMAKE_BUILD_TYPE}
 )
+
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET triMesh PROPERTY CXX_STANDARD 20)
+  set_property(TARGET testTriMesh PROPERTY CXX_STANDARD 20)
+endif()

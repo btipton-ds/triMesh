@@ -33,6 +33,7 @@ This file is part of the TriMesh library.
 #include <map>
 #include <vector>
 #include <iostream>
+#include <mutex>
 
 #include <tm_math.h>
 #include <tm_spatialSearch.h>
@@ -61,6 +62,7 @@ namespace TriMesh {
 		using BoxTestType = SearchTree::BoxTestType;
 
 		CMesh();
+		CMesh(const CMesh& src);
 		CMesh(const Vector3d& min, const Vector3d& max);
 		void reset(const BoundingBox& bbox);
 
@@ -75,7 +77,7 @@ namespace TriMesh {
 		void dumpTree(const std::wstring& filename) const;
 		bool compareDumpedTree(const std::wstring& filename) const;
 
-		size_t addEdge(size_t vertIdx0, size_t vertIdx1);
+		size_t addEdge(size_t vertIdx0, size_t vertIdx1, size_t faceIdx);
 		size_t addTriangle(const Vector3i& tri);
 
 		template<class POINT_TYPE>
@@ -146,6 +148,8 @@ namespace TriMesh {
 		void changed();
 		double findTriMinimumGap(size_t i) const;
 
+		mutable std::mutex _triMutex, _edgeMutex, _vertMutex;
+
 		const long _id;
 		mutable int _changeNumber;
 		std::vector<CVertex> _vertices;
@@ -197,15 +201,22 @@ namespace TriMesh {
 			std::cout << "CMesh::addVertex box intersects: Error\n";
 		}
 		auto results = _vertTree.find(box);
-		for (const auto& index : results) {
-			if ((_vertices[index]._pt - ptUnk).norm() < SAME_DIST_TOL) {
-				return index;
-			}
-		}
-		size_t result = _vertices.size();
-		_vertices.push_back(CVertex(ptUnk));
-		_vertTree.add(box, result);
 
+		size_t result = -1;
+		{
+			std::lock_guard<std::mutex> lock(_vertMutex);
+			for (const auto& index : results) {
+				if ((_vertices[index]._pt - ptUnk).norm() < SAME_DIST_TOL) {
+					return index;
+				}
+			}
+
+			result = _vertices.size();
+			_vertices.push_back(CVertex(ptUnk));
+			_vertTree.add(box, result);
+		}
+
+#if 1 && defined(_DEBUG)
 		// Testing
 		auto testResults = _vertTree.find(BoundingBox(pt));
 		int numFound = 0;
@@ -217,6 +228,7 @@ namespace TriMesh {
 			std::cout << "CMesh::addVertex numFound: Error. numFound: " << numFound << "\n";
 			testResults = _vertTree.find(BoundingBox(pt));
 		}
+#endif
 		return result;
 	}
 

@@ -32,6 +32,7 @@ This file is part of the TriMesh library.
 #include <tm_defines.h>
 #include <vector>
 #include <memory>
+#include <mutex>
 
 #include <tm_math.h>
 #include <tm_boundingBox.h>
@@ -58,6 +59,7 @@ public:
 		Contains, Intersects
 	};
 	CSpatialSearchBase(const BOX_TYPE& bbox = BOX_TYPE(), int axis = 0);
+	CSpatialSearchBase(const CSpatialSearchBase& src);
 
 	void reset(const BOX_TYPE& bbox);
 	void clear();
@@ -82,6 +84,7 @@ private:
 	bool add(const Entry& newEntry, int depth);
 	void split(int depth);
 
+	mutable std::mutex _mutex;
 
 	size_t _numInTree = 0;
 	BOX_TYPE _bbox;

@@ -43,6 +43,20 @@ CSSB_DCL::CSpatialSearchBase(const BOX_TYPE& bbox, int axis)
 }
 
 CSSB_TMPL
+CSSB_DCL::CSpatialSearchBase(const CSpatialSearchBase& src)
+	: _numInTree(src._numInTree)
+	, _bbox(src._bbox)
+	, _axis(src._axis)
+	, _contents(src._contents)
+{
+	if (src._left)
+		_left = make_shared< CSpatialSearchBase>(*src._left);
+	if (src._right)
+		_right = make_shared< CSpatialSearchBase>(*src._right);
+
+}
+
+CSSB_TMPL
 void CSSB_DCL::reset(const BOX_TYPE& bbox) {
 	clear();
 	_bbox = bbox;
@@ -65,17 +79,26 @@ std::vector<INDEX_TYPE> CSSB_DCL::find(const BOX_TYPE& bbox, BoxTestType contain
 
 CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains) const {
+
 	if (contains == BoxTestType::Contains ? _bbox.contains(bbox) : _bbox.intersects(bbox)) {
+		std::unique_lock<std::mutex> lock(_mutex);
 		for (const auto& entry : _contents) {
 			const auto& bb = entry._bbox;
 			if (contains == BoxTestType::Contains ? bb.contains(bbox) : bb.intersects(bbox)) {
 				result.push_back(entry._index);
 			}
 		}
-		if (_left)
+
+		if (_left) {
+			lock.unlock();
 			_left->find(bbox, result, contains);
-		if (_right)
+			lock.lock();
+		}
+		if (_right) {
+			lock.unlock();
 			_right->find(bbox, result, contains);
+			lock.lock();
+		}
 	}
 	return result.size();
 }
@@ -90,9 +113,16 @@ size_t CSSB_DCL::biDirRayCast(const Ray& ray, std::vector<INDEX_TYPE>& hits) con
 }
 
 CSSB_TMPL
+bool CSSB_DCL::add(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
+	return add(Entry(bbox, index), 0);
+}
+
+CSSB_TMPL
 bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 	if (!_bbox.contains(newEntry._bbox))
 		return false;
+
+	std::unique_lock<std::mutex> lock(_mutex);
 
 	for (const auto& curEntry : _contents) {
 		if (curEntry._index == newEntry._index && curEntry._bbox.contains(newEntry._bbox)) {
@@ -101,20 +131,32 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 		}
 	}
 
-	if (_left && _left->add(newEntry, depth + 1)) {
-		_numInTree++;
-		return true;
-	} if (_right && _right->add(newEntry, depth + 1)) {
-		_numInTree++;
-		return true;
+	if (_left) {
+		lock.unlock();
+		bool found = _left->add(newEntry, depth + 1);
+		lock.lock();
+
+		if (found) {
+			_numInTree++;
+			return true;
+		}
+	} if (_right) {
+		lock.unlock();
+		bool found = _right->add(newEntry, depth + 1);
+		lock.lock();
+		if (found) {
+			_numInTree++;
+			return true;
+		}
 	}
 
 	_contents.push_back(newEntry);
 	_numInTree++;
 
 	// Split node and add to correct node
-	if (!_left && _contents.size() > ENTRY_LIMIT)
-		split(depth);
+	lock.unlock();
+
+	split(depth);
 
 	return true;
 
@@ -123,6 +165,7 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 CSSB_TMPL
 bool CSSB_DCL::remove(const Entry& newEntry) {
 	if (_bbox.contains(newEntry._bbox)) {
+		std::unique_lock<std::mutex> lock(_mutex);
 		for (size_t idx = 0; idx < _contents.size(); idx++) {
 			const auto& curEntry = _contents[idx];
 			if (curEntry._index == newEntry._index && curEntry._bbox.contains(newEntry._bbox)) {
@@ -132,22 +175,25 @@ bool CSSB_DCL::remove(const Entry& newEntry) {
 			}
 		}
 
-		if (_left && _left->remove(newEntry)) {
-			// TODO prune dead branch
-			_numInTree--;
-			return true;
-		} if (_right && _right->remove(newEntry)) {
-			// TODO prune dead branch
-			_numInTree--;
-			return true;
+		if (_left) {
+			lock.unlock();
+			if (_left->remove(newEntry)) {
+				lock.lock();
+				// TODO prune dead branch
+				_numInTree--;
+				return true;
+			}
+		} if (_right) {
+			lock.unlock();
+			if (_right->remove(newEntry)) {
+				lock.lock();
+				// TODO prune dead branch
+				_numInTree--;
+				return true;
+			}
 		}
 	}
 	return false;
-}
-
-CSSB_TMPL
-bool CSSB_DCL::add(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
-	return add(Entry(bbox, index), 0);
 }
 
 CSSB_TMPL
@@ -198,6 +244,11 @@ void CSSB_DCL::dump(std::wostream& out, size_t depth) const
 
 CSSB_TMPL
 void CSSB_DCL::split(int depth) {
+	if (_contents.size() <= ENTRY_LIMIT)
+		return;
+
+	std::unique_lock<std::mutex> lock(_mutex);
+
 	BOX_TYPE leftBBox, rightBBox;
 	_bbox.split(_axis, leftBBox, rightBBox, 0.10);
 	int nextAxis = (_axis + 1) % 3;

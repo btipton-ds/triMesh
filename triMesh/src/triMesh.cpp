@@ -32,6 +32,7 @@ This file is part of the TriMesh library.
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
+#include <mutex>
 
 #include <triMesh.h>
 #include <MultiCoreUtil.h>
@@ -45,6 +46,20 @@ namespace TriMesh {
 	CMesh::CMesh() 
 		: _id(_statId++)
 		, _changeNumber(0)
+	{
+	}
+
+	CMesh::CMesh(const CMesh& src)
+		: _id(_statId++)
+		, _changeNumber(0)
+		, _vertices(src._vertices)
+		, _vertTree(src._vertTree)
+		, _edges(src._edges)
+		, _sharpEdgeIndices(src._sharpEdgeIndices)
+		, _edgeTree(src._edgeTree)
+		, _edgeToIdxMap(src._edgeToIdxMap)
+		, _tris(src._tris)
+		, _triTree(src._triTree)
 	{
 	}
 
@@ -78,9 +93,9 @@ namespace TriMesh {
 			out << tri[0] << " " << tri[1] << " " << tri[2] << "\n";
 		}
 		for (const auto& edge : _edges) {
-			out << edge._vertIndex[0] << " " << edge._vertIndex[1] << " " << edge._numFaces << " " << edge._faceIndex[0];
-			if (edge._numFaces == 2)
-				out << " " << edge._faceIndex[1];
+			out << edge._vertIndex[0] << " " << edge._vertIndex[1] << " " << edge._numTris << " " << edge._triIndex[0];
+			if (edge._numTris == 2)
+				out << " " << edge._triIndex[1];
 			out << "\n";
 		}
 	}
@@ -127,11 +142,11 @@ namespace TriMesh {
 			if (b != edge._vertIndex[1]) {
 				return false;
 			}
-			if (numFaces != edge._numFaces) {
+			if (numFaces != edge._numTris) {
 				return false;
 			}
 
-			if (numFaces == 2 && d != edge._faceIndex[1])
+			if (numFaces == 2 && d != edge._triIndex[1])
 				return false;
 		}
 		return true;
@@ -150,41 +165,56 @@ namespace TriMesh {
 		return true;
 	}
 
-	size_t CMesh::addEdge(size_t vertIdx0, size_t vertIdx1) {
-		CEdge edge(vertIdx0, vertIdx1);
-		auto iter = _edgeToIdxMap.find(edge);
-		if (iter != _edgeToIdxMap.end())
-			return iter->second;
-		size_t result = _edges.size();
-		_edges.push_back(edge);
-		_edgeToIdxMap.insert(make_pair(edge, result));
+	size_t CMesh::addEdge(size_t vertIdx0, size_t vertIdx1, size_t triIdx) {
+		CEdge edge(vertIdx0, vertIdx1, triIdx);
+		size_t result = -1;
+		{
+			lock_guard<mutex> lock(_edgeMutex);
 
-		auto& vert0 = _vertices[vertIdx0];
-		auto& vert1 = _vertices[vertIdx1];
-
-		vert0.addEdgeIndex(result);
-		vert1.addEdgeIndex(result);
+			auto iter = _edgeToIdxMap.find(edge);
+			if (iter != _edgeToIdxMap.end()) {
+				_edges[iter->second].addTri(triIdx);
+				return iter->second;
+			}
+			result = _edges.size();
+			_edges.push_back(edge);
+			_edgeToIdxMap.insert(make_pair(edge, result));
+		}
 
 		BoundingBox edgeBox;
-		edgeBox.merge(vert0._pt);
-		edgeBox.merge(vert1._pt);
+		{
+			lock_guard<mutex> lock(_vertMutex);
+			auto& vert0 = _vertices[vertIdx0];
+			auto& vert1 = _vertices[vertIdx1];
+			vert0.addEdgeIndex(result);
+			vert1.addEdgeIndex(result);
+			edgeBox.merge(vert0._pt);
+			edgeBox.merge(vert1._pt);
+		}
+
 		_edgeTree.add(edgeBox, result);
 
 		return result;
 	}
 
 	size_t CMesh::addTriangle(const Vector3i& tri) {
-		size_t triIdx = _tris.size();
-		_tris.push_back(tri);
+		size_t triIdx = -1;
+		{
+			lock_guard<mutex> lock(_triMutex);
+			triIdx = _tris.size();
+			_tris.push_back(tri);
+		}
 		BoundingBox triBox;
 		for (int i = 0; i < 3; i++) {
 			int j = (i + 1) % 3;
-			size_t edgeIdx = addEdge(tri[i], tri[j]);
+			size_t edgeIdx = addEdge(tri[i], tri[j], triIdx);
 
-			auto& vert = _vertices[tri[i]];
-			vert.addFaceIndex(triIdx);
+			{
+				lock_guard<mutex> lock(_vertMutex);
+				auto& vert = _vertices[tri[i]];
+				vert.addFaceIndex(triIdx);
+			}
 
-			_edges[edgeIdx].addFace(triIdx);
 			triBox.merge(_vertices[tri[i]]._pt);
 		}
 		triBox.grow(SAME_DIST_TOL);
@@ -204,15 +234,15 @@ namespace TriMesh {
 
 	bool CMesh::isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const {
 		const CEdge& edge = _edges[edgeIdx];
-		if (edge._numFaces < 2)
+		if (edge._numTris < 2)
 			return true;
 		const LineSegment seg = getEdgesLineSeg(edgeIdx);
 		const Vector3d edgeV = seg.calcDir();
-		if (edge._faceIndex[0] == edge._faceIndex[1]) {
+		if (edge._triIndex[0] == edge._triIndex[1]) {
 			cout << "Duplicated faceIndex\n";
 		}
-		const Vector3d norm0 = triUnitNormal(edge._faceIndex[0]);
-		const Vector3d norm1 = triUnitNormal(edge._faceIndex[1]);
+		const Vector3d norm0 = triUnitNormal(edge._triIndex[0]);
+		const Vector3d norm1 = triUnitNormal(edge._triIndex[1]);
 
 		Vector3d cp = norm0.cross(norm1);
 		double edgeCross = fabs(cp.dot(edgeV));
@@ -242,21 +272,25 @@ namespace TriMesh {
 	}
 
 	size_t CMesh::numVertices() const {
+		lock_guard<mutex> lock(_vertMutex);
 		return _vertices.size();
 	}
 
 	size_t CMesh::numEdges() const {
+		lock_guard<mutex> lock(_edgeMutex);
 		return _edges.size();
 	}
 
 	size_t CMesh::numTris() const {
+		lock_guard<mutex> lock(_triMutex);
 		return _tris.size();
 	}
 
 	size_t CMesh::numLaminarEdges() const {
 		size_t result = 0;
+		lock_guard<mutex> lock(_edgeMutex);
 		for (const auto& edge : _edges) {
-			if (edge._numFaces == 1)
+			if (edge._numTris == 1)
 				result++;
 		}
 		return result;
@@ -450,36 +484,13 @@ namespace TriMesh {
 	void CMesh::merge(vector<CMeshPtr>& src, bool destructive, bool multiCore)
 	{
 #if 1
-		while (src.size() > 1) {
-			cout << "Num meshes 0: " << src.size() << "\n";
-			MultiCore::runLambda([this, &src, destructive](size_t threadNum, size_t numThreads) {
-				for (size_t i = threadNum; i < src.size(); i += numThreads) {
-					if (i % 2 == 0) {
-						size_t j = i + 1;
-						if (j < src.size() && src[j]) {
-							auto pSrc = src[j];
-							assert(src[i]->getBBox().contains(pSrc->getBBox()));
-							src[j] = nullptr;
-
-							src[i]->merge(pSrc, destructive);
-						}
-					}
-				}
-			}, multiCore);
-
-			for (size_t i = 2; i < src.size(); i += 2) {
-				src[i / 2] = src[i];
-				src[i] = nullptr;
+		MultiCore::runLambda([this, &src, destructive](size_t threadNum, size_t numThreads) {
+			for (size_t i = threadNum; i < src.size(); i += numThreads) {
+				merge(src[i], destructive);
+				if (destructive)
+					src[i] = nullptr;
 			}
-
-			while (!src.back()) {
-				src.pop_back();
-			}
-
-			cout << "Num meshes 1: " << src.size() << "\n";
-		}
-
-		merge(src.back(), destructive);
+		}, multiCore);
 
 #else
 		auto bbox = _triTree.getBounds();
@@ -774,19 +785,19 @@ namespace TriMesh {
 			return false;
 
 		_tris.resize(numTris);
-		for (size_t i = 0; i < numTris; i++) {
-			auto& tri = _tris[i];
+		for (size_t triIdx = 0; triIdx < numTris; triIdx++) {
+			auto& tri = _tris[triIdx];
 			in >> str1 >> tri[0] >> tri[1] >> tri[2];
 			if (str1 != "t")
 				return false;
 			for (int j = 0; j < 3; j++) {
-				addEdge(tri[j], tri[(j + 1) % 3]);
+				addEdge(tri[j], tri[(j + 1) % 3], triIdx);
 			}
 			BoundingBox triBox;
 			triBox.merge(_vertices[tri[0]]._pt);
 			triBox.merge(_vertices[tri[1]]._pt);
 			triBox.merge(_vertices[tri[2]]._pt);
-			_triTree.add(triBox, i);
+			_triTree.add(triBox, triIdx);
 		}
 
 		return true;

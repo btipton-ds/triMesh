@@ -41,23 +41,26 @@ namespace TriMesh {
 	class CEdge {
 	public:
 
-		CEdge(size_t vertIdx0 = stm1, size_t vertIdx1 = stm1);
+		CEdge(size_t vertIdx0 = stm1, size_t vertIdx1 = stm1, size_t triIdx = stm1);
+		CEdge(const CEdge& src) = default;
+
 		bool operator < (const CEdge& rhs) const;
 		bool operator == (const CEdge& rhs) const;
-		void addFace(size_t faceIdx);
+		void addTri(size_t faceIdx);
 
 		void dump(std::ostream& out) const;
 
 		size_t _vertIndex[2];
-		int _numFaces;
-		size_t _faceIndex[2];
+		int _numTris;
+		size_t _triIndex[2];
 	};
 
 
-	inline CEdge::CEdge(size_t vertIdx0, size_t vertIdx1)
-		: _numFaces(0)
+	inline CEdge::CEdge(size_t vertIdx0, size_t vertIdx1, size_t triIdx)
+		: _numTris(triIdx == stm1 ? 0 : 1)
 	{
-		_faceIndex[0] = _faceIndex[1] = stm1;
+		_triIndex[0] = triIdx;
+		_triIndex[1] = stm1;
 		if (vertIdx0 <= vertIdx1) {
 			_vertIndex[0] = vertIdx0;
 			_vertIndex[1] = vertIdx1;
@@ -82,13 +85,13 @@ namespace TriMesh {
 		return _vertIndex[0] == rhs._vertIndex[0] && _vertIndex[1] == rhs._vertIndex[1];
 	}
 
-	inline void CEdge::addFace(size_t faceIdx) {
-		for (int i = 0; i < _numFaces; i++) {
-			if (_faceIndex[i] == faceIdx)
+	inline void CEdge::addTri(size_t triIdx) {
+		for (int i = 0; i < _numTris; i++) {
+			if (_triIndex[i] == triIdx)
 				return;
 		}
-		if (_numFaces < 2) {
-			_faceIndex[_numFaces++] = faceIdx;
+		if (_numTris < 2) {
+			_triIndex[_numTris++] = triIdx;
 		}
 		else {
 			// Log error
@@ -97,8 +100,8 @@ namespace TriMesh {
 
 	inline void CEdge::dump(std::ostream& out) const {
 		out << "edge { verts:(" << _vertIndex[0] << ", " << _vertIndex[1] << "), faces(";
-		for (int i = 0; i < _numFaces; i++) {
-			out << _faceIndex[i] << ",";
+		for (int i = 0; i < _numTris; i++) {
+			out << _triIndex[i] << ",";
 		}
 		out << ") }\n";
 	}
