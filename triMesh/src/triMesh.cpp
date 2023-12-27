@@ -38,6 +38,20 @@ This file is part of the TriMesh library.
 
 using namespace std;
 
+namespace
+{
+namespace
+{
+
+inline string fromWString(const wstring& str)
+{
+	return string(str.begin(), str.end());
+}
+
+}
+
+}
+
 namespace TriMesh {
 
 	long _statId = 0;
@@ -66,7 +80,7 @@ namespace TriMesh {
 
 	void CMesh::dumpTris(const wstring& filename) const
 	{
-		wofstream out(filename);
+		wofstream out(fromWString(filename));
 		out << setprecision(15);
 		out << numVertices() << "\n";
 		out << numTris() << "\n";
@@ -87,7 +101,7 @@ namespace TriMesh {
 
 	bool CMesh::compareDumpedTris(const wstring& filename) const
 	{
-		wifstream in(filename);
+		wifstream in(fromWString(filename));
 		size_t nVerts, nTris, nEdges;
 		in >> nVerts;
 		in >> nTris;
@@ -139,7 +153,7 @@ namespace TriMesh {
 
 	void CMesh::dumpTree(const wstring& filename) const
 	{
-		wofstream out(filename);
+		wofstream out(fromWString(filename));
 		out << setprecision(15);
 		_triTree.dump(out);
 

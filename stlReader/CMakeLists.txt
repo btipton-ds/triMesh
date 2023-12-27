@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.10)
 project ("stlReader")
 
 if (UNIX)
-    list(APPEND CMAKE_CXX_FLAGS "-pthread -fPIC")
+    list(APPEND CMAKE_CXX_FLAGS "-pthread -fPIC -Wno-deprecated-enum-enum-conversion")
 
     include_directories(
     include 

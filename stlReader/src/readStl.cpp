@@ -107,12 +107,22 @@ bool CReadSTL::read(const std::string& path, const std::string& filename)
 	return true;
 }
 
+namespace
+{
+
+inline string fromWString(const wstring& str)
+{
+	return string(str.begin(), str.end());
+}
+
+}
+
 bool CReadSTL::read(const std::wstring& path, const std::wstring& filename) {
 	std::vector<Vector3f> points;
 	bool readSuccessful = false;
 
 	{
-		ifstream in(path + filename);
+		ifstream in(fromWString(path + filename));
 		if (!in.good()) {
 			return false;
 		}
@@ -127,7 +137,7 @@ bool CReadSTL::read(const std::wstring& path, const std::wstring& filename) {
 	}
 
 	if (!readSuccessful) {
-		ifstream in(path + filename, ios_base::binary);
+		ifstream in(fromWString(path + filename), ios_base::binary);
 		if (!in.good()) {
 			return false;
 		}
