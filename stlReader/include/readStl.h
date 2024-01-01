@@ -49,6 +49,13 @@ public:
 	}
 
 private:
+#ifndef WIN32
+	inline static string fromWString(const wstring& str)
+	{
+		return string(str.begin(), str.end());
+	}
+#endif
+
 	bool readText(std::istream& in, std::vector<Vector3f>& points);
 	bool readBinary(std::istream& in, std::vector<Vector3f>& points);
 
