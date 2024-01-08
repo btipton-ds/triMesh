@@ -57,25 +57,25 @@ void CSSB_DCL::clear() {
 }
 
 CSSB_TMPL
-std::vector<INDEX_TYPE> CSSB_DCL::find(const BOX_TYPE& bbox, BoxTestType contains) const {
+std::vector<INDEX_TYPE> CSSB_DCL::find(const BOX_TYPE& bbox, BoxTestType testType) const {
 	std::vector<INDEX_TYPE> result;
-	find(bbox, result, contains);
+	find(bbox, result, testType);
 	return result;
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains) const {
-	if (contains == BoxTestType::Contains ? _bbox.contains(bbox) : _bbox.intersects(bbox)) {
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType testType) const {
+	if (boxesMatch(_bbox, bbox, testType)) {
 		for (const auto& entry : _contents) {
 			const auto& bb = entry._bbox;
-			if (contains == BoxTestType::Contains ? bb.contains(bbox) : bb.intersects(bbox)) {
+			if (boxesMatch(_bbox, bbox, testType)) {
 				result.push_back(entry._index);
 			}
 		}
 		if (_left)
-			_left->find(bbox, result, contains);
+			_left->find(bbox, result, testType);
 		if (_right)
-			_right->find(bbox, result, contains);
+			_right->find(bbox, result, testType);
 	}
 	return result.size();
 }
@@ -216,4 +216,13 @@ void CSSB_DCL::split(int depth) {
 			_contents.push_back(entry);
 	}
 
+}
+
+CSSB_TMPL
+inline bool CSSB_DCL::boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType)
+{
+	if (testType == BoxTestType::Contains)
+		return lhs.contains(rhs);
+	else
+		return lhs.intersects(rhs);
 }

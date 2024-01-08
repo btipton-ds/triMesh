@@ -81,7 +81,7 @@ public:
 private:
 	bool add(const Entry& newEntry, int depth);
 	void split(int depth);
-
+	static bool boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType);
 
 	size_t _numInTree = 0;
 	BOX_TYPE _bbox;

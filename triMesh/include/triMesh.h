@@ -61,6 +61,7 @@ namespace TriMesh {
 		using BoxTestType = SearchTree::BoxTestType;
 
 		CMesh();
+		CMesh(const BoundingBox& bbox);
 		CMesh(const Vector3d& min, const Vector3d& max);
 		void reset(const BoundingBox& bbox);
 
@@ -169,6 +170,11 @@ namespace TriMesh {
 	};
 
 	using CMeshPtr = std::shared_ptr<CMesh>;
+
+	inline CMesh::CMesh(const BoundingBox& bbox)
+		: CMesh(bbox.getMin(), bbox.getMax())
+	{
+	}
 
 	template<class POINT_TYPE>
 	size_t CMesh::addTriangle(const POINT_TYPE pts[3]) {
