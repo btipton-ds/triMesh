@@ -304,7 +304,7 @@ namespace TriMesh {
 		return hits.size();
 	}
 
-	size_t CMesh::rayCast(const LineSegment& seg, vector<RayHit>& hits) const {
+	size_t CMesh::rayCast(const LineSegment& seg, vector<RayHit>& hits, double tol) const {
 		auto segLen = seg.calLength();
 		vector<size_t> hitIndices;
 		if (_triTree.biDirRayCast(seg.getRay(), hitIndices) > 0) {
@@ -318,7 +318,12 @@ namespace TriMesh {
 
 				RayHit hit;
 				if (intersectLineSegTri(seg, pts, hit)) {
-					if ((hit.dist > 0) && (hit.dist <= segLen)) {
+					if ((hit.dist >= -tol) && (hit.dist <= segLen + tol)) {
+						if (hit.dist < 0)
+							hit.dist = 0;
+						else if (hit.dist > segLen)
+							hit.dist = segLen;
+
 						hit.triIdx = triIdx2;
 						hits.push_back(hit);
 					}

@@ -116,7 +116,7 @@ namespace TriMesh {
 		void getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins, bool multiCore = true) const;
 		size_t rayCast(size_t triIdx, std::vector<RayHit>& hits, bool biDir = true) const;
 		size_t rayCast(const Ray& ray, std::vector<RayHit>& hits, bool biDir = true) const;
-		size_t rayCast(const LineSegment& seg, std::vector<RayHit>& hits) const;
+		size_t rayCast(const LineSegment& seg, std::vector<RayHit>& hits, double tol = 1.0e-6) const;
 
 		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
 		size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
