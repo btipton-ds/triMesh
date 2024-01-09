@@ -31,7 +31,8 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
-#include  <cmath>
+#include <cmath>
+#include <vector>
 #include <climits>
 #include <cfloat>
 
@@ -114,7 +115,9 @@ struct Ray {
 	inline Ray (const Vector3d& origin, const Vector3d& dir)
 		: _origin(origin)
 		, _dir(dir)
-	{}
+	{
+		_dir.normalize();
+	}
 
 	Vector3d _origin, _dir;
 };
@@ -211,3 +214,36 @@ inline Plane::Plane(const Vector3d* pts[3])
 	: _origin(*pts[0])
 	, _normal(triangleNormal(pts))
 {}
+
+// LERP functions are usually used for points, but can be used for any kind of value that supports +, -  and *
+template<class T>
+inline T LERP(const T& p0, const T& p1, double t)
+{
+	return p0 + t * (p1 - p0);
+}
+
+template<class T>
+inline T BI_LERP(const T& p0, const T& p1, const T& p2, const T& p3, double t, double u)
+{
+	T pt0 = LERP(p0, p1, t);
+	T pt1 = LERP(p3, p2, t);
+
+	return pt0 + u * (pt1 - pt0);
+}
+
+// pts must be size 8 or greater. No bounds checking is done.
+template<class T>
+inline T TRI_LERP(const T pts[8], double t, double u, double v)
+{
+	T pt0 = BI_LERP(pts[0], pts[1], pts[2], pts[3], t, u);
+	T pt1 = BI_LERP(pts[4], pts[5], pts[6], pts[7], t, u);
+
+	return pt0 + v * (pt1 - pt0);
+}
+
+// pts must be size 8 or greater. No bounds checking is done.
+template<class T>
+inline T TRI_LERP(const std::vector<T> pts, double t, double u, double v)
+{
+	return TRI_LERP(pts.data(), t, u, v);
+}

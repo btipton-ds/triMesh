@@ -212,8 +212,9 @@ namespace TriMesh {
 		_vertices.push_back(CVertex(ptUnk));
 		_vertTree.add(box, result);
 
+#ifdef _DEBUG
 		// Testing
-		auto testResults = _vertTree.find(BoundingBox(pt));
+		auto testResults = _vertTree.find(box);
 		int numFound = 0;
 		for (const auto& e : testResults) {
 			if (e == result)
@@ -221,8 +222,9 @@ namespace TriMesh {
 		}
 		if (numFound != 1) {
 			std::cout << "CMesh::addVertex numFound: Error. numFound: " << numFound << "\n";
-			testResults = _vertTree.find(BoundingBox(pt));
+			testResults = _vertTree.find(box);
 		}
+#endif
 		return result;
 	}
 
