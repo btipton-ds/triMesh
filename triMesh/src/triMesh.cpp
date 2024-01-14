@@ -555,6 +555,86 @@ namespace TriMesh {
 		}		
 	}
 
+	void CMesh::calCurvatures(bool multiCore) const
+	{
+		buildCentroids(multiCore);
+		buildNormals(multiCore);
+
+		if (_edgeCurvature.empty()) {
+			_edgeCurvature.resize(_edges.size());
+			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
+				size_t num = _edgeCurvature.size();
+				for (size_t edgeIdx = threadNum; edgeIdx < num; edgeIdx += numThreads)
+					_edgeCurvature[edgeIdx] = calEdgeCurvature(edgeIdx);
+			}, multiCore);
+		}
+
+		if (_vertexCurvature.empty()) {
+			_vertexCurvature.resize(_vertices.size(), 0);
+			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
+				size_t num = _vertices.size();
+				for (size_t vertIdx = threadNum; vertIdx < num; vertIdx += numThreads) {
+					_vertexCurvature[vertIdx] = calVertCurvature(vertIdx);
+				}
+			}, multiCore);
+		}
+	}
+
+	double CMesh::calEdgeCurvature(size_t edgeIdx) const
+	{
+		const auto& edge = _edges[edgeIdx];
+		if (edge._numFaces == 2) {
+			auto seg = getEdgesLineSeg(edgeIdx);
+			Vector3d origin = seg._pts[0];
+			Vector3d vEdge = seg.calcDir();
+
+			Vector3d n0 = triUnitNormal(edge._faceIndex[0]);
+			Vector3d ctr0 = triCentroid(edge._faceIndex[0]);
+			Vector3d v0 = ctr0 - origin;
+			v0 = v0 - vEdge * vEdge.dot(v0);
+			Vector3d pt0 = origin + v0;
+			v0.normalize();
+
+			Vector3d n1 = triUnitNormal(edge._faceIndex[1]);
+			Vector3d ctr1 = triCentroid(edge._faceIndex[1]);
+			Vector3d v1 = ctr1 - origin;
+			v1 = v1 - vEdge * vEdge.dot(v1);
+			Vector3d pt1 = origin + v1;
+			v1.normalize();
+
+			Vector3d vChord = pt1 - pt0;
+			double chordLen = vChord.norm();
+			vChord.normalize();
+			double dp0 = fabs(v0.dot(vChord));
+			double dp1 = fabs(v1.dot(vChord));
+			double curve0 = dp0 / (chordLen * 0.5);
+			double curve1 = dp1 / (chordLen * 0.5);
+			return (curve0 + curve1) * 0.5;
+		}
+		return 0;
+	}
+
+	double CMesh::calVertCurvature(size_t vertIdx) const
+	{
+		const auto& vert = _vertices[vertIdx];
+		Vector3d vertNorm = vertUnitNormal(vertIdx);
+		const auto& faceIds = vert._faceIndices;
+		double curv = 0;
+		for (size_t triIdx : faceIds) {
+			const auto& tri = _tris[triIdx];
+			Vector3d ctr = triCentroid(triIdx);
+
+			Vector3d v = vert._pt - ctr;
+			double chord = v.norm();
+			v.normalize();
+			double db = fabs(vertNorm.dot(v));
+			curv += db / chord;
+		}
+		curv /= faceIds.size();
+
+		return curv;
+	}
+
 	size_t CMesh::findVerts(const BoundingBox& bbox, vector<size_t>& vertIndices, BoxTestType contains) const {
 		return _vertTree.find(bbox, vertIndices, contains);
 	}
@@ -594,6 +674,42 @@ namespace TriMesh {
 		Vector3d normal = v0.cross(v1).normalized();
 		return normal;
 	}
+
+	Vector3d CMesh::vertUnitNormal(size_t vertIdx) const
+	{
+		Vector3d result(0, 0, 0);
+
+		const auto& vert = _vertices[vertIdx];
+		const auto& tris = vert._faceIndices;
+		for (size_t triIdx : tris) {
+			result += triUnitNormal(triIdx);
+		}
+
+		result.normalize();
+		return result;
+	}
+
+
+	double CMesh::edgeCurvature(size_t edgeIdx) const
+	{
+		if (_edgeCurvature.empty())
+			calCurvatures(false);
+
+		if (edgeIdx < _edgeCurvature.size())
+			return _edgeCurvature[edgeIdx];
+		return 0;
+	}
+
+	double CMesh::vertCurvature(size_t vertIdx) const
+	{
+		if (_vertexCurvature.empty())
+			calCurvatures(false);
+
+		if (vertIdx < _vertexCurvature.size())
+			return _vertexCurvature[vertIdx];
+		return 0;
+	}
+
 
 	bool CMesh::verifyFindAllTris() const {
 		bool result = true;
