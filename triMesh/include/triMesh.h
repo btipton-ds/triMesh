@@ -127,14 +127,13 @@ namespace TriMesh {
 		Vector3d triUnitNormal(size_t triIdx) const;
 		Vector3d vertUnitNormal(size_t vertIdx) const;
 		double edgeCurvature(size_t edgeIdx) const;
-		double vertCurvature(size_t vertIdx) const;
 
 		void merge(CMeshPtr& src, bool destructive);
 		void merge(std::vector<CMeshPtr>& src, bool destructive, bool multiCore = true);
 
 		void buildCentroids(bool multiCore = true) const;
 		void buildNormals(bool multiCore = true) const;
-		void calCurvatures(bool multiCore = true) const;
+		void calCurvatures(double edgeAngleRadians, bool multiCore = true) const;
 
 		bool verifyFindAllTris() const;
 
@@ -173,7 +172,6 @@ namespace TriMesh {
 		mutable bool _useNormalCache = true;
 		mutable std::vector<Vector3d> _normals;
 		mutable std::vector<double> _edgeCurvature;
-		mutable std::vector<double> _vertexCurvature;
 		SearchTree _triTree;
 	};
 

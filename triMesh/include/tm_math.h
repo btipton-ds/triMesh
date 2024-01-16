@@ -243,7 +243,7 @@ inline T TRI_LERP(const T pts[8], double t, double u, double v)
 
 // pts must be size 8 or greater. No bounds checking is done.
 template<class T>
-inline T TRI_LERP(const std::vector<T> pts, double t, double u, double v)
+inline T TRI_LERP(const std::vector<T>& pts, double t, double u, double v)
 {
 	return TRI_LERP(pts.data(), t, u, v);
 }

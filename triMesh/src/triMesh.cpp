@@ -241,11 +241,17 @@ namespace TriMesh {
 
 		double sinEdgeAngle = sin(edgeAngleRadians);
 		buildNormals();
+
+		vector<bool> sharps;
+		sharps.resize(_edges.size());
+		MultiCore::runLambda([this, &sharps, sinEdgeAngle](size_t index) {
+			sharps[index] = isEdgeSharp(index, sinEdgeAngle);
+		}, _edges.size(), true);
+
 		_sharpEdgeIndices.clear();
 		_sharpEdgeIndices.reserve(_edges.size());
-
-		for (size_t i = 0; i < _edges.size(); i++) {
-			if (isEdgeSharp(i, sinEdgeAngle)) {
+		for (size_t i = 0; i < sharps.size(); i++) {
+			if (sharps[i]) {
 				_sharpEdgeIndices.push_back(i);
 			}
 		}
@@ -555,26 +561,25 @@ namespace TriMesh {
 		}		
 	}
 
-	void CMesh::calCurvatures(bool multiCore) const
+	void CMesh::calCurvatures(double edgeAngleRadians, bool multiCore) const
 	{
 		buildCentroids(multiCore);
 		buildNormals(multiCore);
+		double sinAngle = sin(edgeAngleRadians);
 
 		if (_edgeCurvature.empty()) {
 			_edgeCurvature.resize(_edges.size());
-			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
+			MultiCore::runLambda([this, sinAngle](size_t threadNum, size_t numThreads) {
 				size_t num = _edgeCurvature.size();
-				for (size_t edgeIdx = threadNum; edgeIdx < num; edgeIdx += numThreads)
-					_edgeCurvature[edgeIdx] = calEdgeCurvature(edgeIdx);
-			}, multiCore);
-		}
-
-		if (_vertexCurvature.empty()) {
-			_vertexCurvature.resize(_vertices.size(), 0);
-			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
-				size_t num = _vertices.size();
-				for (size_t vertIdx = threadNum; vertIdx < num; vertIdx += numThreads) {
-					_vertexCurvature[vertIdx] = calVertCurvature(vertIdx);
+				for (size_t edgeIdx = threadNum; edgeIdx < num; edgeIdx += numThreads) {
+					if (edgeIdx % numThreads == threadNum) {
+						const CEdge& edge = _edges[edgeIdx];
+						if (!isEdgeSharp(edgeIdx, sinAngle)) {
+							_edgeCurvature[edgeIdx] = calEdgeCurvature(edgeIdx);
+						} else {
+							_edgeCurvature[edgeIdx] = -1;
+						}
+					}
 				}
 			}, multiCore);
 		}
@@ -588,14 +593,14 @@ namespace TriMesh {
 			Vector3d origin = seg._pts[0];
 			Vector3d vEdge = seg.calcDir();
 
-			Vector3d n0 = triUnitNormal(edge._faceIndex[0]);
+			Vector3d norm0 = triUnitNormal(edge._faceIndex[0]);
 			Vector3d ctr0 = triCentroid(edge._faceIndex[0]);
 			Vector3d v0 = ctr0 - origin;
 			v0 = v0 - vEdge * vEdge.dot(v0);
 			Vector3d pt0 = origin + v0;
 			v0.normalize();
 
-			Vector3d n1 = triUnitNormal(edge._faceIndex[1]);
+			Vector3d norm1 = triUnitNormal(edge._faceIndex[1]);
 			Vector3d ctr1 = triCentroid(edge._faceIndex[1]);
 			Vector3d v1 = ctr1 - origin;
 			v1 = v1 - vEdge * vEdge.dot(v1);
@@ -605,8 +610,8 @@ namespace TriMesh {
 			Vector3d vChord = pt1 - pt0;
 			double chordLen = vChord.norm();
 			vChord.normalize();
-			double dp0 = fabs(v0.dot(vChord));
-			double dp1 = fabs(v1.dot(vChord));
+			double dp0 = fabs(norm0.dot(vChord));
+			double dp1 = fabs(norm1.dot(vChord));
 			double curve0 = dp0 / (chordLen * 0.5);
 			double curve1 = dp1 / (chordLen * 0.5);
 			return (curve0 + curve1) * 0.5;
@@ -699,17 +704,6 @@ namespace TriMesh {
 			return _edgeCurvature[edgeIdx];
 		return 0;
 	}
-
-	double CMesh::vertCurvature(size_t vertIdx) const
-	{
-		if (_vertexCurvature.empty())
-			calCurvatures(false);
-
-		if (vertIdx < _vertexCurvature.size())
-			return _vertexCurvature[vertIdx];
-		return 0;
-	}
-
 
 	bool CMesh::verifyFindAllTris() const {
 		bool result = true;
