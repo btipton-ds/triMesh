@@ -33,6 +33,7 @@ This file is part of the TriMesh library.
 #include <fstream>
 #include <iomanip>
 
+#include <../../stlReader/include/readStl.h>
 #include <triMesh.h>
 #include <MultiCoreUtil.h>
 
@@ -69,7 +70,7 @@ namespace TriMesh {
 #ifdef WIN32
 		wofstream out(filename);
 #else
-		wofstream out(fromWString(filename));
+		wofstream out(CReadSTL::fromWString(filename));
 #endif // WIND32
 
 		out << setprecision(15);
@@ -95,7 +96,7 @@ namespace TriMesh {
 #ifdef WIN32
 		wifstream in(filename);
 #else
-		wifstream in(fromWString(filename));
+		wifstream in(CReadSTL::fromWString(filename));
 #endif // WIND32
 		size_t nVerts, nTris, nEdges;
 		in >> nVerts;
@@ -151,7 +152,7 @@ namespace TriMesh {
 #ifdef WIN32
 		wofstream out(filename);
 #else
-		wofstream out(fromWString(filename));
+		wofstream out(CReadSTL::fromWString(filename));
 #endif
 		out << setprecision(15);
 		_triTree.dump(out);

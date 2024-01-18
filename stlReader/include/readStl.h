@@ -48,13 +48,13 @@ public:
 		return _meshPtr;
 	}
 
-private:
 #ifndef WIN32
-	inline static string fromWString(const wstring& str)
+	inline static std::string fromWString(const std::wstring& str)
 	{
-		return string(str.begin(), str.end());
+		return std::string(str.begin(), str.end());
 	}
 #endif
+private:
 
 	bool readText(std::istream& in, std::vector<Vector3f>& points);
 	bool readBinary(std::istream& in, std::vector<Vector3f>& points);
