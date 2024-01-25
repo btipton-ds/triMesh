@@ -55,6 +55,7 @@ public:
 	bool intersects(const Ray& ray) const;
 	void split(int axis, CBoundingBox3D& left, CBoundingBox3D& right, Scalar overlap = 0) const;
 	void grow(Scalar dist);
+	void growPercent(double amount);
 private:
 	POINT_TYPE _min, _max;
 };
@@ -191,4 +192,12 @@ void CBoundingBox3D<SCALAR_TYPE>::grow(Scalar dist) {
 		_min[i] -= dist;
 		_max[i] += dist;
 	}
+}
+
+template <class SCALAR_TYPE>
+void CBoundingBox3D<SCALAR_TYPE>::growPercent(double amount)
+{
+	auto r = range() * amount;
+	_min -= r;
+	_max += r;
 }
