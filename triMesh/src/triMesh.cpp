@@ -645,7 +645,24 @@ namespace TriMesh {
 	}
 
 	size_t CMesh::findTris(const BoundingBox& bbox, vector<size_t>& triIndices, BoxTestType contains) const {
-		return _triTree.find(bbox, triIndices, contains);
+		vector<size_t> triBoxIndices;
+		size_t numHits = _triTree.find(bbox, triBoxIndices, contains);
+		if (numHits > 0) {
+			for (size_t triIdx : triBoxIndices) {
+				const auto& tri = getTri(triIdx);
+				Vector3d pts[] = {
+					getVert(tri[0])._pt,
+					getVert(tri[1])._pt,
+					getVert(tri[2])._pt,
+				};
+
+				if (bbox.intersectsTriangle(pts)) {
+					triIndices.push_back(triIdx);
+				}
+			}
+			numHits = triIndices.size();
+		}
+		return numHits;
 	}
 
 	Vector3d CMesh::triCentroid(size_t triIdx) const {

@@ -187,3 +187,29 @@ bool intersectLineSegPlane(const LineSegment& seg, const Plane& plane, RayHit& h
 bool intersectLineSegPlane(const LineSegment& seg, const Vector3d* pts[3], RayHit& hit) {
 	return intersectLineSegPlane(seg, Plane(pts), hit);
 }
+
+bool pointInTriangle(const Vector3d pts[3], const Vector3d& pt)
+{
+	Vector3d v0 = pts[1] - pts[0];
+	Vector3d v1 = pts[2] - pts[0];
+
+	Vector3d norm = triangleNormal(pts);
+	norm.normalize();
+
+	v0 = pt - pts[0];
+	double dp = v0.dot(norm);
+	if (fabs(dp) > 1.0e-6) {
+		return false; // Pt not in plane
+	}
+
+	for (size_t i = 0; i < 3; i++) {
+		size_t j = (i + 1) % 3;
+		v0 = pt - pts[i];
+		v1 = pts[j] - pts[i];
+		double cp = v1.cross(v0).dot(norm);
+		if (cp < 0)
+			return false;
+	}
+
+	return true;
+}

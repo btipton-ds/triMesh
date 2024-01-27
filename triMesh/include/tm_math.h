@@ -194,6 +194,7 @@ bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit)
 bool intersectLineSegTri(const LineSegment& seg, Vector3d const* const pts[3], RayHit& hit);
 bool intersectLineSegPlane(const LineSegment& seg, const Plane& plane, RayHit& hit);
 bool intersectLineSegPlane(const LineSegment& seg, const Vector3d* pts[3], RayHit& hit);
+bool pointInTriangle(const Vector3d pts[3], const Vector3d& pt);
 
 Vector3d triangleNormal(Vector3d const* const pts[3]);
 Vector3d triangleNormal(const Vector3d pts[3]);

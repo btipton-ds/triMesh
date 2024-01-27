@@ -54,10 +54,12 @@ public:
 	bool intersects(const CBoundingBox3D& otherBox) const;
 	bool intersects(const Ray& ray) const;
 	bool intersects(const LineSegment& seg) const;
+	bool intersectsTriangle(const POINT_TYPE pts[3]) const;
 	void split(int axis, CBoundingBox3D& left, CBoundingBox3D& right, Scalar overlap = 0) const;
 	void grow(Scalar dist);
 	void growPercent(double amount);
 private:
+	void getEdges(LineSegment edges[12]) const;
 	POINT_TYPE _min, _max;
 };
 
@@ -197,6 +199,79 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray& ray) const {
 
 	}
 	return false;
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsTriangle(const POINT_TYPE pts[3]) const
+{
+	CBoundingBox3D triBox;
+	for (int i = 0; i < 3; i++)
+		triBox.merge(pts[i]);
+
+	if (contains(triBox))
+		return true;
+	if (!intersects(triBox))
+		return false;
+
+	LineSegment edges[12];
+	getEdges(edges);
+
+	POINT_TYPE v0 = pts[2] - pts[0];
+	POINT_TYPE v1 = pts[1] - pts[0];
+	POINT_TYPE norm = v1.cross(v0);
+	auto mag = norm.norm();
+	if (mag > 1.0e-8) {
+		norm /= mag;
+		Plane triPlane(pts[0], norm);
+
+		for (int i = 0; i < 12; i++) {
+			const auto& seg = edges[i];
+			RayHit hit;
+			if (intersectLineSegPlane(seg, triPlane, hit)) {
+				if (contains(hit.hitPt) && pointInTriangle(pts, hit.hitPt)) {
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+template <class SCALAR_TYPE>
+void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment edges[12]) const
+{
+	Vector3d r = range();
+	Vector3d corners[] = {
+		_min,		
+		_min + Vector3d(r[0],    0, 0),
+		_min + Vector3d(r[0], r[1], 0),
+		_min + Vector3d(0,    r[1], 0),
+
+		_min + Vector3d(0,       0, r[2]),
+		_min + Vector3d(r[0],    0, r[2]),
+		_min + Vector3d(r[0], r[1], r[2]),
+		_min + Vector3d(0,    r[1], r[2]),
+	};
+
+	// x edges
+	edges[0] = LineSegment(corners[0], corners[1]);
+	edges[1] = LineSegment(corners[3], corners[2]);
+	edges[2] = LineSegment(corners[4], corners[5]);
+	edges[3] = LineSegment(corners[7], corners[6]);
+
+	// y edges
+	edges[4] = LineSegment(corners[0], corners[3]);
+	edges[5] = LineSegment(corners[1], corners[2]);
+	edges[6] = LineSegment(corners[4], corners[7]);
+	edges[7] = LineSegment(corners[5], corners[6]);
+
+	// z edges
+	edges[8] = LineSegment(corners[0], corners[4]);
+	edges[9] = LineSegment(corners[1], corners[5]);
+	edges[10] = LineSegment(corners[2], corners[6]);
+	edges[11] = LineSegment(corners[3], corners[7]);
+
 }
 
 template <class SCALAR_TYPE>
