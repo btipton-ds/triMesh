@@ -41,7 +41,7 @@ using namespace std;
 
 namespace TriMesh {
 
-	long _statId = 0;
+	atomic<size_t> CMesh::_statId = 0;
 
 	CMesh::CMesh() 
 		: _id(_statId++)
@@ -354,11 +354,6 @@ namespace TriMesh {
 				hits.push_back(hit);
 		}
 		return hits.size();
-	}
-
-	void CMesh::changed()
-	{
-		_changeNumber++;
 	}
 
 	double CMesh::findTriMinimumGap(size_t i) const {

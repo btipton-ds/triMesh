@@ -53,6 +53,7 @@ public:
 	// This is actually intersects or contains
 	bool intersects(const CBoundingBox3D& otherBox) const;
 	bool intersects(const Ray& ray) const;
+	bool intersects(const LineSegment& seg) const;
 	void split(int axis, CBoundingBox3D& left, CBoundingBox3D& right, Scalar overlap = 0) const;
 	void grow(Scalar dist);
 	void growPercent(double amount);
@@ -156,6 +157,28 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox) con
 			return false;
 	}
 	return true;
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment& seg) const
+{
+	if (contains(seg._pts[0]) || contains(seg._pts[1]))
+		return true;
+
+	const Vector3d x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
+	Plane planes[] = {
+		Plane(_min, x), Plane(_max, x),
+		Plane(_min, y), Plane(_max, y),
+		Plane(_min, z), Plane(_max, z)
+	};
+	for (size_t i = 0; i < 6; i++) {
+		RayHit hit;
+		if (intersectLineSegPlane(seg, planes[i], hit)) {
+			if (contains(hit.hitPt))
+				return true;
+		}
+	}
+	return false;
 }
 
 template <class SCALAR_TYPE>

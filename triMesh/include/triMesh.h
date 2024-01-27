@@ -65,8 +65,9 @@ namespace TriMesh {
 		CMesh(const Vector3d& min, const Vector3d& max);
 		void reset(const BoundingBox& bbox);
 
-		long getId() const;
-		int getChangeNumber() const;
+		size_t getId() const;
+		size_t getChangeNumber() const;
+		void changed();
 
 		void save(std::ostream& out) const;
 		bool read(std::istream& in);
@@ -147,13 +148,13 @@ namespace TriMesh {
 		const std::vector<unsigned int>& getGlEdgeIndices();
 
 	private:
-		void changed();
 		double findTriMinimumGap(size_t i) const;
 		double calEdgeCurvature(size_t edgeIdx) const;
 		double calVertCurvature(size_t vertIdx) const;
 
-		const long _id;
-		mutable int _changeNumber;
+		static std::atomic<size_t> _statId;
+		const size_t _id;
+		size_t _changeNumber = 0;
 		std::vector<CVertex> _vertices;
 		SearchTree _vertTree;
 
@@ -264,14 +265,19 @@ namespace TriMesh {
 		return _tris.size();
 	}
 
-	inline long CMesh::getId() const
+	inline size_t CMesh::getId() const
 	{
 		return _id;
 	}
 
-	inline int CMesh::getChangeNumber() const
+	inline size_t CMesh::getChangeNumber() const
 	{
 		return _changeNumber;
+	}
+
+	inline void CMesh::changed()
+	{
+		_changeNumber++;
 	}
 
 	inline const CVertex& CMesh::getVert(size_t idx) const {
