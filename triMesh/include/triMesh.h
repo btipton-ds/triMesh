@@ -203,12 +203,12 @@ namespace TriMesh {
 	template<class POINT_TYPE>
 	size_t CMesh::addVertex(const POINT_TYPE& ptUnk) {
 		Vector3d pt(ptUnk);
-		BoundingBox box(pt);
-		box.grow(SAME_DIST_TOL);
-		if (!box.intersects(BoundingBox(pt))) {
+		BoundingBox ptBBox(pt), thisBBox = getBBox();
+		ptBBox.grow(SAME_DIST_TOL);
+		if (!thisBBox.contains(pt)) {
 			std::cout << "CMesh::addVertex box intersects: Error\n";
 		}
-		auto results = _vertTree.find(box);
+		auto results = _vertTree.find(ptBBox);
 		for (const auto& index : results) {
 			if ((_vertices[index]._pt - ptUnk).norm() < SAME_DIST_TOL) {
 				return index;
@@ -216,11 +216,11 @@ namespace TriMesh {
 		}
 		size_t result = _vertices.size();
 		_vertices.push_back(CVertex(ptUnk));
-		_vertTree.add(box, result);
+		_vertTree.add(ptBBox, result);
 
 #ifdef _DEBUG
 		// Testing
-		auto testResults = _vertTree.find(box);
+		auto testResults = _vertTree.find(ptBBox);
 		int numFound = 0;
 		for (const auto& e : testResults) {
 			if (e == result)
@@ -228,7 +228,7 @@ namespace TriMesh {
 		}
 		if (numFound != 1) {
 			std::cout << "CMesh::addVertex numFound: Error. numFound: " << numFound << "\n";
-			testResults = _vertTree.find(box);
+			testResults = _vertTree.find(ptBBox);
 		}
 #endif
 		return result;
