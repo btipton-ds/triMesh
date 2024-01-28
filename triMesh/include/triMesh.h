@@ -59,6 +59,7 @@ namespace TriMesh {
 		using BoundingBox = CBoundingBox3Dd;
 		using SearchTree = CSpatialSearchST<BoundingBox>;
 		using BoxTestType = SearchTree::BoxTestType;
+		using SearchEntry = SearchTree::Entry;
 
 		CMesh();
 		CMesh(const BoundingBox& bbox);
@@ -120,9 +121,9 @@ namespace TriMesh {
 		size_t rayCast(const Ray& ray, std::vector<RayHit>& hits, bool biDir = true) const;
 		size_t rayCast(const LineSegment& seg, std::vector<RayHit>& hits, double tol = 1.0e-6) const;
 
-		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
-		size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
-		size_t findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findEdges(const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findTris(const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
 
 		Vector3d triCentroid(size_t triIdx) const;
 		Vector3d triUnitNormal(size_t triIdx) const;
@@ -210,7 +211,8 @@ namespace TriMesh {
 			std::cout << "CMesh::addVertex box intersects: Error\n";
 		}
 		auto results = _vertTree.find(ptBBox);
-		for (const auto& index : results) {
+		for (const auto& entry : results) {
+			size_t index = entry.getIndex();
 			if ((_vertices[index]._pt - ptUnk).norm() < SAME_DIST_TOL) {
 				return index;
 			}
@@ -224,7 +226,8 @@ namespace TriMesh {
 		auto testResults = _vertTree.find(ptBBox);
 		int numFound = 0;
 		for (const auto& e : testResults) {
-			if (e == result)
+			size_t index = e.getIndex();
+			if (index == result)
 				numFound++;
 		}
 		if (numFound != 1) {

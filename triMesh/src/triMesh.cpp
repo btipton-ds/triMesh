@@ -636,28 +636,32 @@ namespace TriMesh {
 		return curv;
 	}
 
-	size_t CMesh::findVerts(const BoundingBox& bbox, vector<size_t>& vertIndices, BoxTestType contains) const {
+	size_t CMesh::findVerts(const BoundingBox& bbox, vector<SearchEntry>& vertIndices, BoxTestType contains) const {
 		return _vertTree.find(bbox, vertIndices, contains);
 	}
 
-	size_t CMesh::findEdges(const BoundingBox& bbox, vector<size_t>& edgeIndices, BoxTestType contains) const {
+	size_t CMesh::findEdges(const BoundingBox& bbox, vector<SearchEntry>& edgeIndices, BoxTestType contains) const {
 		return _edgeTree.find(bbox, edgeIndices, contains);
 	}
 
-	size_t CMesh::findTris(const BoundingBox& bbox, vector<size_t>& triIndices, BoxTestType contains) const {
-		vector<size_t> triBoxIndices;
-		size_t numHits = _triTree.find(bbox, triBoxIndices, contains);
+	size_t CMesh::findTris(const BoundingBox& bbox, vector<SearchEntry>& triIndices, BoxTestType contains) const {
+		vector<SearchEntry> temp;
+		size_t numHits = _triTree.find(bbox, temp, contains);
 		if (numHits > 0) {
-			for (size_t triIdx : triBoxIndices) {
-				const auto& tri = getTri(triIdx);
+			for (const auto& triEntry : temp) {
+				const auto& tri = getTri(triEntry.getIndex());
+				size_t triIdx = triEntry.getIndex();
+				
 				Vector3d pts[] = {
 					getVert(tri[0])._pt,
 					getVert(tri[1])._pt,
 					getVert(tri[2])._pt,
 				};
 
-				if (bbox.intersectsTriangle(pts)) {
-					triIndices.push_back(triIdx);
+				if (contains == BoxTestType::Contains && bbox.contains(triEntry.getBBox()))
+					triIndices.push_back(triEntry);
+				else if (bbox.intersectsTriangle(pts)) {
+					triIndices.push_back(triEntry);
 				}
 			}
 			numHits = triIndices.size();
@@ -728,11 +732,11 @@ namespace TriMesh {
 				triBox.merge(v._pt);
 			}
 
-			vector<size_t> hits;
-			_triTree.find(triBox, hits);
+			vector<SearchEntry> entries;
+			_triTree.find(triBox, entries);
 			bool found = false;
-			for (size_t hit : hits) {
-				found = found || hit == triIdx;
+			for (const auto& entry : entries) {
+				found = found || entry.getIndex() == triIdx;
 			}
 			if (!found) {
 				cout << "Error: Could not find newly added tri box.\n";

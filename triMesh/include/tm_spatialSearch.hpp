@@ -57,19 +57,19 @@ void CSSB_DCL::clear() {
 }
 
 CSSB_TMPL
-std::vector<INDEX_TYPE> CSSB_DCL::find(const BOX_TYPE& bbox, BoxTestType testType) const {
-	std::vector<INDEX_TYPE> result;
+std::vector<typename CSSB_DCL::Entry> CSSB_DCL::find(const BOX_TYPE& bbox, BoxTestType testType) const {
+	std::vector<Entry> result;
 	find(bbox, result, testType);
 	return result;
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType testType) const {
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
 		for (const auto& entry : _contents) {
-			const auto& bb = entry._bbox;
+			const auto& bb = entry.getBBox();
 			if (boxesMatch(_bbox, bbox, testType)) {
-				result.push_back(entry._index);
+				result.push_back(entry);
 			}
 		}
 		if (_left)
@@ -91,11 +91,11 @@ size_t CSSB_DCL::biDirRayCast(const Ray& ray, std::vector<INDEX_TYPE>& hits) con
 
 CSSB_TMPL
 bool CSSB_DCL::add(const Entry& newEntry, int depth) {
-	if (!_bbox.contains(newEntry._bbox))
+	if (!_bbox.contains(newEntry.getBBox()))
 		return false;
 
 	for (const auto& curEntry : _contents) {
-		if (curEntry._index == newEntry._index && curEntry._bbox.contains(newEntry._bbox)) {
+		if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox())) {
 			assert(!"duplicate");
 			return false;
 		}
@@ -122,10 +122,10 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 
 CSSB_TMPL
 bool CSSB_DCL::remove(const Entry& newEntry) {
-	if (_bbox.contains(newEntry._bbox)) {
+	if (_bbox.contains(newEntry.getBBox())) {
 		for (size_t idx = 0; idx < _contents.size(); idx++) {
 			const auto& curEntry = _contents[idx];
-			if (curEntry._index == newEntry._index && curEntry._bbox.contains(newEntry._bbox)) {
+			if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox())) {
 				_contents.erase(_contents.begin() + idx);
 				_numInTree--;
 				return true;
@@ -159,8 +159,8 @@ CSSB_TMPL
 void CSSB_DCL::biDirRayCastRecursive(const Ray& ray, std::vector<INDEX_TYPE>& hits) const {
 	if (_bbox.intersects(ray)) {
 		for (const auto& entry : _contents) {
-			if (entry._bbox.intersects(ray)) {
-				hits.push_back(entry._index);
+			if (entry.getBBox().intersects(ray)) {
+				hits.push_back(entry.getIndex());
 			}
 		}
 		if (_left)
@@ -186,9 +186,9 @@ void CSSB_DCL::dump(std::wostream& out, size_t depth) const
 	out << pad << _bbox.getMax()[0] << " " << _bbox.getMax()[1] << " " << _bbox.getMax()[2] << "\n";
 	out << pad << axisStr << " " << _contents.size() << "\n";
 	for (const auto& entry : _contents) {
-		out << pad << "  " << entry._index << "\n";
-		out << pad << "  " << entry._bbox.getMin()[0] << " " << entry._bbox.getMin()[1] << " " << entry._bbox.getMin()[2] << "\n";
-		out << pad << "  " << entry._bbox.getMax()[0] << " " << entry._bbox.getMax()[1] << " " << entry._bbox.getMax()[2] << "\n";
+		out << pad << "  " << entry.getIndex() << "\n";
+		out << pad << "  " << entry.getBBox().getMin()[0] << " " << entry.getBBox().getMin()[1] << " " << entry.getBBox().getMin()[2] << "\n";
+		out << pad << "  " << entry.getBBox().getMax()[0] << " " << entry.getBBox().getMax()[1] << " " << entry.getBBox().getMax()[2] << "\n";
 	}
 	if (_left)
 		_left->dump(out, depth + 1);
@@ -208,9 +208,9 @@ void CSSB_DCL::split(int depth) {
 	_contents.clear();
 
 	for (const auto& entry : temp) {
-		if (leftBBox.contains(entry._bbox))
+		if (leftBBox.contains(entry.getBBox()))
 			_left->add(entry, depth + 1);
-		else if (rightBBox.contains(entry._bbox))
+		else if (rightBBox.contains(entry.getBBox()))
 			_right->add(entry, depth + 1);
 		else
 			_contents.push_back(entry);
