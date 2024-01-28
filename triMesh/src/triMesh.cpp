@@ -245,8 +245,9 @@ namespace TriMesh {
 
 		vector<bool> sharps;
 		sharps.resize(_edges.size());
-		MultiCore::runLambda([this, &sharps, sinEdgeAngle](size_t index) {
+		MultiCore::runLambda([this, &sharps, sinEdgeAngle](size_t index)->bool {
 			sharps[index] = isEdgeSharp(index, sinEdgeAngle);
+			return true;
 		}, _edges.size(), true);
 
 		_sharpEdgeIndices.clear();
@@ -369,7 +370,7 @@ namespace TriMesh {
 
 		minGapVec.resize(MultiCore::getNumCores(), DBL_MAX);
 
-		MultiCore::runLambda([this, tol, &minGapVec](size_t threadNum, size_t numThreads) {
+		MultiCore::runLambda([this, tol, &minGapVec](size_t threadNum, size_t numThreads)->bool {
 			auto& minGap = minGapVec[threadNum];
 			size_t num = numTris();
 			for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads) {
@@ -380,6 +381,7 @@ namespace TriMesh {
 						minGap = d;
 				}
 			}
+			return true;
 		}, multiCore);
 
 		double minGap = DBL_MAX;
@@ -404,7 +406,7 @@ namespace TriMesh {
 			bin.resize(binSizes.size(), 0);
 		}
 
-		MultiCore::runLambda([this, &binSizes, &binSet](size_t threadNum, size_t numThreads) {
+		MultiCore::runLambda([this, &binSizes, &binSet](size_t threadNum, size_t numThreads)->bool {
 			auto& bins = binSet[threadNum];
 			size_t num = numTris();
 			for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads) {
@@ -422,6 +424,7 @@ namespace TriMesh {
 					}
 				}
 			}
+			return true;
 		}, multiCore);
 
 		for (auto& bin : binSet) {
@@ -472,7 +475,7 @@ namespace TriMesh {
 #if 1
 		while (src.size() > 1) {
 			cout << "Num meshes 0: " << src.size() << "\n";
-			MultiCore::runLambda([this, &src, destructive](size_t threadNum, size_t numThreads) {
+			MultiCore::runLambda([this, &src, destructive](size_t threadNum, size_t numThreads)->bool {
 				for (size_t i = threadNum; i < src.size(); i += numThreads) {
 					if (i % 2 == 0) {
 						size_t j = i + 1;
@@ -485,6 +488,7 @@ namespace TriMesh {
 						}
 					}
 				}
+				return true;
 			}, multiCore);
 
 			for (size_t i = 2; i < src.size(); i += 2) {
@@ -536,10 +540,11 @@ namespace TriMesh {
 		if (_centroids.empty()) {
 			ScopedSetVal<bool> set(_useCentroidCache, false);
 			_centroids.resize(_tris.size());
-			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
+			MultiCore::runLambda([this](size_t threadNum, size_t numThreads)->bool {
 				size_t num = _centroids.size();
 				for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads)
 					_centroids[triIdx] = triCentroid(triIdx);
+				return true;
 			}, multiCore);
 		}
 	}
@@ -549,10 +554,11 @@ namespace TriMesh {
 		if (_normals.empty()) {
 			ScopedSetVal<bool> set(_useNormalCache, false);
 			_normals.resize(_tris.size());
-			MultiCore::runLambda([this](size_t threadNum, size_t numThreads) {
+			MultiCore::runLambda([this](size_t threadNum, size_t numThreads)->bool {
 				size_t num = _normals.size();
 				for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads)
 					_normals[triIdx] = triUnitNormal(triIdx);
+				return true;
 			}, multiCore);
 		}		
 	}
@@ -565,7 +571,7 @@ namespace TriMesh {
 
 		if (_edgeCurvature.empty()) {
 			_edgeCurvature.resize(_edges.size());
-			MultiCore::runLambda([this, sinAngle](size_t threadNum, size_t numThreads) {
+			MultiCore::runLambda([this, sinAngle](size_t threadNum, size_t numThreads)->bool {
 				size_t num = _edgeCurvature.size();
 				for (size_t edgeIdx = threadNum; edgeIdx < num; edgeIdx += numThreads) {
 					if (edgeIdx % numThreads == threadNum) {
@@ -577,6 +583,7 @@ namespace TriMesh {
 						}
 					}
 				}
+				return true;
 			}, multiCore);
 		}
 	}
