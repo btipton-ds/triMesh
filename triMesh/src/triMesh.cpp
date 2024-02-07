@@ -164,6 +164,15 @@ namespace TriMesh {
 		return true;
 	}
 
+	size_t CMesh::findEdge(size_t vertIdx0, size_t vertIdx1) const
+	{
+		CEdge edge(vertIdx0, vertIdx1);
+		auto iter = _edgeToIdxMap.find(edge);
+		if (iter != _edgeToIdxMap.end())
+			return iter->second;
+		return -1;
+	}
+
 	size_t CMesh::addEdge(size_t vertIdx0, size_t vertIdx1) {
 		CEdge edge(vertIdx0, vertIdx1);
 		auto iter = _edgeToIdxMap.find(edge);

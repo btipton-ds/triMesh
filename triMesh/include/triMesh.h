@@ -80,6 +80,7 @@ namespace TriMesh {
 
 		size_t addEdge(size_t vertIdx0, size_t vertIdx1);
 		size_t addTriangle(const Vector3i& tri);
+		size_t findEdge(size_t vertIdx0, size_t vertIdx1) const;
 
 		template<class POINT_TYPE>
 		size_t addTriangle(const POINT_TYPE pts[3]);
