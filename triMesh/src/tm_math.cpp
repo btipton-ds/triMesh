@@ -105,7 +105,7 @@ Vector3d Plane::projectPoint(const Vector3d& pt) const
 	Vector3d v = pt - _origin;
 	v = v - _normal.dot(v) * _normal;
 	Vector3d result = _origin + v;
-	assert(distanceFromPlane(result) < 1.0e-8);
+	assert(distanceToPoint(result) < 1.0e-8);
 	return result;
 }
 
