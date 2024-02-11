@@ -59,6 +59,47 @@ double LineSegment::distanceToPoint(const Vector3d& pt, double& t) const {
 	return dist;
 }
 
+Plane::Plane(const Vector3d& origin, const Vector3d& normal)
+	: _origin(origin)
+	, _normal(normal)
+{
+	double tol = 1.0e-6;
+
+	// Intersect the plan with principal axes to find a principal origin
+	double minDist = DBL_MAX;
+	Vector3d testOrigin;
+	for (int i = 0; i < 3; i++) {
+		Vector3d dir(0, 0, 0);
+		dir[i] = 1;
+		Vector3d pt;
+		double dist;
+		if (intersectLine(Vector3d(0, 0, 0), dir, pt, dist) && fabs(dist) < minDist) {
+			minDist = fabs(dist);
+			testOrigin = pt;
+		}
+	}
+	double testDist = distanceToPoint(testOrigin);
+	if (fabs(testDist) < tol) {
+		_origin = testOrigin;
+		testDist = distanceToPoint(origin);
+		assert(fabs(testDist) < tol);
+	} else
+		assert(!"Principal origin out of tolerance");
+}
+
+bool Plane::intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt, double& dist) const
+{
+	Ray ray(pt0, (pt1 - pt0).normalized());
+	RayHit hitPt;
+	if (intersectRayPlane(ray, *this, hitPt)) {
+		pt = hitPt.hitPt;
+		dist = hitPt.dist;
+		return true;
+	}
+
+	return false;
+}
+
 double distanceFromPlane(const Vector3d& pt, const Plane& plane) {
 	return (pt - plane._origin).dot(plane._normal);
 }

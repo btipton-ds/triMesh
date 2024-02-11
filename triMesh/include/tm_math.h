@@ -138,12 +138,10 @@ struct RayHit {
 };
 
 struct Plane {
-	inline Plane(const Vector3d& origin = Vector3d(), const Vector3d& normal = Vector3d())
-		: _origin(origin)
-		, _normal(normal)
-	{}
-
+	Plane(const Vector3d& origin, const Vector3d& normal);
 	Plane(const Vector3d* pts[3]);
+
+	bool intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt, double& dist) const;
 	inline double distanceToPoint(const Vector3d& pt) const {
 		return fabs((pt - _origin).dot(_normal));
 	}
@@ -212,8 +210,7 @@ inline Vector3d triangleCentroid(const Vector3d pts[]) {
 double volumeUnderTriangle(Vector3d const* const pts[3], const Vector3d& axis);
 
 inline Plane::Plane(const Vector3d* pts[3]) 
-	: _origin(*pts[0])
-	, _normal(triangleNormal(pts))
+	: Plane(*pts[0], triangleNormal(pts))
 {}
 
 // LERP functions are usually used for points, but can be used for any kind of value that supports +, -  and *
