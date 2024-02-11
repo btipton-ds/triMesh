@@ -142,6 +142,7 @@ struct Plane {
 	Plane(const Vector3d* pts[3]);
 
 	bool intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt, double& dist) const;
+	Vector3d projectPoint(const Vector3d& pt) const;
 	inline double distanceToPoint(const Vector3d& pt) const {
 		return fabs((pt - _origin).dot(_normal));
 	}

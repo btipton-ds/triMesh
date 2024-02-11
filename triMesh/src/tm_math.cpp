@@ -100,6 +100,15 @@ bool Plane::intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt
 	return false;
 }
 
+Vector3d Plane::projectPoint(const Vector3d& pt) const
+{
+	Vector3d v = pt - _origin;
+	v = v - _normal.dot(v) * _normal;
+	Vector3d result = _origin + v;
+	assert(distanceFromPlane(result) < 1.0e-8);
+	return result;
+}
+
 double distanceFromPlane(const Vector3d& pt, const Plane& plane) {
 	return (pt - plane._origin).dot(plane._normal);
 }
