@@ -46,7 +46,7 @@ template<typename SCALAR_TYPE>
 SCALAR_TYPE defaultVal();
 
 template <typename T>
-using Vector3 = Eigen::Matrix<T, 1, 3>;
+using Vector3 = Eigen::Matrix<T, 3, 1>;
 
 using Vector3d = Vector3<double>;
 using Vector3f = Vector3<float>;
