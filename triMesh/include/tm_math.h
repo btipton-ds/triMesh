@@ -196,10 +196,16 @@ bool intersectLineSegPlane(const LineSegment& seg, const Vector3d* pts[3], RayHi
 bool pointInTriangle(const Vector3d pts[3], const Vector3d& pt);
 
 template<class T>
-Vector3<T> orthoganalize(const Vector3<T>& origin, const Vector3<T>& unitVector, const Vector3<T>& pt)
+Vector3<T> orthoganalizeVector(const Vector3<T>& v, const Vector3<T>& unitVector)
+{
+	return v - unitVector * unitVector.dot(v);
+}
+
+template<class T>
+Vector3<T> orthoganalizePoint(const Vector3<T>& origin, const Vector3<T>& unitVector, const Vector3<T>& pt)
 {
 	Vector3<T> v = pt - origin;
-	v = v - unitVector * unitVector.dot(v);
+	v = orthoganalize(v, unitVector);
 	return origin + v;
 }
 

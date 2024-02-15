@@ -594,6 +594,7 @@ namespace TriMesh {
 				}
 				return true;
 			}, multiCore);
+			int dbgBreak = 1;
 		}
 	}
 
@@ -607,13 +608,13 @@ namespace TriMesh {
 
 			Vector3d norm0 = triUnitNormal(edge._faceIndex[0]);
 			Vector3d ctr0 = triCentroid(edge._faceIndex[0]);
-			Vector3d pt0 = orthoganalize(origin, vEdge, ctr0);
 
 			Vector3d norm1 = triUnitNormal(edge._faceIndex[1]);
 			Vector3d ctr1 = triCentroid(edge._faceIndex[1]);
-			Vector3d pt1 = orthoganalize(origin, vEdge, ctr1);
 
-			Vector3d vChord = pt1 - pt0;
+			Vector3d vChord = ctr1 - ctr0;
+			vChord = orthoganalizeVector(vChord, vEdge);
+
 			double chordLen = vChord.norm();
 			vChord.normalize();
 			double dp0 = fabs(norm0.dot(vChord));
@@ -822,28 +823,39 @@ namespace TriMesh {
 
 	const std::vector<float>& CMesh::getGlCurvatures(double edgeAngleRadians, bool multiCore) // size = GlPoints.size() / 3
 	{
-		if (_glCurvatures.size() != _vertices.size()) {
-			_glCurvatures.resize(_vertices.size(), 0);
+		if (_glCurvatures.size() != 3 * _tris.size()) {
+			vector<float> temp;
+			temp.resize(_vertices.size(), 0);
 
 			vector<size_t> counts;
-			counts.resize(_glCurvatures.size(), 0);
+			counts.resize(temp.size(), 0);
 			calCurvatures(edgeAngleRadians, multiCore);
 			for (size_t i = 0; i < _edges.size(); i++) {
 				float cur = (float)_edgeCurvature[i];
 				if (cur < 0)
-					cur = 1.0e6f; // Sharp
+					cur = 500; // Sharp
 
 				size_t vIdx0 = _edges[i]._vertIndex[0];
 				size_t vIdx1 = _edges[i]._vertIndex[1];
-				_glCurvatures[vIdx0] += cur;
+				temp[vIdx0] += cur;
 				counts[vIdx0]++;
 
-				_glCurvatures[vIdx1] += cur;
+				temp[vIdx1] += cur;
 				counts[vIdx1]++;
 			}
 
-			for (size_t i = 0; i < _glCurvatures.size(); i++) {
-				_glCurvatures[i] /= counts[i];
+			for (size_t i = 0; i < temp.size(); i++) {
+				if (counts[i] > 0)
+					temp[i] /= counts[i];
+			}
+
+			_glCurvatures.resize(3 * _tris.size());
+			size_t idx = 0;
+			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
+				const auto& vertIndices = _tris[triIdx];
+				for (size_t i = 0; i < 3; i++) {
+					_glCurvatures[idx++] = temp[vertIndices[i]];
+				}
 			}
 		}
 
