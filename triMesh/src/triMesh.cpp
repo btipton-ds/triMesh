@@ -602,22 +602,16 @@ namespace TriMesh {
 		const auto& edge = _edges[edgeIdx];
 		if (edge._numFaces == 2) {
 			auto seg = getEdgesLineSeg(edgeIdx);
-			Vector3d origin = seg._pts[0];
+			const Vector3d& origin = seg._pts[0];
 			Vector3d vEdge = seg.calcDir();
 
 			Vector3d norm0 = triUnitNormal(edge._faceIndex[0]);
 			Vector3d ctr0 = triCentroid(edge._faceIndex[0]);
-			Vector3d v0 = ctr0 - origin;
-			v0 = v0 - vEdge * vEdge.dot(v0);
-			Vector3d pt0 = origin + v0;
-			v0.normalize();
+			Vector3d pt0 = orthoganalize(origin, vEdge, ctr0);
 
 			Vector3d norm1 = triUnitNormal(edge._faceIndex[1]);
 			Vector3d ctr1 = triCentroid(edge._faceIndex[1]);
-			Vector3d v1 = ctr1 - origin;
-			v1 = v1 - vEdge * vEdge.dot(v1);
-			Vector3d pt1 = origin + v1;
-			v1.normalize();
+			Vector3d pt1 = orthoganalize(origin, vEdge, ctr1);
 
 			Vector3d vChord = pt1 - pt0;
 			double chordLen = vChord.norm();
@@ -824,6 +818,36 @@ namespace TriMesh {
 			_glParams.resize(3 * 2 * _tris.size(), 0);
 		}
 		return _glParams;
+	}
+
+	const std::vector<float>& CMesh::getGlCurvatures(double edgeAngleRadians, bool multiCore) // size = GlPoints.size() / 3
+	{
+		if (_glCurvatures.size() != _vertices.size()) {
+			_glCurvatures.resize(_vertices.size(), 0);
+
+			vector<size_t> counts;
+			counts.resize(_glCurvatures.size(), 0);
+			calCurvatures(edgeAngleRadians, multiCore);
+			for (size_t i = 0; i < _edges.size(); i++) {
+				float cur = (float)_edgeCurvature[i];
+				if (cur < 0)
+					cur = 1.0e6f; // Sharp
+
+				size_t vIdx0 = _edges[i]._vertIndex[0];
+				size_t vIdx1 = _edges[i]._vertIndex[1];
+				_glCurvatures[vIdx0] += cur;
+				counts[vIdx0]++;
+
+				_glCurvatures[vIdx1] += cur;
+				counts[vIdx1]++;
+			}
+
+			for (size_t i = 0; i < _glCurvatures.size(); i++) {
+				_glCurvatures[i] /= counts[i];
+			}
+		}
+
+		return _glCurvatures;
 	}
 
 	const vector<unsigned int>& CMesh::getGlFaceIndices()

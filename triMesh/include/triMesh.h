@@ -146,6 +146,7 @@ namespace TriMesh {
 		const std::vector<float>& getGlPoints();
 		const std::vector<float>& getGlNormals(bool smoothed);
 		const std::vector<float>& getGlParams();
+		const std::vector<float>& getGlCurvatures(double edgeAngleRadians, bool multiCore = true); // size = GlPoints.size() / 3
 		const std::vector<unsigned int>& getGlFaceIndices();
 		const std::vector<unsigned int>& getGlEdgeIndices();
 
@@ -170,7 +171,7 @@ namespace TriMesh {
 		mutable bool _useCentroidCache = true;
 		mutable std::vector<Vector3d> _centroids;
 
-		std::vector<float> _glPoints, _glNormals, _glParams;
+		std::vector<float> _glPoints, _glNormals, _glParams, _glCurvatures;
 		std::vector<unsigned int> _glTriIndices, _glEdgeIndices;
 		mutable bool _useNormalCache = true;
 		mutable std::vector<Vector3d> _normals;

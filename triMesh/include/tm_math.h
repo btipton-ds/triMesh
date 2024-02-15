@@ -195,6 +195,14 @@ bool intersectLineSegPlane(const LineSegment& seg, const Plane& plane, RayHit& h
 bool intersectLineSegPlane(const LineSegment& seg, const Vector3d* pts[3], RayHit& hit);
 bool pointInTriangle(const Vector3d pts[3], const Vector3d& pt);
 
+template<class T>
+Vector3<T> orthoganalize(const Vector3<T>& origin, const Vector3<T>& unitVector, const Vector3<T>& pt)
+{
+	Vector3<T> v = pt - origin;
+	v = v - unitVector * unitVector.dot(v);
+	return origin + v;
+}
+
 Vector3d triangleNormal(Vector3d const* const pts[3]);
 Vector3d triangleNormal(const Vector3d pts[3]);
 
