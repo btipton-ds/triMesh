@@ -42,7 +42,7 @@ add_library (
     "src/tm_vertex.cpp" 
     "src/tm_vector3.cpp"
     "src/tm_fixedMath.cpp"
-)
+ "src/tm_edge.cpp")
 
 add_executable (
     testTriMesh 
@@ -54,7 +54,7 @@ add_executable (
     "src/tm_vector3.cpp"
     "include/tm_fixedMath.h"
     "src/tm_fixedMath.cpp"
-)
+ "src/tm_edge.cpp")
 
 
 link_directories(

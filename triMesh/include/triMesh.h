@@ -81,6 +81,7 @@ namespace TriMesh {
 		size_t addEdge(size_t vertIdx0, size_t vertIdx1);
 		size_t addTriangle(const Vector3i& tri);
 		size_t findEdge(size_t vertIdx0, size_t vertIdx1) const;
+		size_t findEdge(const CEdge& edge) const;
 
 		template<class POINT_TYPE>
 		size_t addTriangle(const POINT_TYPE pts[3]);
@@ -152,8 +153,9 @@ namespace TriMesh {
 
 	private:
 		double findTriMinimumGap(size_t i) const;
-		double calEdgeCurvature(size_t edgeIdx) const;
+		double calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const;
 		double calVertCurvature(size_t vertIdx) const;
+		void getOtherEdges(const CEdge& thisEdge, size_t triIdx, CEdge& edge0, CEdge& edge1) const;
 
 		static std::atomic<size_t> _statId;
 		const size_t _id;
