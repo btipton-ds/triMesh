@@ -624,30 +624,34 @@ namespace TriMesh {
 
 			Vector3d bisector = (norm0 + norm1).normalized();
 			double sinTheta = bisector.cross(norm0).norm();
-			if (sinTheta < 1.0e-6)
+			if (sinTheta < 1.0e-10)
 				return 0; // The faces are coplanar = zero curvature at this edge
 
 			Vector3d bisectorPlaneNormal = bisector.cross(vEdge).normalized();
 
 			CEdge otherEdge0, otherEdge1, dicardEdge;
 			getOtherEdges(edge, edge._faceIndex[0], otherEdge0, dicardEdge);
-			Vector3d triPt0 = otherEdge0.getSeg(this).interpolate(0.5);
-			Vector3d vPt0 = triPt0 - origin;
-			double semiChord0 = fabs(bisectorPlaneNormal.dot(vPt0));
-
 			getOtherEdges(edge, edge._faceIndex[1], otherEdge1, dicardEdge);
+
+			Vector3d triPt0 = otherEdge0.getSeg(this).interpolate(0.5);
 			Vector3d triPt1 = otherEdge1.getSeg(this).interpolate(0.5);
+
+			Vector3d vPt0 = triPt0 - origin;
 			Vector3d vPt1 = triPt1 - origin;
+
+			double semiChord0 = fabs(bisectorPlaneNormal.dot(vPt0));
 			double semiChord1 = fabs(bisectorPlaneNormal.dot(vPt1));
 
-			double semiChord;
-			if (semiChord0 < semiChord1) {
-				semiChord = semiChord0;
-			} else {
-				semiChord = semiChord1;
-			}
+			double minRadius = 0.001;
+			double maxCurvature = 1 / minRadius;
 
-			double curv = sinTheta / semiChord;
+			double curv0 = sinTheta / semiChord0;
+			if (curv0 > maxCurvature)
+				curv0 = maxCurvature;
+			double curv1 = sinTheta / semiChord1;
+			if (curv1 > maxCurvature)
+				curv1 = maxCurvature;
+			double curv = (curv0 + curv1) * 0.5;
 			return curv;
 		}
 		return 0;
@@ -848,31 +852,69 @@ namespace TriMesh {
 		return _glParams;
 	}
 
-	const std::vector<float>& CMesh::getGlCurvatures(double edgeAngleRadians, bool multiCore) // size = GlPoints.size() / 3
+	const std::vector<float>& CMesh::getGlTriCurvatures(double edgeAngleRadians, bool multiCore) // size = GlPoints.size() / 3
 	{
-		if (_glCurvatures.size() != 3 * _tris.size()) { // 3 verts / tri, 1 curvature / vert
+		if (_glTriCurvatures.size() != 3 * _tris.size()) { // 3 verts / tri, 1 curvature / vert
 			calCurvatures(edgeAngleRadians, multiCore);
 
-			vector<int> counts;
 			size_t count = 0;
-			_glCurvatures.resize(3 * _tris.size());
-			counts.resize(_glCurvatures.size(), 0);
+			_glTriCurvatures.resize(3 * _tris.size(), 0);
 			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
 				const auto& tri = _tris[triIdx];
+				float curvs[3];
 				for (int i = 0; i < 3; i++) {
 					int j = (i + 1) % 3;
-					CEdge edge(tri[i], tri[j]);
-					size_t edgeIdx = findEdge(edge);
-					float cur = (float)_edgeCurvature[edgeIdx];
-					_glCurvatures[3 * triIdx + i] += cur;
-					counts[3 * triIdx + i]++;
+					size_t edgeIdx = findEdge(tri[i], tri[j]);
+					curvs[i] = (float)_edgeCurvature[edgeIdx];
+				}
+				float minCurv = FLT_MAX;
+				for (int i = 0; i < 3; i++) {
+					if (curvs[i] < minCurv)
+						minCurv = curvs[i];
+				}
+				if (minCurv < 1.0e-6) {
+					float avgNonZeroCurv = 0;
+					int count = 0;
+					for (int i = 0; i < 3; i++) {
+						if (curvs[i] > minCurv) {
+							avgNonZeroCurv += curvs[i];
+							count++;
+						}
+					}
+					if (count > 0) {
+						avgNonZeroCurv /= (float) count;
+						for (int i = 0; i < 3; i++) {
+							if (curvs[i] <= minCurv) {
+								curvs[i] = avgNonZeroCurv;
+							}
+						}
+					}
+				}
+
+				for (int i = 0; i < 3; i++) {
+					size_t curIdx = 3 * triIdx + i;
+					_glTriCurvatures[curIdx] += curvs[i];
+				}
+				for (int i = 0; i < 3; i++) {
+					size_t curIdx = 3 * triIdx + i;
+					_glTriCurvatures[curIdx] /= 3.0f;
 				}
 			}
-			for (size_t i = 0; i < _glCurvatures.size(); i++)
-				_glCurvatures[i] /= counts[i];
 		}
 
-		return _glCurvatures;
+		return _glTriCurvatures;
+	}
+
+	const std::vector<float>& CMesh::getGlEdgeCurvatures(double edgeAngleRadians, bool multiCore) // size = GlPoints.size() / 3
+	{
+		if (_glEdgeCurvatures.size() != 2 * _edges.size()) { // 2 verts / edge, 1 curvature / edge
+			calCurvatures(edgeAngleRadians, multiCore);
+			_glEdgeCurvatures.resize(2 * _edges.size());
+			for (size_t i = 0; i < _edges.size(); i++) {
+				_glEdgeCurvatures[2 * i + 0] = _glEdgeCurvatures[2 * i + 1] = (float) _edgeCurvature[i];
+			}
+		}
+		return _glEdgeCurvatures;
 	}
 
 	const vector<unsigned int>& CMesh::getGlFaceIndices()
