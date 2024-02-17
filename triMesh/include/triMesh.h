@@ -144,9 +144,10 @@ namespace TriMesh {
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;
 
-		const std::vector<float>& getGlPoints();
-		const std::vector<float>& getGlNormals(bool smoothed);
-		const std::vector<float>& getGlParams();
+		const std::vector<float>& getGlTriPoints();
+		const std::vector<float>& getGlEdgePoints();
+		const std::vector<float>& getGlTriNormals(bool smoothed);
+		const std::vector<float>& getGlTriParams();
 		const std::vector<float>& getGlTriCurvatures(double edgeAngleRadians, bool multiCore = true); // size = GlPoints.size() / 3
 		const std::vector<float>& getGlEdgeCurvatures(double edgeAngleRadians, bool multiCore = true); // size = GlPoints.size() / 3
 		const std::vector<unsigned int>& getGlFaceIndices();
@@ -174,7 +175,8 @@ namespace TriMesh {
 		mutable bool _useCentroidCache = true;
 		mutable std::vector<Vector3d> _centroids;
 
-		std::vector<float> _glPoints, _glNormals, _glParams, _glTriCurvatures, _glEdgeCurvatures;
+		std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatures, 
+			_glEdgePoints, _glEdgeCurvatures;
 		std::vector<unsigned int> _glTriIndices, _glEdgeIndices;
 		mutable bool _useNormalCache = true;
 		mutable std::vector<Vector3d> _normals;
