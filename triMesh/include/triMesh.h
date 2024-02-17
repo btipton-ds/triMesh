@@ -143,21 +143,26 @@ namespace TriMesh {
 
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;
+		double calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const;
 
 		const std::vector<float>& getGlTriPoints();
-		const std::vector<float>& getGlEdgePoints();
 		const std::vector<float>& getGlTriNormals(bool smoothed);
 		const std::vector<float>& getGlTriParams();
 		const std::vector<float>& getGlTriCurvatures(double edgeAngleRadians, bool multiCore = true); // size = GlPoints.size() / 3
-		const std::vector<float>& getGlEdgeCurvatures(double edgeAngleRadians, bool multiCore = true); // size = GlPoints.size() / 3
-		const std::vector<unsigned int>& getGlFaceIndices();
+		const std::vector<unsigned int>& getGlTriIndices();
+
+		// If all is true, get every edge. If false, only get sharp and curved edges.
+		const std::vector<float>& getGlEdgePoints();
 		const std::vector<unsigned int>& getGlEdgeIndices();
+
+		const std::vector<float>& getGlNonPlanarEdgePoints(double edgeAngleRadians, bool multiCore = true);
+		const std::vector<unsigned int>& getGlNonPlanarEdgeIndices(double edgeAngleRadians, bool multiCore = true);
+		const std::vector<float>& getGlEdgeCurvatures(double edgeAngleRadians, bool multiCore = true); // size = GlPoints.size() / 3
 
 	private:
 		double findTriMinimumGap(size_t i) const;
-		double calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const;
 		double calVertCurvature(size_t vertIdx) const;
-		void getOtherEdges(const CEdge& thisEdge, size_t triIdx, CEdge& edge0, CEdge& edge1) const;
+		size_t getOtherVertIdx(const CEdge& thisEdge, size_t triIdx) const;
 
 		static std::atomic<size_t> _statId;
 		const size_t _id;

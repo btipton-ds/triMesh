@@ -220,9 +220,8 @@ namespace TriMesh {
 		return triIdx;
 	}
 
-	LineSegment CMesh::getEdgesLineSeg(size_t edgeIdx) const {
-
-		/*TODO, not finished, may not be needed*/
+	LineSegment CMesh::getEdgesLineSeg(size_t edgeIdx) const 
+	{
 		const CEdge& edge = _edges[edgeIdx];
 		size_t idx0 = edge._vertIndex[0];
 		size_t idx1 = edge._vertIndex[1];
@@ -593,65 +592,61 @@ namespace TriMesh {
 		}
 	}
 
-	void CMesh::getOtherEdges(const CEdge& thisEdge, size_t triIdx, CEdge& edge0, CEdge& edge1) const
+	size_t CMesh::getOtherVertIdx(const CEdge& thisEdge, size_t triIdx) const
 	{
 		const auto& tri = _tris[triIdx];
 		int outIdx = 0;
 		for (int i = 0; i < 3; i++) {
-			int j = (i + 1) % 3;
-			CEdge testEdge(tri[i], tri[j]);
-			if (!(testEdge == thisEdge)) {
-				if (outIdx++ == 0)
-					edge0 = testEdge;
-				else
-					edge1 = testEdge;
+			if (tri[i] != thisEdge._vertIndex[0] && tri[i] != thisEdge._vertIndex[1]) {
+				return tri[i];
 			}
 		}
+		return -1;
 	}
 
 	double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 	{
 		const auto& edge = _edges[edgeIdx];
 		if (edge._numFaces == 2) {
+			if (isEdgeSharp(edgeIdx, sinEdgeAngle))
+				return 100000;
 			auto seg = getEdgesLineSeg(edgeIdx);
 			const Vector3d& origin = seg._pts[0];
 			Vector3d vEdge = seg.calcDir();
 
 			Vector3d norm0 = triUnitNormal(edge._faceIndex[0]);
 			Vector3d norm1 = triUnitNormal(edge._faceIndex[1]);
-			if (norm1.cross(norm0).norm() > sinEdgeAngle)
+
+			if (norm0.cross(norm1).norm() < 1.0e-8) // Planes are parallel
 				return 0;
 
-			Vector3d bisector = (norm0 + norm1).normalized();
-			double sinTheta = bisector.cross(norm0).norm();
-			if (sinTheta < 1.0e-10)
-				return 0; // The faces are coplanar = zero curvature at this edge
+			Plane edgePlane(origin, vEdge);
+			size_t vertIdx0 = getOtherVertIdx(edge, edge._faceIndex[0]);
+			size_t vertIdx1 = getOtherVertIdx(edge, edge._faceIndex[1]);
 
-			Vector3d bisectorPlaneNormal = bisector.cross(vEdge).normalized();
+			// Both edge vertices AND each of the opposite vertices lie on the actual surface
+						// Project the points to a plane perpendicular to the edge and fit a circle through it
+						// Fit a circle through tree points
+			Vector3d triPt0 = edgePlane.projectPoint(_vertices[vertIdx0]._pt);
+			Vector3d triPt1 = edgePlane.projectPoint(_vertices[vertIdx1]._pt);
+			assert(fabs((triPt0 - origin).dot(vEdge)) < 1.0e-6);
+			assert(fabs((triPt1 - origin).dot(vEdge)) < 1.0e-6);
 
-			CEdge otherEdge0, otherEdge1, dicardEdge;
-			getOtherEdges(edge, edge._faceIndex[0], otherEdge0, dicardEdge);
-			getOtherEdges(edge, edge._faceIndex[1], otherEdge1, dicardEdge);
+			Vector3d vChord0 = triPt0 - origin;
+			Vector3d vChord1 = triPt1 - origin;
+			Vector3d midPt0 = origin + 0.5 * (vChord0);
+			Vector3d midPt1 = origin + 0.5 * (vChord1);
 
-			Vector3d triPt0 = otherEdge0.getSeg(this).interpolate(0.5);
-			Vector3d triPt1 = otherEdge1.getSeg(this).interpolate(0.5);
+			Plane midPlane(midPt0, vChord0.normalized());
+			Vector3d ctr;
+			double dist;
+			if (!midPlane.intersectLine(midPt1, midPt1 + norm1, ctr, dist))
+				return 0;
 
-			Vector3d vPt0 = triPt0 - origin;
-			Vector3d vPt1 = triPt1 - origin;
+			assert(fabs((ctr - origin).dot(vEdge)) < 1.0e-6);
+			double radius = (ctr - origin).norm();
 
-			double semiChord0 = fabs(bisectorPlaneNormal.dot(vPt0));
-			double semiChord1 = fabs(bisectorPlaneNormal.dot(vPt1));
-
-			double minRadius = 0.001;
-			double maxCurvature = 1 / minRadius;
-
-			double curv0 = sinTheta / semiChord0;
-			if (curv0 > maxCurvature)
-				curv0 = maxCurvature;
-			double curv1 = sinTheta / semiChord1;
-			if (curv1 > maxCurvature)
-				curv1 = maxCurvature;
-			double curv = (curv0 + curv1) * 0.5;
+			double curv = 1 / radius;
 			return curv;
 		}
 		return 0;
@@ -924,19 +919,56 @@ namespace TriMesh {
 		return _glTriCurvatures;
 	}
 
+	const std::vector<float>& CMesh::getGlNonPlanarEdgePoints(double edgeAngleRadians, bool multiCore)
+	{
+		if (_glEdgePoints.empty()) { // 2 verts / edge, 1 curvature / edge
+			calCurvatures(edgeAngleRadians, multiCore);
+			_glEdgePoints.reserve(2 * 3 * _edges.size());
+			for (size_t edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
+				if (_edgeCurvature[edgeIdx] > 1.0e-4) {
+					const auto& edge = _edges[edgeIdx];
+					for (int i = 0; i < 2; i++) {
+						const auto& pt = _vertices[edge._vertIndex[i]]._pt;
+						for (int j = 0; j < 3; j++)
+							_glEdgePoints.push_back((float)pt[j]);
+					}
+				}
+			}
+		}
+		return _glEdgePoints;
+	}
+
+	const std::vector<unsigned int>& CMesh::getGlNonPlanarEdgeIndices(double edgeAngleRadians, bool multiCore)
+	{
+		if (_glEdgeIndices.empty()) { // 2 verts / edge, 1 curvature / edge
+			calCurvatures(edgeAngleRadians, multiCore);
+			_glEdgeCurvatures.reserve(_edges.size());
+			for (unsigned int edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
+				if (_edgeCurvature[edgeIdx] > 1.0e-4) {
+					_glEdgeIndices.push_back(2 * edgeIdx + 0);
+					_glEdgeIndices.push_back(2 * edgeIdx + 1);
+				}
+			}
+		}
+		return _glEdgeIndices;
+	}
+
 	const std::vector<float>& CMesh::getGlEdgeCurvatures(double edgeAngleRadians, bool multiCore) // size = GlPoints.size() / 3
 	{
-		if (_glEdgeCurvatures.size() != 2 * _edges.size()) { // 2 verts / edge, 1 curvature / edge
+		if (_glEdgeCurvatures.empty()) { // 2 verts / edge, 1 curvature / edge
 			calCurvatures(edgeAngleRadians, multiCore);
-			_glEdgeCurvatures.resize(2 * _edges.size());
-			for (size_t i = 0; i < _edges.size(); i++) {
-				_glEdgeCurvatures[2 * i + 0] = _glEdgeCurvatures[2 * i + 1] = (float) _edgeCurvature[i];
+			_glEdgeCurvatures.reserve(_edges.size());
+			for (size_t edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
+				if (_edgeCurvature[edgeIdx] > 1.0e-4) {
+					float curv = (float)_edgeCurvature[edgeIdx];
+					_glEdgeCurvatures.push_back(curv);
+				}
 			}
 		}
 		return _glEdgeCurvatures;
 	}
 
-	const vector<unsigned int>& CMesh::getGlFaceIndices()
+	const vector<unsigned int>& CMesh::getGlTriIndices()
 	{
 		if (_glTriPoints.empty())
 			getGlTriPoints();
