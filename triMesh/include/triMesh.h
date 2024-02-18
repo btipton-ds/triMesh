@@ -152,12 +152,9 @@ namespace TriMesh {
 		const std::vector<unsigned int>& getGlTriIndices();
 
 		// If all is true, get every edge. If false, only get sharp and curved edges.
-		const std::vector<float>& getGlEdgePoints();
-		const std::vector<unsigned int>& getGlEdgeIndices();
 
-		const std::vector<float>& getGlNonPlanarEdgePoints(double edgeAngleRadians, bool multiCore = true);
-		const std::vector<unsigned int>& getGlNonPlanarEdgeIndices(double edgeAngleRadians, bool multiCore = true);
-		const std::vector<float>& getGlEdgeCurvatures(double edgeAngleRadians, bool multiCore = true); // size = GlPoints.size() / 3
+		template<typename LAMBDA>
+		void getGlEdges(LAMBDA cuvatureToColorFunc, double edgeAngleRadians, std::vector<float>& points, std::vector<float>& color, std::vector<unsigned int>& indices, bool multiCore = true);
 
 	private:
 		double findTriMinimumGap(size_t i) const;
@@ -180,9 +177,8 @@ namespace TriMesh {
 		mutable bool _useCentroidCache = true;
 		mutable std::vector<Vector3d> _centroids;
 
-		std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatures, 
-			_glEdgePoints, _glEdgeCurvatures;
-		std::vector<unsigned int> _glTriIndices, _glEdgeIndices;
+		std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatures;
+		std::vector<unsigned int> _glTriIndices;
 		mutable bool _useNormalCache = true;
 		mutable std::vector<Vector3d> _normals;
 		mutable std::vector<double> _edgeCurvature;
@@ -305,6 +301,45 @@ namespace TriMesh {
 
 	inline const CEdge& CMesh::getEdge(size_t idx) const {
 		return _edges[idx];
+	}
+
+	template<typename LAMBDA>
+	void CMesh::getGlEdges(LAMBDA curvatureToColorFunc, double edgeAngleRadians, std::vector<float>& points, std::vector<float>& colors, std::vector<unsigned int>& indices, bool multiCore) // size = GlPoints.size() / 3
+	{
+		points.clear();
+		colors.clear();
+		indices.clear();
+
+		points.reserve(2 * 3 * _edges.size());
+		indices.reserve(2 * _edges.size());
+
+		if (edgeAngleRadians > 0) {
+			buildNormals(multiCore);
+			calCurvatures(edgeAngleRadians, multiCore);
+			colors.reserve(2 * 3 * _edges.size());
+		}
+		unsigned int indexCount = 0;
+		for (size_t edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
+			float curv = (float)_edgeCurvature[edgeIdx];
+			float rgb[3];
+			if (curvatureToColorFunc(curv, rgb)) {
+				indices.push_back(indexCount++);
+				indices.push_back(indexCount++);
+
+				const auto& edge = _edges[edgeIdx];
+				for (int i = 0; i < 2; i++) {
+					const auto& pt = _vertices[edge._vertIndex[i]]._pt;
+					for (int j = 0; j < 3; j++) {
+						points.push_back((float)pt[j]);
+						if (edgeAngleRadians > 0) 
+							colors.push_back(rgb[j]);
+					}
+				}
+			}
+		}
+		points.shrink_to_fit();
+		colors.shrink_to_fit();
+		indices.shrink_to_fit();
 	}
 
 	template<typename T>
