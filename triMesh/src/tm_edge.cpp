@@ -13,7 +13,7 @@ LineSegment CEdge::getSeg(const CMesh* pMesh) const
 CEdge::CEdge(size_t vertIdx0, size_t vertIdx1)
 	: _numFaces(0)
 {
-	_faceIndex[0] = _faceIndex[1] = stm1;
+	_faceIndices[0] = _faceIndices[1] = stm1;
 	if (vertIdx0 <= vertIdx1) {
 		_vertIndex[0] = vertIdx0;
 		_vertIndex[1] = vertIdx1;
@@ -38,22 +38,38 @@ bool CEdge::operator == (const CEdge& rhs) const {
 	return _vertIndex[0] == rhs._vertIndex[0] && _vertIndex[1] == rhs._vertIndex[1];
 }
 
-void CEdge::addFace(size_t faceIdx) {
+void CEdge::addFaceIndex(size_t faceIdx) {
 	for (int i = 0; i < _numFaces; i++) {
-		if (_faceIndex[i] == faceIdx)
+		if (_faceIndices[i] == faceIdx)
 			return;
 	}
 	if (_numFaces < 2) {
-		_faceIndex[_numFaces++] = faceIdx;
+		_faceIndices[_numFaces++] = faceIdx;
 	} else {
 //		assert(!"An edge cannot have more than two triangles attached to it");
 	}
 }
 
-inline void CEdge::dump(std::ostream& out) const {
+void CEdge::removeFaceIndex(size_t faceIdx)
+{
+	for (int i = 0; i < _numFaces; i++) {
+		if (_faceIndices[i] == faceIdx) {
+			if (i == 0) {
+				_faceIndices[i] = _faceIndices[i + 1];
+			}
+			_numFaces--;
+			_faceIndices[1] = -1;
+			if (_numFaces == 0)
+				_faceIndices[0] = -1;
+			return;
+		}
+	}
+}
+
+void CEdge::dump(std::ostream& out) const {
 	out << "edge { verts:(" << _vertIndex[0] << ", " << _vertIndex[1] << "), faces(";
 	for (int i = 0; i < _numFaces; i++) {
-		out << _faceIndex[i] << ",";
+		out << _faceIndices[i] << ",";
 	}
 	out << ") }\n";
 }

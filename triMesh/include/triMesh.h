@@ -93,6 +93,8 @@ namespace TriMesh {
 		template<class POINT_TYPE>
 		size_t addQuad(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, const POINT_TYPE& pt3);
 
+		void squeezeEdge(size_t idx);
+
 		// takes a vector of 8 points in {
 		// 0,3,2,1
 		// 4,5,6,7 } order
@@ -105,7 +107,7 @@ namespace TriMesh {
 		LineSegment getEdgesLineSeg(size_t edgeIdx) const;
 		bool isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const;
 
-		const std::vector<size_t>& getSharpEdgeIndices(double edgeAngleRadians = 0);
+		const std::vector<size_t>& getSharpEdgeIndices(double edgeAngleRadians = 0) const;
 
 		size_t numVertices() const;
 		size_t numEdges() const;
@@ -129,8 +131,12 @@ namespace TriMesh {
 
 		Vector3d triCentroid(size_t triIdx) const;
 		Vector3d triUnitNormal(size_t triIdx) const;
+		double triArea(size_t triIdx) const;
+		double triAspectRatio(size_t triIdx) const;
+
 		Vector3d vertUnitNormal(size_t vertIdx) const;
 		double edgeCurvature(size_t edgeIdx) const;
+		double edgeLength(size_t edgeIdx) const;
 
 		void merge(CMeshPtr& src, bool destructive);
 		void merge(std::vector<CMeshPtr>& src, bool destructive, bool multiCore = true);
@@ -143,7 +149,6 @@ namespace TriMesh {
 
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;
-		double calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const;
 
 		const std::vector<float>& getGlTriPoints();
 		const std::vector<float>& getGlTriNormals(bool smoothed);
@@ -156,10 +161,26 @@ namespace TriMesh {
 		template<typename LAMBDA>
 		void getGlEdges(LAMBDA cuvatureToColorFunc, double edgeAngleRadians, std::vector<float>& points, std::vector<float>& color, std::vector<unsigned int>& indices, bool multiCore = true);
 
+		bool testSqueezeEdge();
+		bool testRemoveTri(size_t idx);
+
+		bool verifyTopology() const;
 	private:
+		static bool sameTri(const Vector3i& tri0, const Vector3i& tri1);
+
 		double findTriMinimumGap(size_t i) const;
-		double calVertCurvature(size_t vertIdx) const;
+		double calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const;
+		double calSinVertexAngle(size_t triIdx, size_t vertIdx, size_t& oppositeEdgeIdx) const;
 		size_t getOtherVertIdx(const CEdge& thisEdge, size_t triIdx) const;
+		void squeezeShortSharpEdges();
+		bool removeTri(size_t triIdx);
+		void deleteTri(size_t edgeIdx);
+		void deleteEdge(size_t edgeIdx);
+		void mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove);
+
+		bool verifyTriVertsPointToTry(size_t triIdx) const;
+		bool verifyVertTrisPointToVert(size_t vertIdx) const;
+		bool verifyEdgeVertsPointToEdge(size_t edgeIdx) const;
 
 		static std::atomic<size_t> _statId;
 		const size_t _id;
@@ -168,21 +189,24 @@ namespace TriMesh {
 		SearchTree _vertTree;
 
 		std::vector<CEdge> _edges;
-		std::vector<size_t> _sharpEdgeIndices;
 		SearchTree _edgeTree;
 		std::map<CEdge, size_t> _edgeToIdxMap;
 
 		std::vector<Vector3i> _tris;
 
-		mutable bool _useCentroidCache = true;
-		mutable std::vector<Vector3d> _centroids;
-
 		std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatures;
 		std::vector<unsigned int> _glTriIndices;
+		SearchTree _triTree;
+
+		// These are cached data and can be reproduced. Marked mutable so they can be accessed from const getters
+		mutable bool _useCentroidCache = true;
+		mutable std::vector<Vector3d> _centroids;
+		mutable std::vector<size_t> _sharpEdgeIndices;
+		mutable std::vector<std::vector<size_t>> _sharpEdgeLoops;
 		mutable bool _useNormalCache = true;
 		mutable std::vector<Vector3d> _normals;
 		mutable std::vector<double> _edgeCurvature;
-		SearchTree _triTree;
+
 	};
 
 	using CMeshPtr = std::shared_ptr<CMesh>;

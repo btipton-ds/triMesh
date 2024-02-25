@@ -46,7 +46,9 @@ struct CVertex {
 	bool read(std::istream& in);
 
 	void addEdgeIndex(size_t index);
+	void removeEdgeIndex(size_t index);
 	void addFaceIndex(size_t index);
+	void removeFaceIndex(size_t index);
 
 	void dump(std::ostream& out) const;
 

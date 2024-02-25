@@ -45,7 +45,8 @@ public:
 	CEdge(size_t vertIdx0 = stm1, size_t vertIdx1 = stm1);
 	bool operator < (const CEdge& rhs) const;
 	bool operator == (const CEdge& rhs) const;
-	void addFace(size_t faceIdx);
+	void addFaceIndex(size_t faceIdx);
+	void removeFaceIndex(size_t faceIdx);
 
 	LineSegment getSeg(const CMesh* pMesh) const;
 
@@ -53,7 +54,7 @@ public:
 
 	size_t _vertIndex[2];
 	int _numFaces;
-	size_t _faceIndex[2];
+	size_t _faceIndices[2];
 };
 
 }

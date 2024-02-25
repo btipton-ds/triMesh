@@ -54,11 +54,26 @@ void CVertex::addEdgeIndex(size_t index)
 		_edgeIndices.push_back(index);
 }
 
+void CVertex::removeEdgeIndex(size_t index)
+{
+	auto curIdx = find(_edgeIndices.begin(), _edgeIndices.end(), index);
+	if (curIdx != _edgeIndices.end())
+		_edgeIndices.erase(curIdx);
+
+}
+
 void CVertex::addFaceIndex(size_t index)
 {
 	auto curIdx = find(_faceIndices.begin(), _faceIndices.end(), index);
 	if (curIdx == _faceIndices.end())
 		_faceIndices.push_back(index);
+}
+
+void CVertex::removeFaceIndex(size_t index)
+{
+	auto curIdx = find(_faceIndices.begin(), _faceIndices.end(), index);
+	if (curIdx != _faceIndices.end())
+		_faceIndices.erase(curIdx);
 }
 
 }

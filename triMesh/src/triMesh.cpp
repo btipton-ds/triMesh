@@ -27,11 +27,15 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 
 */
 
+#include <list>
 #include <tm_defines.h>
 
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
+
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 #include <../../stlReader/include/readStl.h>
 #include <triMesh.h>
@@ -84,9 +88,9 @@ void CMesh::dumpTris(const wstring& filename) const
 		out << tri[0] << " " << tri[1] << " " << tri[2] << "\n";
 	}
 	for (const auto& edge : _edges) {
-		out << edge._vertIndex[0] << " " << edge._vertIndex[1] << " " << edge._numFaces << " " << edge._faceIndex[0];
+		out << edge._vertIndex[0] << " " << edge._vertIndex[1] << " " << edge._numFaces << " " << edge._faceIndices[0];
 		if (edge._numFaces == 2)
-			out << " " << edge._faceIndex[1];
+			out << " " << edge._faceIndices[1];
 		out << "\n";
 	}
 }
@@ -141,7 +145,7 @@ bool CMesh::compareDumpedTris(const wstring& filename) const
 			return false;
 		}
 
-		if (numFaces == 2 && d != edge._faceIndex[1])
+		if (numFaces == 2 && d != edge._faceIndices[1])
 			return false;
 	}
 	return true;
@@ -177,6 +181,257 @@ size_t CMesh::findEdge(size_t vertIdx0, size_t vertIdx1) const
 	return findEdge(CEdge(vertIdx0, vertIdx1));
 }
 
+void CMesh::squeezeEdge(size_t idx)
+{
+	auto& edge = _edges[idx];
+	if (edge._numFaces != 2)
+		return;
+
+	Vector3d dir = getEdgesLineSeg(idx).calcDir();
+
+	double minCp[] = { DBL_MAX, DBL_MAX };
+	double minDist[] = { DBL_MAX, DBL_MAX };
+	for (size_t i = 0; i < 2; i++) {
+		const auto& vert = _vertices[edge._vertIndex[i]];
+		for (size_t edgeIdx : vert._edgeIndices) {
+			if (edgeIdx == idx)
+				continue;
+			auto seg = getEdgesLineSeg(edgeIdx);
+			Vector3d v = seg.calcDir();
+			double cp = v.cross(dir).norm();
+			if (cp < minCp[i]) {
+				minCp[i] = cp;
+				minDist[i] = seg.calLength();
+			}
+		}
+	}
+
+	// squeeze to the longer edge so the shorter edge gets longer. This reduces the aspect ratio of the tri with the short 
+	// edge so it's less likely we need to squeeze it too.
+	size_t vertIdxToKeep, vertIdxToRemove;
+	if (minDist[0] > minDist[1]) {
+		vertIdxToKeep = edge._vertIndex[0];
+		vertIdxToRemove = edge._vertIndex[1];
+	} else {
+		vertIdxToKeep = edge._vertIndex[1];
+		vertIdxToRemove = edge._vertIndex[0];
+	}
+
+	removeTri(edge._faceIndices[0]);
+	removeTri(edge._faceIndices[1]);
+	mergeVertices(vertIdxToKeep, vertIdxToRemove);
+}
+
+bool CMesh::removeTri(size_t triIdx)
+{
+	assert(verifyTopology());
+	assert(triIdx != -1);
+	if (triIdx == 7943) {
+		int dbgBreak = 1;
+	}
+	
+	const auto& tri = _tris[triIdx];
+	BoundingBox triBBox;
+	for (int i = 0; i < 3; i++) {
+		triBBox.merge(_vertices[tri[i]]._pt);
+	}
+	_triTree.remove(triBBox, triIdx);
+
+	for (int i = 0; i < 3; i++) {
+		int j = (i + 1) % 3;
+		size_t vertIdx0 = tri[i];
+		size_t vertIdx1 = tri[j];
+		size_t edgeIdx = findEdge(vertIdx0, vertIdx1);
+		if (edgeIdx == 2) {
+			int dbgBreak = 1;
+		}
+		auto& vert0 = _vertices[vertIdx0];
+		auto& vert1 = _vertices[vertIdx1];
+
+		vert0.removeFaceIndex(triIdx);
+
+		auto& edge = _edges[edgeIdx];
+		edge.removeFaceIndex(triIdx);
+		if (edge._numFaces == 0) {
+			deleteEdge(edgeIdx);
+		}
+	}
+	deleteTri(triIdx);
+
+	if (verifyTopology())
+		return true;
+
+	assert(!"Failed to remove triangle");
+
+	return false;
+}
+
+void CMesh::deleteTri(size_t triIdx)
+{
+	size_t srcIdx = _tris.size() - 1;
+
+	if (triIdx == _tris.size() - 1) {
+		_tris.pop_back();
+		return;
+	}
+	_tris[triIdx] = _tris[srcIdx];
+	_tris.pop_back();
+
+	{
+		auto& tri = _tris[triIdx];
+		for (int i = 0; i < 3; i++) {
+			int j = (i + 1) % 3;
+			auto& vert0 = _vertices[tri[i]];
+			auto& vert1 = _vertices[tri[j]];
+
+			vert0.removeFaceIndex(srcIdx);
+			vert0.addFaceIndex(triIdx);
+
+			size_t edgeIdx = findEdge(tri[i], tri[j]);
+			auto& edge = _edges[edgeIdx];
+			edge.removeFaceIndex(srcIdx);
+			edge.addFaceIndex(triIdx);
+
+			int dbgBreak = 1;
+		}
+	}
+
+	verifyTriVertsPointToTry(triIdx);
+}
+
+void CMesh::deleteEdge(size_t edgeIdx)
+{
+	{
+		auto& edge = _edges[edgeIdx];
+		auto& vert0 = _vertices[edge._vertIndex[0]];
+		auto& vert1 = _vertices[edge._vertIndex[1]];
+		vert0.removeEdgeIndex(edgeIdx);
+		vert1.removeEdgeIndex(edgeIdx);
+		assert(edge._numFaces == 0);
+	}
+
+	size_t srcIdx = _edges.size() - 1;
+
+	_edges[edgeIdx] = _edges[srcIdx];
+	_edges.pop_back();
+
+	{
+		auto& edge = _edges[edgeIdx];
+		auto& vert0 = _vertices[edge._vertIndex[0]];
+		auto& vert1 = _vertices[edge._vertIndex[1]];
+		vert0.removeEdgeIndex(srcIdx);
+		vert1.removeEdgeIndex(srcIdx);
+
+		vert0.addEdgeIndex(edgeIdx);
+		vert1.addEdgeIndex(edgeIdx);
+	}
+	verifyEdgeVertsPointToEdge(edgeIdx);
+}
+
+void CMesh::mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove)
+{
+	auto& vertToRemove = _vertices[vertIdxToRemove];
+	auto triIdsToModify = vertToRemove._faceIndices;
+
+	for (size_t triIdx : triIdsToModify) {
+		auto tri = _tris[triIdx];
+		int vertIdxToSwap = -1;
+		for (int i = 0; i < 3; i++) {
+			if (tri[i] == vertIdxToRemove) {
+				vertIdxToSwap = i;
+				break;
+			}
+		}
+		if (vertIdxToSwap != -1) {
+			removeTri(triIdx);
+			tri[vertIdxToSwap] = vertIdxToKeep;
+			addTriangle(tri);
+		}
+	}
+	assert(verifyTopology());
+}
+
+bool CMesh::verifyTopology() const
+{
+	for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
+		if (!verifyTriVertsPointToTry(triIdx))
+			return false;
+	}
+
+	for (size_t vertIdx = 0; vertIdx < _vertices.size(); vertIdx++) {
+		if (!verifyVertTrisPointToVert(vertIdx))
+			return false;
+	}
+
+	for (size_t edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
+		if (!verifyEdgeVertsPointToEdge(edgeIdx))
+			return false;
+	}
+
+	return true;
+}
+
+bool CMesh::verifyTriVertsPointToTry(size_t triIdx) const
+{
+	const auto& tri = _tris[triIdx];
+	for (size_t i = 0; i < 3; i++) {
+		size_t j = (i + 1) % 3;
+		size_t vertIdx0 = tri[i];
+		size_t vertIdx1 = tri[j];
+		size_t edgeIdx = findEdge(vertIdx0, vertIdx1);
+		const auto& vert = _vertices[vertIdx0];
+		const auto& vertFaces = vert._faceIndices;
+		const auto& vertEdges = vert._edgeIndices;
+
+		if (find(vertFaces.begin(), vertFaces.end(), triIdx) == vertFaces.end())
+			return false;
+
+		if (find(vertEdges.begin(), vertEdges.end(), edgeIdx) == vertEdges.end())
+			return false;
+	}
+
+	return true;
+}
+
+bool CMesh::verifyVertTrisPointToVert(size_t vertIdx) const
+{
+	const auto& vert = _vertices[vertIdx];
+
+	const auto& vertFaces = vert._faceIndices;
+	for (auto triIdx : vertFaces) {
+		const auto& triVerts = _tris[triIdx];
+		bool found = false;
+		for (size_t i = 0; i < 3; i++) {
+			if (triVerts[i] == vertIdx) {
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			return false;
+	}
+	return true;
+}
+
+bool CMesh::verifyEdgeVertsPointToEdge(size_t edgeIdx) const
+{
+	const auto& edge = _edges[edgeIdx];
+
+	for (int i = 0; i < 2; i++) {
+		bool found = false;
+		const auto& vertEdges = _vertices[edge._vertIndex[i]]._edgeIndices;
+		for (size_t vertEdgeIdx : vertEdges) {
+			if (edgeIdx == vertEdgeIdx) {
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			return false;
+	}
+	return true;
+}
+
 size_t CMesh::addEdge(size_t vertIdx0, size_t vertIdx1) {
 	CEdge edge(vertIdx0, vertIdx1);
 	auto iter = _edgeToIdxMap.find(edge);
@@ -200,19 +455,47 @@ size_t CMesh::addEdge(size_t vertIdx0, size_t vertIdx1) {
 	return result;
 }
 
+bool CMesh::sameTri(const Vector3i& tri0, const Vector3i& tri1)
+{
+	for (int i = 0; i < 3; i++) {
+		bool found = false;
+		for (int j = 0; j < 3; j++) {
+			if (tri0[i] == tri1[j]) {
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			return false;
+	}
+
+	return true;
+}
+
 size_t CMesh::addTriangle(const Vector3i& tri) {
-	size_t triIdx = _tris.size();
-	_tris.push_back(tri);
 	BoundingBox triBox;
 	for (int i = 0; i < 3; i++) {
+		const auto& vert = _vertices[tri[i]];
+		triBox.merge(vert._pt);
+	}
+
+	auto triIndices = _triTree.find(triBox);
+	for (const auto& triEntry : triIndices) {
+		size_t triIdx = triEntry.getIndex();
+		if (sameTri(_tris[triIdx], tri))
+			return triIdx;
+	}
+
+	size_t triIdx = _tris.size();
+	_tris.push_back(tri);
+	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
-		size_t edgeIdx = addEdge(tri[i], tri[j]);
+		size_t edgeIdx = addEdge(tri[i], tri[j]); // addEdge adds itself to its vertices
 
 		auto& vert = _vertices[tri[i]];
 		vert.addFaceIndex(triIdx);
 
-		_edges[edgeIdx].addFace(triIdx);
-		triBox.merge(_vertices[tri[i]]._pt);
+		_edges[edgeIdx].addFaceIndex(triIdx);
 	}
 	triBox.grow(SAME_DIST_TOL);
 	_triTree.add(triBox, triIdx);
@@ -234,18 +517,18 @@ bool CMesh::isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const {
 		return true;
 	const LineSegment seg = getEdgesLineSeg(edgeIdx);
 	const Vector3d edgeV = seg.calcDir();
-	if (edge._faceIndex[0] == edge._faceIndex[1]) {
+	if (edge._faceIndices[0] == edge._faceIndices[1]) {
 		cout << "Duplicated faceIndex\n";
 	}
-	const Vector3d norm0 = triUnitNormal(edge._faceIndex[0]);
-	const Vector3d norm1 = triUnitNormal(edge._faceIndex[1]);
+	const Vector3d norm0 = triUnitNormal(edge._faceIndices[0]);
+	const Vector3d norm1 = triUnitNormal(edge._faceIndices[1]);
 
 	double sinTheta = norm0.cross(norm1).norm();
 	bool isSharp = sinTheta > sinEdgeAngle;
 	return isSharp;
 }
 
-const vector<size_t>& CMesh::getSharpEdgeIndices(double edgeAngleRadians)
+const vector<size_t>& CMesh::getSharpEdgeIndices(double edgeAngleRadians) const
 {
 	if (edgeAngleRadians < 1.0e-6) {
 		return _sharpEdgeIndices;
@@ -574,22 +857,28 @@ void CMesh::buildNormals(bool multiCore) const
 	}		
 }
 
-void CMesh::calCurvatures(double edgeAngleRadians, bool multiCore) const
+double CMesh::calSinVertexAngle(size_t triIdx, size_t vertIdx, size_t& oppositeEdgeIdx) const
 {
-	if (_edgeCurvature.empty()) {
-		buildCentroids(multiCore);
-		buildNormals(multiCore);
-		double sinAngle = sin(edgeAngleRadians);
+	static double minSinTheta = 1;
+	const auto& tri = _tris[triIdx];
+	for (int i = 0; i < 3; i++) {
+		if (tri[i] == vertIdx) {
+			int j = (i + 1) % 3;
+			int k = (j + 1) % 3;
+			oppositeEdgeIdx = findEdge(tri[j], tri[k]);
+			const auto& pt0 = _vertices[tri[i]]._pt;
+			const auto& pt1 = _vertices[tri[j]]._pt;
+			const auto& pt2 = _vertices[tri[k]]._pt;
+			Vector3d v0 = (pt1 - pt0).normalized();
+			Vector3d v1 = (pt2 - pt0).normalized();
+			double sinTheta = (v0.cross(v1)).norm();
+			if (sinTheta < minSinTheta)
+				minSinTheta = sinTheta;
 
-		_edgeCurvature.resize(_edges.size());
-		MultiCore::runLambda([this, sinAngle](size_t threadNum, size_t numThreads)->bool {
-			for (size_t edgeIdx = threadNum; edgeIdx < _edgeCurvature.size(); edgeIdx += numThreads) {
-				_edgeCurvature[edgeIdx] = calEdgeCurvature(edgeIdx, sinAngle);
-			}
-			return true;
-		}, multiCore);
-		int dbgBreak = 1;
+			return sinTheta;
+		}
 	}
+	return 1;
 }
 
 size_t CMesh::getOtherVertIdx(const CEdge& thisEdge, size_t triIdx) const
@@ -604,6 +893,36 @@ size_t CMesh::getOtherVertIdx(const CEdge& thisEdge, size_t triIdx) const
 	return -1;
 }
 
+void CMesh::calCurvatures(double edgeAngleRadians, bool multiCore) const
+{
+	if (_edgeCurvature.empty()) {
+		buildCentroids(multiCore);
+		buildNormals(multiCore);
+		double sinAngle = sin(edgeAngleRadians);
+
+		_edgeCurvature.resize(_edges.size());
+		MultiCore::runLambda([this, sinAngle](size_t threadNum, size_t numThreads)->bool {
+			for (size_t edgeIdx = threadNum; edgeIdx < _edgeCurvature.size(); edgeIdx += numThreads) {
+				_edgeCurvature[edgeIdx] = calEdgeCurvature(edgeIdx, sinAngle);
+			}
+			return true;
+		}, multiCore);
+
+#if 0
+		vector<double> avgEdgeCurv, edgeArea;
+		avgEdgeCurv.resize(_edges.size(), 0);
+		edgeArea.resize(_edges.size(), 0);
+
+		for (size_t vertIdx = 0; vertIdx < _vertices.size(); vertIdx++) {
+			const auto& vert = _vertices[vertIdx];
+			for (size_t edgeIdx = 0; edgeIdx < vert._edgeIndices.size(); edgeIdx++) {
+			}
+		}
+#endif
+		int dbgBreak = 1;
+	}
+}
+
 double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 {
 	const auto& edge = _edges[edgeIdx];
@@ -612,12 +931,12 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 		const Vector3d& origin = seg._pts[0];
 		Vector3d vEdge = seg.calcDir();
 
-		Vector3d norm0 = triUnitNormal(edge._faceIndex[0]);
-		Vector3d norm1 = triUnitNormal(edge._faceIndex[1]);
+		Vector3d norm0 = triUnitNormal(edge._faceIndices[0]);
+		Vector3d norm1 = triUnitNormal(edge._faceIndices[1]);
 
 		Plane edgePlane(origin, vEdge);
-		size_t vertIdx0 = getOtherVertIdx(edge, edge._faceIndex[0]);
-		size_t vertIdx1 = getOtherVertIdx(edge, edge._faceIndex[1]);
+		size_t vertIdx0 = getOtherVertIdx(edge, edge._faceIndices[0]);
+		size_t vertIdx1 = getOtherVertIdx(edge, edge._faceIndices[1]);
 
 		// Both edge vertices AND each of the opposite vertices lie on the actual surface
 					// Project the points to a plane perpendicular to the edge and fit a circle through it
@@ -653,27 +972,6 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 		return curv;
 	}
 	return 0;
-}
-
-double CMesh::calVertCurvature(size_t vertIdx) const
-{
-	const auto& vert = _vertices[vertIdx];
-	Vector3d vertNorm = vertUnitNormal(vertIdx);
-	const auto& faceIds = vert._faceIndices;
-	double curv = 0;
-	for (size_t triIdx : faceIds) {
-		const auto& tri = _tris[triIdx];
-		Vector3d ctr = triCentroid(triIdx);
-
-		Vector3d v = vert._pt - ctr;
-		double chord = v.norm();
-		v.normalize();
-		double db = fabs(vertNorm.dot(v));
-		curv += db / chord;
-	}
-	curv /= faceIds.size();
-
-	return curv;
 }
 
 size_t CMesh::findVerts(const BoundingBox& bbox, vector<SearchEntry>& vertIndices, BoxTestType contains) const {
@@ -737,6 +1035,50 @@ Vector3d CMesh::triUnitNormal(size_t triIdx) const {
 	return normal;
 }
 
+double CMesh::triArea(size_t triIdx) const
+{
+	const auto& tri = _tris[triIdx];
+	const Vector3d& pt0 = _vertices[tri[0]]._pt;
+	const Vector3d& pt1 = _vertices[tri[1]]._pt;
+	const Vector3d& pt2 = _vertices[tri[2]]._pt;
+
+	Vector3d v0 = pt1 - pt0;
+	Vector3d v1 = pt2 - pt0;
+	double area = v0.cross(v1).norm() / 2;
+	return area;
+
+}
+
+double CMesh::triAspectRatio(size_t triIdx) const
+{
+	const double idealL = sqrt(0.75);
+	const auto& tri = _tris[triIdx];
+	double maxRatio = 0;
+	for (size_t i = 0; i < 3; i++) {
+		size_t j = (i + 1) % 3;
+		size_t k = (j + 1) % 3;
+
+		const auto& pt0 = _vertices[tri[i]]._pt;
+		const auto& pt1 = _vertices[tri[j]]._pt;
+		const auto& pt2 = _vertices[tri[k]]._pt;
+
+		// calculate the perpendicular distance to the 3rd vertex
+		Vector3d v0 = pt1 - pt0;
+		double l = v0.norm();
+		v0 /= l;
+		Vector3d v1 = pt2 - pt0;
+		v1 = v1 - v0 * v0.dot(v1);
+
+		double d = v1.norm();
+		double ratio = l > d ? l / d : d / l;
+
+		if (ratio > maxRatio)
+			maxRatio = ratio;
+	}
+
+	return maxRatio / 2;
+}
+
 Vector3d CMesh::vertUnitNormal(size_t vertIdx) const
 {
 	Vector3d result(0, 0, 0);
@@ -755,11 +1097,52 @@ Vector3d CMesh::vertUnitNormal(size_t vertIdx) const
 double CMesh::edgeCurvature(size_t edgeIdx) const
 {
 	if (_edgeCurvature.empty())
-		calCurvatures(false);
+		calCurvatures(true);
 
 	if (edgeIdx < _edgeCurvature.size())
 		return _edgeCurvature[edgeIdx];
 	return 0;
+}
+
+double CMesh::edgeLength(size_t edgeIdx) const
+{
+	const auto& edge = _edges[edgeIdx];
+	const Vector3d& pt0 = _vertices[edge._vertIndex[0]]._pt;
+	const Vector3d& pt1 = _vertices[edge._vertIndex[1]]._pt;
+	return (pt1 - pt0).norm();
+}
+
+void CMesh::squeezeShortSharpEdges()
+{
+	const double minSinTheta = sin(1 / 180.0 * M_PI);
+
+	for (size_t vertIdx = 0; vertIdx < _vertices.size(); vertIdx++) {
+		auto& vert = _vertices[vertIdx];
+		auto& vertFaces = vert._faceIndices;
+
+		map<double, vector<size_t>> aspectRatioToShortEdgeIdxMap; // Using a vector for indices is overkill, but there is a remote chance of a duplicated aspect ratio
+
+		if (vertFaces.size() <= 40)
+			continue;
+		for (size_t faceIdx : vertFaces) {
+			size_t oppositeEdgeIdx;
+			double sinTheta = calSinVertexAngle(faceIdx, vertIdx, oppositeEdgeIdx);
+			auto iter = aspectRatioToShortEdgeIdxMap.find(sinTheta);
+			if (iter == aspectRatioToShortEdgeIdxMap.end())
+				iter = aspectRatioToShortEdgeIdxMap.insert(make_pair(sinTheta, vector<size_t>())).first;
+			iter->second.push_back(oppositeEdgeIdx);
+		}
+
+		for (const auto& pair : aspectRatioToShortEdgeIdxMap) {
+			if (pair.first < minSinTheta) {
+				const auto& edgeIds = pair.second;
+				for (size_t edgeId : edgeIds) {
+					squeezeEdge(edgeId);
+				}
+			}
+		}
+	}
+
 }
 
 bool CMesh::verifyFindAllTris() const {
@@ -853,6 +1236,7 @@ const vector<float>& CMesh::getGlTriParams()
 const std::vector<float>& CMesh::getGlTriCurvatures(double edgeAngleRadians, bool multiCore) // size = GlPoints.size() / 3
 {
 	if (_glTriCurvatures.size() != 3 * _tris.size()) { // 3 verts / tri, 1 curvature / vert
+		squeezeShortSharpEdges();
 		calCurvatures(edgeAngleRadians, multiCore);
 
 		size_t count = 0;
@@ -1013,4 +1397,46 @@ bool CMesh::read(istream& in) {
 
 	return true;
 }
+
+bool CMesh::testRemoveTri(size_t idx)
+{
+	return removeTri(idx);
+}
+
+bool CMesh::testSqueezeEdge()
+{
+
+	size_t worstVertIdx = -1, maxEdges = 0;
+	for (size_t i = 0; i < numVertices(); i++) {
+		const auto& vert = getVert(i);
+		const auto& vertEdgeIndices = vert._edgeIndices;
+		if (vertEdgeIndices.size() > maxEdges) {
+			maxEdges = vertEdgeIndices.size();
+			worstVertIdx = i;
+		}
+	}
+
+	map<double, vector<size_t>> aspectRatioToShortEdgeIdxMap; // Using a vector for indices is overkill, but there is a remote chance of a duplicated aspect ratio
+	auto& vert = getVert(worstVertIdx);
+	auto& vertFaces = vert._faceIndices;
+
+	for (size_t faceIdx : vertFaces) {
+		size_t oppositeEdgeIdx;
+		double sinTheta = calSinVertexAngle(faceIdx, worstVertIdx, oppositeEdgeIdx);
+		auto iter = aspectRatioToShortEdgeIdxMap.find(sinTheta);
+		if (iter == aspectRatioToShortEdgeIdxMap.end())
+			iter = aspectRatioToShortEdgeIdxMap.insert(make_pair(sinTheta, vector<size_t>())).first;
+		iter->second.push_back(oppositeEdgeIdx);
+	}
+
+	auto pair = *aspectRatioToShortEdgeIdxMap.begin();
+	const auto& edgeIds = pair.second;
+	for (size_t edgeId : edgeIds) {
+		squeezeEdge(edgeId);
+	}
+
+	return true;
+}
+
+
 }

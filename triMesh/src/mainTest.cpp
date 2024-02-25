@@ -1,6 +1,12 @@
 #include <iostream>
+#include <fstream>
+
+#define _USE_MATH_DEFINES
+#include <corecrt_math_defines.h>
+
 #include <tm_fixedMath.h>
 #include <tm_boundingBox.h>
+#include <triMesh.h>
 
 using namespace std;
 
@@ -191,6 +197,9 @@ private:
 	bool testAssign();
 	bool testCompare();
 	bool testMath();
+	bool testRemoveTri();
+	bool testSqueezeEdge();
+	TriMesh::CMeshPtr makeCylinder(Vector3d& origin, double height, double radius);
 };
 
 template<>
@@ -231,6 +240,8 @@ bool Test_double_f<T>::testAll()
 	if (!testCompare()) return false;
 	if (!testAssign()) return false;
 	if (!testMath()) return false;
+	if (!testRemoveTri()) return false;
+	if (!testSqueezeEdge()) return false;
 
 	return true;
 }
@@ -308,6 +319,68 @@ bool Test_double_f<T>::testMath()
 	double d = double_f<T>(0.5) - double_f<T>(0.2);
 	TEST_EQUAL_TOL(0.3, double_f<T>(0.5) - double_f<T>(0.2), "Test_double_f::testMath 3 == 5 - 2 fail");
 	TEST_EQUAL_TOL(double_f<T>(0.20 / 3.0), double_f<T>(0.2) / 3, "Test_double_f::testMath 2.0 / 3.0 == double_f<T>(2) / double_f<T>(3) fail");
+	return true;
+}
+
+template<class T>
+TriMesh::CMeshPtr Test_double_f<T>::makeCylinder(Vector3d& origin, double height, double radius)
+{
+	Vector3d ll(origin - Vector3d(-radius, -radius, -height / 2)),
+		ur(origin - Vector3d(radius, radius, height / 2));
+	TriMesh::CMesh::BoundingBox bbox(ll, ur);
+	bbox.grow(0.01);
+	TriMesh::CMeshPtr result = make_shared<TriMesh::CMesh>(bbox);
+
+	Vector3d upperOrigin = origin + Vector3d(0, 0, height / 2);
+	Vector3d lowerOrigin = origin + Vector3d(0, 0, -height / 2);
+	size_t steps = 2 * 360; // 1/2 degree
+	for (size_t i = 0; i < steps; i++) {
+		double t0 = i / (double) steps;
+		double t1 = (i + 1) / (double) steps;
+		double theta0 = 2 * M_PI * t0;
+		double theta1 = 2 * M_PI * t1;
+		Vector3d v0(cos(theta0), sin(theta0), 0);
+		Vector3d v1(cos(theta1), sin(theta1), 0);
+		Vector3d pt00 = upperOrigin + radius * v0;
+		Vector3d pt01 = upperOrigin + radius * v1;
+
+		result->addTriangle(upperOrigin, pt00, pt01);
+		Vector3d pt10 = pt00 - Vector3d(0, 0, height);
+		Vector3d pt11 = pt01 - Vector3d(0, 0, height);
+
+		result->addTriangle(upperOrigin, pt11, pt10);
+
+		result->addQuad(pt00, pt10, pt11, pt01);
+	}
+
+#if 0
+	{
+		ofstream out("D:/DarkSky/Projects/output/cyl.obj");
+		result->dumpObj(out);
+	}
+#endif
+
+	return result;
+}
+
+template<class T>
+bool Test_double_f<T>::testRemoveTri()
+{
+	TriMesh::CMeshPtr pMesh = makeCylinder(Vector3d(0, 0, 0), 1, 2);
+
+	TEST_TRUE(pMesh->testRemoveTri(0), "testRemoveTri(0)");
+	TEST_TRUE(pMesh->verifyTopology(), "verifyTopology 1");
+	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() - 1), "testRemoveTri(pMesh->numTris() - 1)");
+	TEST_TRUE(pMesh->verifyTopology(), "verifyTopology 2");
+	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() / 2), "testRemoveTri(pMesh->numTris() / 2)");
+	TEST_TRUE(pMesh->verifyTopology(), "verifyTopology 3");
+	return true;
+}
+
+template<class T>
+bool Test_double_f<T>::testSqueezeEdge()
+{
+
 	return true;
 }
 
