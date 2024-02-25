@@ -224,6 +224,7 @@ void CMesh::squeezeEdge(size_t idx)
 
 bool CMesh::removeTri(size_t triIdx)
 {
+	bool result = true;
 	assert(verifyTopology());
 	assert(triIdx != -1);
 	if (triIdx == 7943) {
@@ -253,26 +254,28 @@ bool CMesh::removeTri(size_t triIdx)
 		auto& edge = _edges[edgeIdx];
 		edge.removeFaceIndex(triIdx);
 		if (edge._numFaces == 0) {
-			deleteEdge(edgeIdx);
+			if (!deleteEdge(edgeIdx)) {
+				result = false;
+				break;
+			}
 		}
 	}
-	deleteTri(triIdx);
+	if (!deleteTri(triIdx))
+		result = false;
 
-	if (verifyTopology())
-		return true;
+	if (!verifyTopology())
+		result = true;
 
-	assert(!"Failed to remove triangle");
-
-	return false;
+	return result;
 }
 
-void CMesh::deleteTri(size_t triIdx)
+bool CMesh::deleteTri(size_t triIdx)
 {
 	size_t srcIdx = _tris.size() - 1;
 
 	if (triIdx == _tris.size() - 1) {
 		_tris.pop_back();
-		return;
+		return true;
 	}
 	_tris[triIdx] = _tris[srcIdx];
 	_tris.pop_back();
@@ -297,9 +300,10 @@ void CMesh::deleteTri(size_t triIdx)
 	}
 
 	verifyTriVertsPointToTry(triIdx);
+	return true;
 }
 
-void CMesh::deleteEdge(size_t edgeIdx)
+bool CMesh::deleteEdge(size_t edgeIdx)
 {
 	{
 		auto& edge = _edges[edgeIdx];
@@ -312,6 +316,10 @@ void CMesh::deleteEdge(size_t edgeIdx)
 
 	size_t srcIdx = _edges.size() - 1;
 
+	if (edgeIdx == _edges.size() - 1) {
+		_edges.pop_back();
+		return true;
+	}
 	_edges[edgeIdx] = _edges[srcIdx];
 	_edges.pop_back();
 
@@ -326,6 +334,7 @@ void CMesh::deleteEdge(size_t edgeIdx)
 		vert1.addEdgeIndex(edgeIdx);
 	}
 	verifyEdgeVertsPointToEdge(edgeIdx);
+	return true;
 }
 
 void CMesh::mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove)

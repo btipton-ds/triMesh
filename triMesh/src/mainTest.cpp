@@ -368,12 +368,14 @@ bool Test_double_f<T>::testRemoveTri()
 {
 	TriMesh::CMeshPtr pMesh = makeCylinder(Vector3d(0, 0, 0), 1, 2);
 
-	TEST_TRUE(pMesh->testRemoveTri(0), "testRemoveTri(0)");
-	TEST_TRUE(pMesh->verifyTopology(), "verifyTopology 1");
-	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() - 1), "testRemoveTri(pMesh->numTris() - 1)");
-	TEST_TRUE(pMesh->verifyTopology(), "verifyTopology 2");
-	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() / 2), "testRemoveTri(pMesh->numTris() / 2)");
-	TEST_TRUE(pMesh->verifyTopology(), "verifyTopology 3");
+	TEST_TRUE(pMesh->testRemoveTri(1), "testRemoveTri(1) failed");
+	TEST_TRUE(pMesh->verifyTopology(), "verifyTopology 1 failed");
+	TEST_TRUE(pMesh->testRemoveTri(0), "testRemoveTri(0) failed");
+	TEST_TRUE(pMesh->verifyTopology(), "verifyTopology 0 failed");
+	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() - 1), "testRemoveTri(pMesh->numTris() - 1) failed");
+	TEST_TRUE(pMesh->verifyTopology(), "verifyTopology n-1 failed");
+	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() / 2), "testRemoveTri(pMesh->numTris() / 2) failed");
+	TEST_TRUE(pMesh->verifyTopology(), "verifyTopology n/2 failed");
 	return true;
 }
 

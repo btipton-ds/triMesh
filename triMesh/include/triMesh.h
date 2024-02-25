@@ -174,8 +174,8 @@ namespace TriMesh {
 		size_t getOtherVertIdx(const CEdge& thisEdge, size_t triIdx) const;
 		void squeezeShortSharpEdges();
 		bool removeTri(size_t triIdx);
-		void deleteTri(size_t edgeIdx);
-		void deleteEdge(size_t edgeIdx);
+		bool deleteTri(size_t edgeIdx);
+		bool deleteEdge(size_t edgeIdx);
 		void mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove);
 
 		bool verifyTriVertsPointToTry(size_t triIdx) const;
