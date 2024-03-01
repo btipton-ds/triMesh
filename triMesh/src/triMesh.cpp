@@ -291,8 +291,10 @@ void CMesh::squeezeEdge(size_t idx)
 		vertIdxToRemove = edge._vertIndex[0];
 	}
 
-	removeTri(edge._faceIndices[0]);
-	removeTri(edge._faceIndices[1]);
+	size_t faceIdx0 = edge._faceIndices[0];
+	size_t faceIdx1 = edge._faceIndices[1];
+	removeTri(faceIdx0);
+	removeTri(faceIdx1);
 	mergeVertices(vertIdxToKeep, vertIdxToRemove);
 }
 
@@ -1561,7 +1563,7 @@ bool CMesh::testRemoveTri(size_t idx)
 	return removeTri(idx);
 }
 
-bool CMesh::testSqueezeEdge()
+bool CMesh::testSqueezeEdge(size_t idx)
 {
 
 	size_t worstVertIdx = -1, maxEdges = 0;
@@ -1587,10 +1589,17 @@ bool CMesh::testSqueezeEdge()
 		iter->second.push_back(oppositeEdgeIdx);
 	}
 
-	auto pair = *aspectRatioToShortEdgeIdxMap.begin();
-	const auto& edgeIds = pair.second;
-	for (size_t edgeId : edgeIds) {
-		squeezeEdge(edgeId);
+	auto iter = aspectRatioToShortEdgeIdxMap.begin();
+	for (size_t i = 0; i < aspectRatioToShortEdgeIdxMap.size(); i++) {
+		if (i == idx) {
+			auto& pair = *iter;
+			const auto& edgeIds = pair.second;
+			for (size_t edgeId : edgeIds) {
+				squeezeEdge(edgeId);
+			}
+			break;
+		}
+		iter++;
 	}
 
 	return true;

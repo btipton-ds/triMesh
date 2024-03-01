@@ -165,7 +165,7 @@ namespace TriMesh {
 		template<typename LAMBDA>
 		void getGlEdges(LAMBDA cuvatureToColorFunc, double edgeAngleRadians, std::vector<float>& points, std::vector<float>& color, std::vector<unsigned int>& indices, bool multiCore = true);
 
-		bool testSqueezeEdge();
+		bool testSqueezeEdge(size_t idx);
 		bool testRemoveTri(size_t idx);
 
 		bool verifyTopology(bool allowEmptyEdges) const;

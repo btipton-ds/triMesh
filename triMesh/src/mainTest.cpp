@@ -367,13 +367,13 @@ bool Test_double_f<T>::testRemoveTri()
 	TriMesh::CMeshPtr pMesh = makeCylinder(Vector3d(0, 0, 0), 1, 2);
 
 	TEST_TRUE(pMesh->testRemoveTri(1), "testRemoveTri(1) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "verifyTopology 1 failed");
+	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology 1 failed");
 	TEST_TRUE(pMesh->testRemoveTri(0), "testRemoveTri(0) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "verifyTopology 0 failed");
+	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology 0 failed");
 	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() - 1), "testRemoveTri(pMesh->numTris() - 1) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "verifyTopology n-1 failed");
+	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology n-1 failed");
 	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() / 2), "testRemoveTri(pMesh->numTris() / 2) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "verifyTopology n/2 failed");
+	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology n/2 failed");
 
 	cout << "testRemoveTri passed \n";
 	return true;
@@ -382,6 +382,17 @@ bool Test_double_f<T>::testRemoveTri()
 template<class T>
 bool Test_double_f<T>::testSqueezeEdge()
 {
+	TriMesh::CMeshPtr pMesh = makeCylinder(Vector3d(0, 0, 0), 1, 2);
+
+	TEST_TRUE(pMesh->testSqueezeEdge(1), "testSqueezeEdge(1) failed");
+	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology 1 failed");
+	TEST_TRUE(pMesh->testSqueezeEdge(0), "testRemoveTri(0) failed");
+	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology 0 failed");
+	TEST_TRUE(pMesh->testSqueezeEdge(pMesh->numTris() - 1), "testRemoveTri(pMesh->numTris() - 1) failed");
+	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology n-1 failed");
+	TEST_TRUE(pMesh->testSqueezeEdge(pMesh->numTris() / 2), "testRemoveTri(pMesh->numTris() / 2) failed");
+	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology n/2 failed");
+
 	cout << "testSqueezeEdge passed \n";
 
 	return true;
