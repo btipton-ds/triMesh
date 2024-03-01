@@ -104,6 +104,10 @@ namespace TriMesh {
 		const BoundingBox& getBBox() const {
 			return _vertTree.getBounds();
 		}
+
+		BoundingBox getTriBBox(size_t triIdx) const;
+		BoundingBox getEdgeBBox(size_t edgeIdx) const;
+		BoundingBox getVertBBox(size_t vertIdx) const;
 		LineSegment getEdgesLineSeg(size_t edgeIdx) const;
 		bool isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const;
 
@@ -164,7 +168,7 @@ namespace TriMesh {
 		bool testSqueezeEdge();
 		bool testRemoveTri(size_t idx);
 
-		bool verifyTopology() const;
+		bool verifyTopology(bool allowEmptyEdges) const;
 	private:
 		static bool sameTri(const Vector3i& tri0, const Vector3i& tri1);
 
@@ -174,13 +178,20 @@ namespace TriMesh {
 		size_t getOtherVertIdx(const CEdge& thisEdge, size_t triIdx) const;
 		void squeezeShortSharpEdges();
 		bool removeTri(size_t triIdx);
-		bool deleteTri(size_t edgeIdx);
-		bool deleteEdge(size_t edgeIdx);
+		bool deleteTriFromStorage(size_t edgeIdx);
+		bool deleteEdgeFromStorage(size_t edgeIdx);
 		void mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove);
 
-		bool verifyTriVertsPointToTry(size_t triIdx) const;
-		bool verifyVertTrisPointToVert(size_t vertIdx) const;
-		bool verifyEdgeVertsPointToEdge(size_t edgeIdx) const;
+		bool triContainsVertex(size_t triIdx, size_t vertIdx) const;
+		bool triContainsEdge(size_t triIdx, size_t edgeIdx) const;
+		bool edgeContainsVert(size_t edgeIdx, size_t vertIdx) const;
+		bool edgeReferencesTri(size_t edgeIdx, size_t triIdx) const;
+		bool vertReferencesTri(size_t vertIdx, size_t triIdx) const;
+		bool vertReferencesEdge(size_t vertIdx, size_t edgeIdx) const;
+
+		bool verifyTris(size_t triIdx) const;
+		bool verifyVerts(size_t vertIdx) const;
+		bool verifyEdges(size_t edgeIdx, bool allowEmpty) const;
 
 		static std::atomic<size_t> _statId;
 		const size_t _id;

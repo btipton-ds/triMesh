@@ -33,9 +33,8 @@ This file is part of the TriMesh library.
 
 #include <tm_vertex.h>
 
-namespace TriMesh {
-
 using namespace std;
+using namespace TriMesh;
 
 void CVertex::save(ostream& out) const {
 	out << fixed << setprecision(filePrecision) << "v " << _pt[0] << " " << _pt[1] << " " << _pt[2] << "\n";
@@ -49,31 +48,49 @@ bool CVertex::read(istream& in) {
 
 void CVertex::addEdgeIndex(size_t index)
 {
-	auto curIdx = find(_edgeIndices.begin(), _edgeIndices.end(), index);
-	if (curIdx == _edgeIndices.end())
+	auto iter = find(_edgeIndices.begin(), _edgeIndices.end(), index);
+	if (iter == _edgeIndices.end())
 		_edgeIndices.push_back(index);
 }
 
 void CVertex::removeEdgeIndex(size_t index)
 {
-	auto curIdx = find(_edgeIndices.begin(), _edgeIndices.end(), index);
-	if (curIdx != _edgeIndices.end())
-		_edgeIndices.erase(curIdx);
+	auto iter = find(_edgeIndices.begin(), _edgeIndices.end(), index);
+	if (iter != _edgeIndices.end())
+		_edgeIndices.erase(iter);
 
+}
+
+void CVertex::changeEdgeIndex(size_t oldEdgeIdx, size_t newEdgeIdx)
+{
+	if (oldEdgeIdx == 4319) {
+		int dbgBreak = 1;
+	}
+	auto iter = find(_edgeIndices.begin(), _edgeIndices.end(), oldEdgeIdx);
+	if (iter != _edgeIndices.end())
+		*iter = newEdgeIdx;
 }
 
 void CVertex::addFaceIndex(size_t index)
 {
-	auto curIdx = find(_faceIndices.begin(), _faceIndices.end(), index);
-	if (curIdx == _faceIndices.end())
+	auto iter = find(_faceIndices.begin(), _faceIndices.end(), index);
+	if (iter == _faceIndices.end())
 		_faceIndices.push_back(index);
 }
 
 void CVertex::removeFaceIndex(size_t index)
 {
-	auto curIdx = find(_faceIndices.begin(), _faceIndices.end(), index);
-	if (curIdx != _faceIndices.end())
-		_faceIndices.erase(curIdx);
+	auto iter = find(_faceIndices.begin(), _faceIndices.end(), index);
+	if (iter != _faceIndices.end())
+		_faceIndices.erase(iter);
 }
 
+void CVertex::changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx)
+{
+	for (size_t i = 0; i < _faceIndices.size(); i++) {
+		if (_faceIndices[i] == oldFaceIdx) {
+			_faceIndices[i] = newFaceIdx;
+			break;
+		}
+	}
 }

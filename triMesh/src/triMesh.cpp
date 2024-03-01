@@ -181,6 +181,80 @@ size_t CMesh::findEdge(size_t vertIdx0, size_t vertIdx1) const
 	return findEdge(CEdge(vertIdx0, vertIdx1));
 }
 
+bool CMesh::triContainsVertex(size_t triIdx, size_t vertIdx) const
+{
+	if (triIdx < _tris.size()) {
+		const auto& tri = _tris[triIdx];
+		for (int i = 0; i < 3; i++) {
+			if (tri[i] == vertIdx)
+				return true;
+		}
+	}
+	return false;
+}
+
+bool CMesh::triContainsEdge(size_t triIdx, size_t edgeIdx) const
+{
+	if (triIdx < _tris.size() && edgeIdx < _edges.size()) {
+		const auto& tri = _tris[triIdx];
+		const auto& testEdge = _edges[edgeIdx];
+
+		for (int i = 0; i < 3; i++) {
+			int j = (i + 1) % 3;
+			CEdge edge(tri[i], tri[j]);
+			if (testEdge == edge)
+				return true;
+		}
+	}
+	return false;
+}
+
+bool CMesh::edgeContainsVert(size_t edgeIdx, size_t vertIdx) const
+{
+	if (edgeIdx < _edges.size() && vertIdx < _vertices.size()) {
+		const auto& edge = _edges[edgeIdx];
+		for (int i = 0; i < 2; i++) {
+			if (edge._vertIndex[i] == vertIdx)
+				return true;
+		}
+	}
+	return false;
+}
+
+bool CMesh::edgeReferencesTri(size_t edgeIdx, size_t triIdx) const
+{
+	if (edgeIdx < _edges.size() && triIdx < _tris.size()) {
+		const auto& edge = _edges[edgeIdx];
+		for (int i = 0; i < edge._numFaces; i++) {
+			if (edge._faceIndices[i] == triIdx)
+				return true;
+		}
+	}
+	return false;
+}
+
+bool CMesh::vertReferencesTri(size_t vertIdx, size_t triIdx) const
+{
+	if (vertIdx < _vertices.size() && triIdx < _tris.size()) {
+		const auto& vertIds = _vertices[vertIdx]._faceIndices;
+		if (find(vertIds.begin(), vertIds.end(), triIdx) != vertIds.end())
+			return true;
+		return false;
+	}
+	return false;
+}
+
+bool CMesh::vertReferencesEdge(size_t vertIdx, size_t edgeIdx) const
+{
+	if (vertIdx < _vertices.size() && edgeIdx < _edges.size()) {
+		const auto& edgeIds = _vertices[vertIdx]._edgeIndices;
+		if (find(edgeIds.begin(), edgeIds.end(), edgeIdx) != edgeIds.end())
+			return true;
+		return false;
+	}
+	return false;
+}
+
 void CMesh::squeezeEdge(size_t idx)
 {
 	auto& edge = _edges[idx];
@@ -225,53 +299,57 @@ void CMesh::squeezeEdge(size_t idx)
 bool CMesh::removeTri(size_t triIdx)
 {
 	bool result = true;
-	assert(verifyTopology());
-	assert(triIdx != -1);
-	if (triIdx == 7943) {
-		int dbgBreak = 1;
-	}
+	assert(triIdx < _tris.size());
 	
-	const auto& tri = _tris[triIdx];
-	BoundingBox triBBox;
-	for (int i = 0; i < 3; i++) {
-		triBBox.merge(_vertices[tri[i]]._pt);
-	}
+	BoundingBox triBBox = getTriBBox(triIdx);
 	_triTree.remove(triBBox, triIdx);
 
+	set<size_t> edgesToRemove;
+	const auto& tri = _tris[triIdx];
 	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
 		size_t vertIdx0 = tri[i];
 		size_t vertIdx1 = tri[j];
 		size_t edgeIdx = findEdge(vertIdx0, vertIdx1);
-		if (edgeIdx == 2) {
-			int dbgBreak = 1;
-		}
-		auto& vert0 = _vertices[vertIdx0];
-		auto& vert1 = _vertices[vertIdx1];
 
+		auto& vert0 = _vertices[vertIdx0];
 		vert0.removeFaceIndex(triIdx);
 
 		auto& edge = _edges[edgeIdx];
 		edge.removeFaceIndex(triIdx);
 		if (edge._numFaces == 0) {
-			if (!deleteEdge(edgeIdx)) {
-				result = false;
-				break;
-			}
+			auto& vert1 = _vertices[vertIdx1];
+			vert0.removeEdgeIndex(edgeIdx);
+			vert1.removeEdgeIndex(edgeIdx);
+			edgesToRemove.insert(edgeIdx);
 		}
 	}
-	if (!deleteTri(triIdx))
+	if (!deleteTriFromStorage(triIdx))
 		result = false;
 
-	if (!verifyTopology())
-		result = true;
+	if (!verifyTopology(true))
+		result = false;
+
+	while (!edgesToRemove.empty()) {
+		if (!deleteEdgeFromStorage(*edgesToRemove.begin())) {
+			result = false;
+			break;
+		}
+		edgesToRemove.erase(edgesToRemove.begin());
+	}
+
+	if (!verifyTopology(false))
+		result = false;
 
 	return result;
 }
 
-bool CMesh::deleteTri(size_t triIdx)
+bool CMesh::deleteTriFromStorage(size_t triIdx)
 {
 	size_t srcIdx = _tris.size() - 1;
+
+	BoundingBox bbox = getTriBBox(triIdx), srcBBox = getTriBBox(srcIdx);
+	_triTree.remove(srcBBox, srcIdx);
 
 	if (triIdx == _tris.size() - 1) {
 		_tris.pop_back();
@@ -284,56 +362,62 @@ bool CMesh::deleteTri(size_t triIdx)
 		auto& tri = _tris[triIdx];
 		for (int i = 0; i < 3; i++) {
 			int j = (i + 1) % 3;
-			auto& vert0 = _vertices[tri[i]];
-			auto& vert1 = _vertices[tri[j]];
+			size_t vertIdx0 = tri[i];
+			size_t vertIdx1 = tri[j];
+			size_t edgeIdx = findEdge(vertIdx0, vertIdx1);
 
-			vert0.removeFaceIndex(srcIdx);
-			vert0.addFaceIndex(triIdx);
+			auto& vert0 = _vertices[vertIdx0];
+			vert0.changeFaceIndex(srcIdx, triIdx);
+			vert0.changeEdgeIndex(srcIdx, triIdx);
 
-			size_t edgeIdx = findEdge(tri[i], tri[j]);
 			auto& edge = _edges[edgeIdx];
-			edge.removeFaceIndex(srcIdx);
-			edge.addFaceIndex(triIdx);
+			edge.changeFaceIndex(srcIdx, triIdx);
 
 			int dbgBreak = 1;
 		}
+		BoundingBox bbox = getTriBBox(triIdx);
+		_triTree.add(bbox, triIdx);
 	}
 
-	verifyTriVertsPointToTry(triIdx);
+	verifyTris(triIdx);
 	return true;
 }
 
-bool CMesh::deleteEdge(size_t edgeIdx)
+bool CMesh::deleteEdgeFromStorage(size_t edgeIdx)
 {
+	size_t srcIdx = _edges.size() - 1;
+	BoundingBox bbox = getEdgeBBox(edgeIdx), srcBbox = getEdgeBBox(srcIdx);
+	_edgeTree.remove(bbox, edgeIdx);
+	_edgeTree.remove(srcBbox, srcIdx);
+
 	{
 		auto& edge = _edges[edgeIdx];
-		auto& vert0 = _vertices[edge._vertIndex[0]];
-		auto& vert1 = _vertices[edge._vertIndex[1]];
+
+		size_t vertIdx0 = edge._vertIndex[0];
+		size_t vertIdx1 = edge._vertIndex[1];
+		auto& vert0 = _vertices[vertIdx0];
+		auto& vert1 = _vertices[vertIdx0];
+
 		vert0.removeEdgeIndex(edgeIdx);
 		vert1.removeEdgeIndex(edgeIdx);
 		assert(edge._numFaces == 0);
 	}
 
-	size_t srcIdx = _edges.size() - 1;
-
 	if (edgeIdx == _edges.size() - 1) {
 		_edges.pop_back();
-		return true;
-	}
-	_edges[edgeIdx] = _edges[srcIdx];
-	_edges.pop_back();
+	} else {
+		_edges[edgeIdx] = _edges[srcIdx];
+		_edges.pop_back();
 
-	{
 		auto& edge = _edges[edgeIdx];
 		auto& vert0 = _vertices[edge._vertIndex[0]];
 		auto& vert1 = _vertices[edge._vertIndex[1]];
-		vert0.removeEdgeIndex(srcIdx);
-		vert1.removeEdgeIndex(srcIdx);
-
-		vert0.addEdgeIndex(edgeIdx);
-		vert1.addEdgeIndex(edgeIdx);
+		vert0.changeEdgeIndex(srcIdx, edgeIdx);
+		vert1.changeEdgeIndex(srcIdx, edgeIdx);
+		_triTree.add(srcBbox, edgeIdx);
 	}
-	verifyEdgeVertsPointToEdge(edgeIdx);
+
+	verifyEdges(edgeIdx, true);
 	return true;
 }
 
@@ -357,80 +441,102 @@ void CMesh::mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove)
 			addTriangle(tri);
 		}
 	}
-	assert(verifyTopology());
+	assert(verifyTopology(false));
 }
 
-bool CMesh::verifyTopology() const
+bool CMesh::verifyTopology(bool allowEmptyEdges) const
 {
 	for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
-		if (!verifyTriVertsPointToTry(triIdx))
+		if (!verifyTris(triIdx))
 			return false;
 	}
 
 	for (size_t vertIdx = 0; vertIdx < _vertices.size(); vertIdx++) {
-		if (!verifyVertTrisPointToVert(vertIdx))
+		if (!verifyVerts(vertIdx))
 			return false;
 	}
 
 	for (size_t edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
-		if (!verifyEdgeVertsPointToEdge(edgeIdx))
+		if (!verifyEdges(edgeIdx, allowEmptyEdges))
 			return false;
 	}
 
 	return true;
 }
 
-bool CMesh::verifyTriVertsPointToTry(size_t triIdx) const
+bool CMesh::verifyTris(size_t triIdx) const
 {
+	{
+		BoundingBox bbox = getTriBBox(triIdx);
+		auto foundTris = _triTree.find(bbox);
+		bool found = false;
+		for (const auto& ent : foundTris) {
+			if (ent.getIndex() == triIdx) {
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			return false;
+	}
+
 	const auto& tri = _tris[triIdx];
 	for (size_t i = 0; i < 3; i++) {
 		size_t j = (i + 1) % 3;
 		size_t vertIdx0 = tri[i];
 		size_t vertIdx1 = tri[j];
 		size_t edgeIdx = findEdge(vertIdx0, vertIdx1);
-		const auto& vert = _vertices[vertIdx0];
-		const auto& vertFaces = vert._faceIndices;
-		const auto& vertEdges = vert._edgeIndices;
-
-		if (find(vertFaces.begin(), vertFaces.end(), triIdx) == vertFaces.end())
+		// 4319 deleted, but still in use by triIdx == 0
+		if (!vertReferencesTri(vertIdx0, triIdx))
 			return false;
-
-		if (find(vertEdges.begin(), vertEdges.end(), edgeIdx) == vertEdges.end())
+		if (!vertReferencesEdge(vertIdx0, edgeIdx))
+			return false;
+		if (!edgeReferencesTri(edgeIdx, triIdx))
 			return false;
 	}
 
 	return true;
 }
 
-bool CMesh::verifyVertTrisPointToVert(size_t vertIdx) const
+bool CMesh::verifyVerts(size_t vertIdx) const
 {
+	{
+		BoundingBox bbox = getVertBBox(vertIdx);
+		auto foundTris = _vertTree.find(bbox);
+		bool found = false;
+		for (const auto& ent : foundTris) {
+			if (ent.getIndex() == vertIdx) {
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			return false;
+	}
+
 	const auto& vert = _vertices[vertIdx];
 
-	const auto& vertFaces = vert._faceIndices;
-	for (auto triIdx : vertFaces) {
-		const auto& triVerts = _tris[triIdx];
-		bool found = false;
-		for (size_t i = 0; i < 3; i++) {
-			if (triVerts[i] == vertIdx) {
-				found = true;
-				break;
-			}
-		}
-		if (!found)
+	for (auto triIdx : vert._faceIndices) {
+		if (!vertReferencesTri(vertIdx, triIdx))
 			return false;
 	}
+
+	for (auto edgeIdx : vert._edgeIndices) {
+		if (!vertReferencesEdge(vertIdx, edgeIdx))
+			return false;
+	}
+
 	return true;
 }
 
-bool CMesh::verifyEdgeVertsPointToEdge(size_t edgeIdx) const
+bool CMesh::verifyEdges(size_t edgeIdx, bool allowEmpty) const
 {
-	const auto& edge = _edges[edgeIdx];
-
-	for (int i = 0; i < 2; i++) {
+	{
+		BoundingBox bbox = getEdgeBBox(edgeIdx);
+		auto foundTris = _edgeTree.find(bbox);
 		bool found = false;
-		const auto& vertEdges = _vertices[edge._vertIndex[i]]._edgeIndices;
-		for (size_t vertEdgeIdx : vertEdges) {
-			if (edgeIdx == vertEdgeIdx) {
+		for (const auto& ent : foundTris) {
+			if (ent.getIndex() == edgeIdx) {
 				found = true;
 				break;
 			}
@@ -438,6 +544,25 @@ bool CMesh::verifyEdgeVertsPointToEdge(size_t edgeIdx) const
 		if (!found)
 			return false;
 	}
+
+	const auto& edge = _edges[edgeIdx];
+	if (edge._numFaces == 0)
+		return allowEmpty;
+
+	if (edge._numFaces > 2)
+		return false;
+
+	for (int i = 0; i < 2; i++) {
+		if (!vertReferencesEdge(edge._vertIndex[i], edgeIdx))
+			return false;
+	}
+
+	for (int i = 0; i < edge._numFaces; i++) {
+		bool found = false;
+		if (!triContainsEdge(edge._faceIndices[i], edgeIdx))
+			return false;
+	}
+
 	return true;
 }
 
@@ -510,6 +635,34 @@ size_t CMesh::addTriangle(const Vector3i& tri) {
 	_triTree.add(triBox, triIdx);
 
 	return triIdx;
+}
+
+CMesh::BoundingBox CMesh::getTriBBox(size_t triIdx) const
+{
+	BoundingBox result;
+	const auto& tri = _tris[triIdx];
+	for (int i = 0; i < 3; i++)
+		result.merge(_vertices[tri[i]]._pt);
+
+	return result;
+}
+
+CMesh::BoundingBox CMesh::getEdgeBBox(size_t edgeIdx) const
+{
+	BoundingBox result;
+	const auto& edge = _edges[edgeIdx];
+	for (int i = 0; i < 2; i++)
+		result.merge(_vertices[edge._vertIndex[i]]._pt);
+
+	return result;
+}
+
+CMesh::BoundingBox CMesh::getVertBBox(size_t vertIdx) const
+{
+	BoundingBox result;
+	result.merge(_vertices[vertIdx]._pt);
+
+	return result;
 }
 
 LineSegment CMesh::getEdgesLineSeg(size_t edgeIdx) const 
@@ -1157,12 +1310,7 @@ void CMesh::squeezeShortSharpEdges()
 bool CMesh::verifyFindAllTris() const {
 	bool result = true;
 	for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
-		const auto& tri = _tris[triIdx];
-		BoundingBox triBox;
-		for (int i = 0; i < 3; i++) {
-			const auto& v = _vertices[tri[i]];
-			triBox.merge(v._pt);
-		}
+		BoundingBox triBox = getTriBBox(triIdx);
 
 		vector<SearchEntry> entries;
 		_triTree.find(triBox, entries);

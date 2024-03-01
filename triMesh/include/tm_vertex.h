@@ -47,8 +47,11 @@ struct CVertex {
 
 	void addEdgeIndex(size_t index);
 	void removeEdgeIndex(size_t index);
+	void changeEdgeIndex(size_t oldEdgeIdx, size_t newEdgeIdx);
+
 	void addFaceIndex(size_t index);
 	void removeFaceIndex(size_t index);
+	void changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx);
 
 	void dump(std::ostream& out) const;
 

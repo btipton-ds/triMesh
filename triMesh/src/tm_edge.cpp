@@ -38,6 +38,16 @@ bool CEdge::operator == (const CEdge& rhs) const {
 	return _vertIndex[0] == rhs._vertIndex[0] && _vertIndex[1] == rhs._vertIndex[1];
 }
 
+bool CEdge::isAttachedToFace(size_t faceIdx) const
+{
+	if (_numFaces > 0 && _vertIndex[0] == faceIdx)
+		return true;
+	else if (_numFaces > 1 && _vertIndex[1] == faceIdx)
+		return true;
+
+	return false;
+}
+
 void CEdge::addFaceIndex(size_t faceIdx) {
 	for (int i = 0; i < _numFaces; i++) {
 		if (_faceIndices[i] == faceIdx)
@@ -61,6 +71,16 @@ void CEdge::removeFaceIndex(size_t faceIdx)
 			_faceIndices[1] = -1;
 			if (_numFaces == 0)
 				_faceIndices[0] = -1;
+			return;
+		}
+	}
+}
+
+void CEdge::changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx)
+{
+	for (int i = 0; i < _numFaces; i++) {
+		if (_faceIndices[i] == oldFaceIdx) {
+			_faceIndices[i] = newFaceIdx;
 			return;
 		}
 	}
