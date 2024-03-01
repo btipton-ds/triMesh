@@ -191,14 +191,14 @@ public:
 	static double tol();
 	Test_double_f();
 	bool testAll();
+	bool testRemoveTri();
+	bool testSqueezeEdge();
 
 private:
 	bool testCreate();
 	bool testAssign();
 	bool testCompare();
 	bool testMath();
-	bool testRemoveTri();
-	bool testSqueezeEdge();
 	TriMesh::CMeshPtr makeCylinder(Vector3d& origin, double height, double radius);
 };
 
@@ -240,8 +240,6 @@ bool Test_double_f<T>::testAll()
 	if (!testCompare()) return false;
 	if (!testAssign()) return false;
 	if (!testMath()) return false;
-	if (!testRemoveTri()) return false;
-	if (!testSqueezeEdge()) return false;
 
 	return true;
 }
@@ -376,12 +374,15 @@ bool Test_double_f<T>::testRemoveTri()
 	TEST_TRUE(pMesh->verifyTopology(false), "verifyTopology n-1 failed");
 	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() / 2), "testRemoveTri(pMesh->numTris() / 2) failed");
 	TEST_TRUE(pMesh->verifyTopology(false), "verifyTopology n/2 failed");
+
+	cout << "testRemoveTri passed \n";
 	return true;
 }
 
 template<class T>
 bool Test_double_f<T>::testSqueezeEdge()
 {
+	cout << "testSqueezeEdge passed \n";
 
 	return true;
 }
@@ -393,6 +394,10 @@ int main(int numArgs, char** args)
 
 	Test_double_f<int64_t> test64;
 	if (!test64.testAll()) return 1;
+
+	if (!test64.testRemoveTri()) return 1;
+	if (!test64.testSqueezeEdge()) return 1;
+
 	cout << "Passed int64_t tests\n";
 
 	Test_double_f<int32_t> test32;

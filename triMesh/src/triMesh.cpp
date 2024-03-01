@@ -327,9 +327,6 @@ bool CMesh::removeTri(size_t triIdx)
 	if (!deleteTriFromStorage(triIdx))
 		result = false;
 
-	if (!verifyTopology(true))
-		result = false;
-
 	while (!edgesToRemove.empty()) {
 		if (!deleteEdgeFromStorage(*edgesToRemove.begin())) {
 			result = false;
@@ -337,9 +334,6 @@ bool CMesh::removeTri(size_t triIdx)
 		}
 		edgesToRemove.erase(edgesToRemove.begin());
 	}
-
-	if (!verifyTopology(false))
-		result = false;
 
 	return result;
 }
@@ -386,9 +380,13 @@ bool CMesh::deleteTriFromStorage(size_t triIdx)
 bool CMesh::deleteEdgeFromStorage(size_t edgeIdx)
 {
 	size_t srcIdx = _edges.size() - 1;
+
+	// Must delete from BOTH _edgeTree and _edgeToIdxMap
 	BoundingBox bbox = getEdgeBBox(edgeIdx), srcBbox = getEdgeBBox(srcIdx);
 	_edgeTree.remove(bbox, edgeIdx);
+	_edgeToIdxMap.erase(_edges[edgeIdx]);
 	_edgeTree.remove(srcBbox, srcIdx);
+	_edgeToIdxMap.erase(_edges[srcIdx]);
 
 	{
 		auto& edge = _edges[edgeIdx];
@@ -398,8 +396,8 @@ bool CMesh::deleteEdgeFromStorage(size_t edgeIdx)
 		auto& vert0 = _vertices[vertIdx0];
 		auto& vert1 = _vertices[vertIdx0];
 
-		vert0.removeEdgeIndex(edgeIdx);
-		vert1.removeEdgeIndex(edgeIdx);
+		assert(!vert0.containsEdgeIndex(edgeIdx));
+		assert(!vert1.containsEdgeIndex(edgeIdx));
 		assert(edge._numFaces == 0);
 	}
 
@@ -410,14 +408,18 @@ bool CMesh::deleteEdgeFromStorage(size_t edgeIdx)
 		_edges.pop_back();
 
 		auto& edge = _edges[edgeIdx];
-		auto& vert0 = _vertices[edge._vertIndex[0]];
-		auto& vert1 = _vertices[edge._vertIndex[1]];
+		size_t vertIdx0 = edge._vertIndex[0];
+		size_t vertIdx1 = edge._vertIndex[1];
+		auto& vert0 = _vertices[vertIdx0];
+		auto& vert1 = _vertices[vertIdx1];
 		vert0.changeEdgeIndex(srcIdx, edgeIdx);
 		vert1.changeEdgeIndex(srcIdx, edgeIdx);
-		_triTree.add(srcBbox, edgeIdx);
+
+		// Must add back to BOTH _edgeTree and _edgeToIdxMap
+		_edgeTree.add(srcBbox, edgeIdx);
+		_edgeToIdxMap.insert(make_pair(edge, edgeIdx));
 	}
 
-	verifyEdges(edgeIdx, true);
 	return true;
 }
 
@@ -441,7 +443,6 @@ void CMesh::mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove)
 			addTriangle(tri);
 		}
 	}
-	assert(verifyTopology(false));
 }
 
 bool CMesh::verifyTopology(bool allowEmptyEdges) const

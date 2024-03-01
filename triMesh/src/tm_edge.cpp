@@ -1,6 +1,8 @@
+#include <iostream>
 #include <tm_edge.h>
 #include <triMesh.h>
 
+using namespace std;
 using namespace TriMesh;
 
 LineSegment CEdge::getSeg(const CMesh* pMesh) const

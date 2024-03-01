@@ -45,10 +45,12 @@ struct CVertex {
 	void save(std::ostream& out) const;
 	bool read(std::istream& in);
 
+	bool containsEdgeIndex(size_t index) const;
 	void addEdgeIndex(size_t index);
 	void removeEdgeIndex(size_t index);
 	void changeEdgeIndex(size_t oldEdgeIdx, size_t newEdgeIdx);
 
+	bool containsFaceIndex(size_t index) const;
 	void addFaceIndex(size_t index);
 	void removeFaceIndex(size_t index);
 	void changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx);

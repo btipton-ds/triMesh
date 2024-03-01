@@ -46,6 +46,12 @@ bool CVertex::read(istream& in) {
 	return (str == "v");
 }
 
+bool CVertex::containsEdgeIndex(size_t index) const
+{
+	auto iter = find(_edgeIndices.begin(), _edgeIndices.end(), index);
+	return iter != _edgeIndices.end();
+}
+
 void CVertex::addEdgeIndex(size_t index)
 {
 	auto iter = find(_edgeIndices.begin(), _edgeIndices.end(), index);
@@ -67,8 +73,15 @@ void CVertex::changeEdgeIndex(size_t oldEdgeIdx, size_t newEdgeIdx)
 		int dbgBreak = 1;
 	}
 	auto iter = find(_edgeIndices.begin(), _edgeIndices.end(), oldEdgeIdx);
-	if (iter != _edgeIndices.end())
+	if (iter != _edgeIndices.end()) {
 		*iter = newEdgeIdx;
+	}
+}
+
+bool CVertex::containsFaceIndex(size_t index) const
+{
+	auto iter = find(_faceIndices.begin(), _faceIndices.end(), index);
+	return iter != _faceIndices.end();
 }
 
 void CVertex::addFaceIndex(size_t index)
