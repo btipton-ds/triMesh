@@ -93,6 +93,7 @@ namespace TriMesh {
 		template<class POINT_TYPE>
 		size_t addQuad(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, const POINT_TYPE& pt3);
 
+		void squeezeShortSharpEdges();
 		void squeezeEdge(size_t idx);
 
 		// takes a vector of 8 points in {
@@ -154,11 +155,11 @@ namespace TriMesh {
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;
 
-		const std::vector<float>& getGlTriPoints();
-		const std::vector<float>& getGlTriNormals(bool smoothed);
-		const std::vector<float>& getGlTriParams();
-		const std::vector<float>& getGlTriCurvatures(double edgeAngleRadians, bool multiCore = true); // size = GlPoints.size() / 3
-		const std::vector<unsigned int>& getGlTriIndices();
+		const std::vector<float>& getGlTriPoints() const;
+		const std::vector<float>& getGlTriNormals(bool smoothed) const;
+		const std::vector<float>& getGlTriParams() const;
+		const std::vector<float>& getGlTriCurvatures(double edgeAngleRadians, bool multiCore = true) const; // size = GlPoints.size() / 3
+		const std::vector<unsigned int>& getGlTriIndices() const;
 
 		// If all is true, get every edge. If false, only get sharp and curved edges.
 
@@ -176,7 +177,6 @@ namespace TriMesh {
 		double calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const;
 		double calSinVertexAngle(size_t triIdx, size_t vertIdx, size_t& oppositeEdgeIdx) const;
 		size_t getOtherVertIdx(const CEdge& thisEdge, size_t triIdx) const;
-		void squeezeShortSharpEdges();
 		bool removeTri(size_t triIdx);
 		bool deleteTriFromStorage(size_t edgeIdx);
 		bool deleteEdgeFromStorage(size_t edgeIdx);
@@ -205,8 +205,8 @@ namespace TriMesh {
 
 		std::vector<Vector3i> _tris;
 
-		std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatures;
-		std::vector<unsigned int> _glTriIndices;
+		mutable std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatures;
+		mutable std::vector<unsigned int> _glTriIndices;
 		SearchTree _triTree;
 
 		// These are cached data and can be reproduced. Marked mutable so they can be accessed from const getters

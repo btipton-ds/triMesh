@@ -293,8 +293,13 @@ void CMesh::squeezeEdge(size_t idx)
 
 	size_t faceIdx0 = edge._faceIndices[0];
 	size_t faceIdx1 = edge._faceIndices[1];
-	removeTri(faceIdx0);
+
+	// Remove the larger one first. If not, the first one can cause the second to move
+	if (faceIdx1 < faceIdx0)
+		swap(faceIdx0, faceIdx1);
+
 	removeTri(faceIdx1);
+	removeTri(faceIdx0);
 	mergeVertices(vertIdxToKeep, vertIdxToRemove);
 }
 
@@ -1281,6 +1286,7 @@ void CMesh::squeezeShortSharpEdges()
 {
 	const double minSinTheta = sin(1 / 180.0 * M_PI);
 
+	size_t count = 0;
 	for (size_t vertIdx = 0; vertIdx < _vertices.size(); vertIdx++) {
 		auto& vert = _vertices[vertIdx];
 		auto& vertFaces = vert._faceIndices;
@@ -1298,13 +1304,20 @@ void CMesh::squeezeShortSharpEdges()
 			iter->second.push_back(oppositeEdgeIdx);
 		}
 
+		bool removed = false;
 		for (const auto& pair : aspectRatioToShortEdgeIdxMap) {
 			if (pair.first < minSinTheta) {
 				const auto& edgeIds = pair.second;
 				for (size_t edgeId : edgeIds) {
 					squeezeEdge(edgeId);
+					removed = true;
 				}
 			}
+		}
+		if (removed) {
+			count++;
+			if (count > 0)
+				break;
 		}
 	}
 
@@ -1349,7 +1362,7 @@ bool CMesh::verifyFindAllTris() const {
 	return result;
 }
 
-const vector<float>& CMesh::getGlTriPoints()
+const vector<float>& CMesh::getGlTriPoints() const
 {
 	if (_glTriPoints.size() != 3 * 3 * _tris.size()) {
 		_glTriPoints.resize(3 * 3 * _tris.size());
@@ -1367,7 +1380,7 @@ const vector<float>& CMesh::getGlTriPoints()
 	return _glTriPoints;
 }
 
-const vector<float>& CMesh::getGlTriNormals(bool smoothed)
+const vector<float>& CMesh::getGlTriNormals(bool smoothed) const
 {
 	buildNormals();
 	if (_glTriNormals.size() != 3 * 3 * _tris.size()) { // _vertices is a 3 vector, _glTriNormals is floats
@@ -1385,7 +1398,7 @@ const vector<float>& CMesh::getGlTriNormals(bool smoothed)
 	return _glTriNormals;
 }
 
-const vector<float>& CMesh::getGlTriParams()
+const vector<float>& CMesh::getGlTriParams() const
 {
 	if (_glTriParams.size() != 3 * 2 * _tris.size()) {
 		_glTriParams.resize(3 * 2 * _tris.size(), 0);
@@ -1393,12 +1406,9 @@ const vector<float>& CMesh::getGlTriParams()
 	return _glTriParams;
 }
 
-const std::vector<float>& CMesh::getGlTriCurvatures(double edgeAngleRadians, bool multiCore) // size = GlPoints.size() / 3
+const std::vector<float>& CMesh::getGlTriCurvatures(double edgeAngleRadians, bool multiCore) const // size = GlPoints.size() / 3
 {
 	if (_glTriCurvatures.size() != 3 * _tris.size()) { // 3 verts / tri, 1 curvature / vert
-		squeezeShortSharpEdges();
-		calCurvatures(edgeAngleRadians, multiCore);
-
 		size_t count = 0;
 		_glTriCurvatures.resize(3 * _tris.size(), 0);
 		for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
@@ -1447,7 +1457,7 @@ const std::vector<float>& CMesh::getGlTriCurvatures(double edgeAngleRadians, boo
 	return _glTriCurvatures;
 }
 
-const vector<unsigned int>& CMesh::getGlTriIndices()
+const vector<unsigned int>& CMesh::getGlTriIndices() const
 {
 	if (_glTriPoints.empty())
 		getGlTriPoints();
