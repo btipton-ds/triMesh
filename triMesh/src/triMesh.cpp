@@ -1284,7 +1284,6 @@ double CMesh::edgeLength(size_t edgeIdx) const
 
 void CMesh::squeezeSkinnyTriangles(double minAngleDegrees)
 {
-	size_t count = 0;
 	for (size_t vertIdx = 0; vertIdx < _vertices.size(); vertIdx++) {
 		auto& vert = _vertices[vertIdx];
 
@@ -1309,12 +1308,7 @@ void CMesh::squeezeSkinnyTriangles(double minAngleDegrees)
 				break;
 			squeezeEdge(edgeIdx);
 		}
-
-		count++;
-		if (count > 10)
-			break;
 	}
-
 }
 
 bool CMesh::verifyFindAllTris() const {
