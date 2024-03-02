@@ -1282,43 +1282,37 @@ double CMesh::edgeLength(size_t edgeIdx) const
 	return (pt1 - pt0).norm();
 }
 
-void CMesh::squeezeShortSharpEdges()
+void CMesh::squeezeSkinnyTriangles(double minAngleDegrees)
 {
-	const double minSinTheta = sin(1 / 180.0 * M_PI);
-
 	size_t count = 0;
 	for (size_t vertIdx = 0; vertIdx < _vertices.size(); vertIdx++) {
 		auto& vert = _vertices[vertIdx];
-		auto& vertFaces = vert._faceIndices;
 
-		map<double, vector<size_t>> aspectRatioToShortEdgeIdxMap; // Using a vector for indices is overkill, but there is a remote chance of a duplicated aspect ratio
-
-		if (vertFaces.size() <= 40)
+		if (vert._faceIndices.size() <= 10)
 			continue;
-		for (size_t faceIdx : vertFaces) {
-			size_t oppositeEdgeIdx;
-			double sinTheta = calSinVertexAngle(faceIdx, vertIdx, oppositeEdgeIdx);
-			auto iter = aspectRatioToShortEdgeIdxMap.find(sinTheta);
-			if (iter == aspectRatioToShortEdgeIdxMap.end())
-				iter = aspectRatioToShortEdgeIdxMap.insert(make_pair(sinTheta, vector<size_t>())).first;
-			iter->second.push_back(oppositeEdgeIdx);
-		}
 
-		bool removed = false;
-		for (const auto& pair : aspectRatioToShortEdgeIdxMap) {
-			if (pair.first < minSinTheta) {
-				const auto& edgeIds = pair.second;
-				for (size_t edgeId : edgeIds) {
-					squeezeEdge(edgeId);
-					removed = true;
+		bool done = false;
+		while (!done) {
+			auto& vertFaces = vert._faceIndices;
+			double minSinTheta = sin(minAngleDegrees / 180.0 * M_PI);
+			size_t edgeIdx = -1;
+			for (size_t faceIdx : vertFaces) {
+				size_t oppositeEdgeIdx;
+				double sinTheta = calSinVertexAngle(faceIdx, vertIdx, oppositeEdgeIdx);
+				if (sinTheta < minSinTheta) {
+					minSinTheta = sinTheta;
+					edgeIdx = oppositeEdgeIdx;
 				}
 			}
-		}
-		if (removed) {
-			count++;
-			if (count > 0)
+
+			if (edgeIdx == -1)
 				break;
+			squeezeEdge(edgeIdx);
 		}
+
+		count++;
+		if (count > 10)
+			break;
 	}
 
 }

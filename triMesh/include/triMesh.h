@@ -93,7 +93,7 @@ namespace TriMesh {
 		template<class POINT_TYPE>
 		size_t addQuad(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, const POINT_TYPE& pt3);
 
-		void squeezeShortSharpEdges();
+		void squeezeSkinnyTriangles(double minAngleDegrees);
 		void squeezeEdge(size_t idx);
 
 		// takes a vector of 8 points in {
