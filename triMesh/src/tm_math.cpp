@@ -127,7 +127,7 @@ bool intersectRayPlane(const Ray& ray, const Plane& plane, RayHit& hit) {
 	Vector3d vTest = hit.hitPt - plane._origin;
 	double testDist = vTest.dot(plane._normal);
 	if (fabs(testDist) > SAME_DIST_TOL) {
-		throw "Point not on plane";
+		assert(!"Point not on plane");
 	}
 #endif
 	return true;

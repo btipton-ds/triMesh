@@ -68,7 +68,7 @@ template <class SCALAR_TYPE>
 inline void checkNAN(SCALAR_TYPE val) {
 #if CHECK_NAN
 	if (std::isnan(val) || std::isinf(val))
-		throw "nan";
+		assert(!"nan");
 #endif
 }
 
