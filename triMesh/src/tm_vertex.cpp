@@ -64,17 +64,15 @@ void CVertex::removeEdgeIndex(size_t index)
 	auto iter = find(_edgeIndices.begin(), _edgeIndices.end(), index);
 	if (iter != _edgeIndices.end())
 		_edgeIndices.erase(iter);
-
 }
 
 void CVertex::changeEdgeIndex(size_t oldEdgeIdx, size_t newEdgeIdx)
 {
-	if (oldEdgeIdx == 4319) {
-		int dbgBreak = 1;
-	}
-	auto iter = find(_edgeIndices.begin(), _edgeIndices.end(), oldEdgeIdx);
-	if (iter != _edgeIndices.end()) {
-		*iter = newEdgeIdx;
+	for (size_t i = 0; i < _edgeIndices.size(); i++) {
+		if (_edgeIndices[i] == oldEdgeIdx) {
+			_edgeIndices[i] = newEdgeIdx;
+			break;
+		}
 	}
 }
 

@@ -158,13 +158,16 @@ namespace TriMesh {
 		const std::vector<float>& getGlTriPoints() const;
 		const std::vector<float>& getGlTriNormals(bool smoothed) const;
 		const std::vector<float>& getGlTriParams() const;
-		const std::vector<float>& getGlTriCurvatures(double edgeAngleRadians, bool multiCore = true) const; // size = GlPoints.size() / 3
+		template<typename LAMBDA>
+		const std::vector<float>& getGlTriCurvatureColors(LAMBDA curvatureToColorFunc) const; // size = GlPoints.size() / 3
 		const std::vector<unsigned int>& getGlTriIndices() const;
 
 		// If all is true, get every edge. If false, only get sharp and curved edges.
 
+		void getGlEdges(std::vector<float>& points, std::vector<unsigned int>& indices, bool multiCore = true);
+
 		template<typename LAMBDA>
-		void getGlEdges(LAMBDA cuvatureToColorFunc, double edgeAngleRadians, std::vector<float>& points, std::vector<float>& color, std::vector<unsigned int>& indices, bool multiCore = true);
+		void getGlEdges(LAMBDA cuvatureToColorFunc, std::vector<float>& points, std::vector<float>& color, std::vector<unsigned int>& indices, bool multiCore = true);
 
 		bool testSqueezeEdge(size_t idx);
 		bool testRemoveTri(size_t idx);
@@ -205,7 +208,7 @@ namespace TriMesh {
 
 		std::vector<Vector3i> _tris;
 
-		mutable std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatures;
+		mutable std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatureColors;
 		mutable std::vector<unsigned int> _glTriIndices;
 		SearchTree _triTree;
 
@@ -216,7 +219,7 @@ namespace TriMesh {
 		mutable std::vector<std::vector<size_t>> _sharpEdgeLoops;
 		mutable bool _useNormalCache = true;
 		mutable std::vector<Vector3d> _normals;
-		mutable std::vector<double> _edgeCurvature;
+		mutable std::vector<double> _edgeCurvature, _vertCurvature;
 
 	};
 
@@ -339,7 +342,28 @@ namespace TriMesh {
 	}
 
 	template<typename LAMBDA>
-	void CMesh::getGlEdges(LAMBDA curvatureToColorFunc, double edgeAngleRadians, std::vector<float>& points, std::vector<float>& colors, std::vector<unsigned int>& indices, bool multiCore) // size = GlPoints.size() / 3
+	const std::vector<float>& CMesh::getGlTriCurvatureColors(LAMBDA curvatureToColorFunc) const // size = GlPoints.size() / 3
+	{
+		size_t numTriVerts = 3 * _tris.size();
+		_glTriCurvatureColors.reserve(3 * numTriVerts);
+
+		for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
+			const auto& tri = _tris[triIdx];
+			for (int i = 0; i < 3; i++) {
+				auto curv = _vertCurvature[tri[i]];
+				float rgb[3];
+				if (curvatureToColorFunc(curv, rgb)) {
+					_glTriCurvatureColors.push_back(rgb[0]);
+					_glTriCurvatureColors.push_back(rgb[1]);
+					_glTriCurvatureColors.push_back(rgb[2]);
+				}
+			}
+		}
+		return _glTriCurvatureColors;
+	}
+
+	template<typename LAMBDA>
+	void CMesh::getGlEdges(LAMBDA curvatureToColorFunc, std::vector<float>& points, std::vector<float>& colors, std::vector<unsigned int>& indices, bool multiCore) // size = GlPoints.size() / 3
 	{
 		points.clear();
 		colors.clear();
@@ -348,11 +372,6 @@ namespace TriMesh {
 		points.reserve(2 * 3 * _edges.size());
 		indices.reserve(2 * _edges.size());
 
-		if (edgeAngleRadians > 0) {
-			buildNormals(multiCore);
-			calCurvatures(edgeAngleRadians, multiCore);
-			colors.reserve(2 * 3 * _edges.size());
-		}
 		unsigned int indexCount = 0;
 		for (size_t edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
 			float curv = (float)_edgeCurvature[edgeIdx];
@@ -366,8 +385,7 @@ namespace TriMesh {
 					const auto& pt = _vertices[edge._vertIndex[i]]._pt;
 					for (int j = 0; j < 3; j++) {
 						points.push_back((float)pt[j]);
-						if (edgeAngleRadians > 0) 
-							colors.push_back(rgb[j]);
+						colors.push_back(rgb[j]);
 					}
 				}
 			}
