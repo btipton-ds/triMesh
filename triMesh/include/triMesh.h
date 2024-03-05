@@ -344,21 +344,29 @@ namespace TriMesh {
 	template<typename LAMBDA>
 	const std::vector<float>& CMesh::getGlTriCurvatureColors(LAMBDA curvatureToColorFunc) const // size = GlPoints.size() / 3
 	{
-		size_t numTriVerts = 3 * _tris.size();
-		_glTriCurvatureColors.reserve(3 * numTriVerts);
+		size_t requiredSize = 3 * 3 * _tris.size();
+		if (_vertCurvature.empty()) {
+			_glTriCurvatureColors.clear();
+		} else if (_glTriCurvatureColors.size() == requiredSize)
+			return _glTriCurvatureColors;
+		else {
+			_glTriCurvatureColors.clear();
+			_glTriCurvatureColors.reserve(requiredSize);
 
-		for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
-			const auto& tri = _tris[triIdx];
-			for (int i = 0; i < 3; i++) {
-				auto curv = _vertCurvature[tri[i]];
-				float rgb[3];
-				if (curvatureToColorFunc(curv, rgb)) {
-					_glTriCurvatureColors.push_back(rgb[0]);
-					_glTriCurvatureColors.push_back(rgb[1]);
-					_glTriCurvatureColors.push_back(rgb[2]);
+			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
+				const auto& tri = _tris[triIdx];
+				for (int i = 0; i < 3; i++) {
+					auto curv = _vertCurvature[tri[i]];
+					float rgb[3];
+					if (curvatureToColorFunc(curv, rgb)) {
+						_glTriCurvatureColors.push_back(rgb[0]);
+						_glTriCurvatureColors.push_back(rgb[1]);
+						_glTriCurvatureColors.push_back(rgb[2]);
+					}
 				}
 			}
 		}
+
 		return _glTriCurvatureColors;
 	}
 
