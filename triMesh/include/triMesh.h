@@ -383,6 +383,9 @@ namespace TriMesh {
 		unsigned int indexCount = 0;
 		for (size_t edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
 			float curv = (float)_edgeCurvature[edgeIdx];
+			if (fabs(curv) < 0.1)
+				continue;
+
 			float rgb[3];
 			if (curvatureToColorFunc(curv, rgb)) {
 				indices.push_back(indexCount++);
