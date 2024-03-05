@@ -1154,7 +1154,28 @@ size_t CMesh::findVerts(const BoundingBox& bbox, vector<SearchEntry>& vertIndice
 }
 
 size_t CMesh::findEdges(const BoundingBox& bbox, vector<SearchEntry>& edgeIndices, BoxTestType contains) const {
-	return _edgeTree.find(bbox, edgeIndices, contains);
+	vector<SearchEntry> allHits;
+	if (!_edgeTree.find(bbox, allHits, contains))
+		return false;
+
+	for (const auto& hit : allHits) {
+		const auto& edge = _edges[hit.getIndex()];
+		if (contains == BoxTestType::Intersects) {
+			if (bbox.intersects(edge.getSeg(this)))
+				edgeIndices.push_back(hit);
+		} else {
+			int numInBounds = 0;
+			for (int i = 0; i < 2; i++) {
+				const auto& v = _vertices[edge._vertIndex[i]];
+				if (bbox.contains(v._pt))
+					numInBounds++;
+			}
+			if (numInBounds == 2)
+				edgeIndices.push_back(hit);
+		}
+	}
+
+	return !edgeIndices.empty();
 }
 
 size_t CMesh::findTris(const BoundingBox& bbox, vector<SearchEntry>& triIndices, BoxTestType contains) const {
