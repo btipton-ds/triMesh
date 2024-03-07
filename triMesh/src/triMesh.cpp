@@ -34,7 +34,6 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 #include <fstream>
 #include <iomanip>
 
-#define _USE_MATH_DEFINES
 #include <cmath>
 
 #include <../../stlReader/include/readStl.h>

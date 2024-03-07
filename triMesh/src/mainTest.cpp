@@ -1,8 +1,7 @@
 #include <iostream>
 #include <fstream>
 
-#define _USE_MATH_DEFINES
-#include <corecrt_math_defines.h>
+#include <cmath>
 
 #include <tm_fixedMath.h>
 #include <tm_boundingBox.h>
@@ -199,7 +198,7 @@ private:
 	bool testAssign();
 	bool testCompare();
 	bool testMath();
-	TriMesh::CMeshPtr makeCylinder(Vector3d& origin, double height, double radius);
+	TriMesh::CMeshPtr makeCylinder(const Vector3d& origin, double height, double radius);
 };
 
 template<>
@@ -321,7 +320,7 @@ bool Test_double_f<T>::testMath()
 }
 
 template<class T>
-TriMesh::CMeshPtr Test_double_f<T>::makeCylinder(Vector3d& origin, double height, double radius)
+TriMesh::CMeshPtr Test_double_f<T>::makeCylinder(const Vector3d& origin, double height, double radius)
 {
 	Vector3d ll(origin - Vector3d(-radius, -radius, -height / 2)),
 		ur(origin - Vector3d(radius, radius, height / 2));

@@ -10,7 +10,7 @@ if (UNIX)
 
     include_directories(
     include 
-    "/usr/local/include/eigen3/"
+    "/usr/include/eigen3/"
     "../triMesh/include" 
     )
 else (UNIX)

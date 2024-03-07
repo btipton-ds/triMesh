@@ -11,13 +11,15 @@ endif()
 
 project ("triMesh")
 
+add_compile_definitions(_USE_MATH_DEFINES)
+
 # Add source to this project's executable.
 if (UNIX)
 	list(APPEND CMAKE_CXX_FLAGS "-mcmodel=large")
 
     include_directories(
     include 
-    "/usr/local/include/eigen3/"
+    "/usr/include/eigen3/"
     "../../utilities/threads/include"
     "../triMesh/include" 
     "../stlReader/include" 
