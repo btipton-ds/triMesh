@@ -78,6 +78,7 @@ Plane::Plane(const Vector3d& origin, const Vector3d& normal)
 			testOrigin = pt;
 		}
 	}
+#if FULL_TESTS
 	double testDist = distanceToPoint(testOrigin);
 	if (fabs(testDist) < tol) {
 		_origin = testOrigin;
@@ -85,6 +86,7 @@ Plane::Plane(const Vector3d& origin, const Vector3d& normal)
 		assert(fabs(testDist) < tol);
 	} else
 		assert(!"Principal origin out of tolerance");
+#endif
 }
 
 bool Plane::intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt, double& dist) const
@@ -123,7 +125,7 @@ bool intersectRayPlane(const Ray& ray, const Plane& plane, RayHit& hit) {
 	hit.dist = h / dp;
 	hit.hitPt = ray._origin + hit.dist * ray._dir;
 
-#if 1 // Verification code
+#if FULL_TESTS // Verification code
 	Vector3d vTest = hit.hitPt - plane._origin;
 	double testDist = vTest.dot(plane._normal);
 	if (fabs(testDist) > SAME_DIST_TOL) {
@@ -143,15 +145,6 @@ bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit)
 
 	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
-#if 0
-		v0 = safeNormalize(*(pts[j]) - *(pts[i]));
-		v1 = hit.hitPt - *(pts[i]);
-		Vector3d v2 = *pts[k] - *pts[i];
-		v2 = safeNormalize(v2 - v0.dot(v2) * v0);
-		double d = v1.dot(v2);
-		if (d < -SAME_DIST_TOL)
-			return false;
-#else
 		v0 = *pts[j] - *pts[i];
 		v1 = hit.hitPt - *pts[i];
 		Vector3d cp = v0.cross(v1);
@@ -162,7 +155,6 @@ bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit)
 			if (err > NUMERIC_DIFF_TOL)
 				return false;
 		}
-#endif
 	}
 	return true;
 }

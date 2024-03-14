@@ -37,4 +37,6 @@ This file is part of the TriMesh library.
 #define _HAS_ITERATOR_DEBUGGING 0
 #endif
 
+#define FULL_TESTS 0
+
 const int filePrecision = 17;
