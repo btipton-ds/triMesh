@@ -39,4 +39,6 @@ This file is part of the TriMesh library.
 
 #define FULL_TESTS 0
 
+#define EIGEN_NO_DEBUG 1
+
 const int filePrecision = 17;
