@@ -39,6 +39,8 @@ This file is part of the TriMesh library.
 namespace TriMesh {
 
 class CMesh;
+using CMeshPtr = std::shared_ptr<CMesh>;
+
 class CEdge {
 public:
 
@@ -52,6 +54,7 @@ public:
 	void changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx);
 
 	LineSegment getSeg(const CMesh* pMesh) const;
+	LineSegment getSeg(const CMeshPtr& pMesh) const;
 
 	void dump(std::ostream& out) const;
 

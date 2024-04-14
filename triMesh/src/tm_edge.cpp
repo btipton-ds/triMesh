@@ -41,6 +41,13 @@ LineSegment CEdge::getSeg(const CMesh* pMesh) const
 	return LineSegment(pt0, pt1);
 }
 
+LineSegment CEdge::getSeg(const CMeshPtr& pMesh) const
+{
+	Vector3d pt0 = pMesh->getVert(_vertIndex[0])._pt;
+	Vector3d pt1 = pMesh->getVert(_vertIndex[1])._pt;
+	return LineSegment(pt0, pt1);
+}
+
 CEdge::CEdge(size_t vertIdx0, size_t vertIdx1)
 	: _numFaces(0)
 {
