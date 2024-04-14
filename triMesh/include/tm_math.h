@@ -189,6 +189,7 @@ struct LineSegment {
 
 double distanceFromPlane(const Vector3d& pt, const Plane& plane);
 bool intersectRayPlane(const Ray& ray, const Plane& plane, RayHit& hit);
+bool intersectRayPlane(const Ray& ray, const Vector3d& origin, const Vector3d& normal, RayHit& hit);
 bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit);
 bool intersectLineSegTri(const LineSegment& seg, Vector3d const* const pts[3], RayHit& hit);
 bool intersectLineSegPlane(const LineSegment& seg, const Plane& plane, RayHit& hit);
@@ -260,3 +261,8 @@ inline T TRI_LERP(const std::vector<T>& pts, double t, double u, double v)
 {
 	return TRI_LERP(pts.data(), t, u, v);
 }
+
+inline bool intersectRayPlane(const Ray& ray, const Plane& plane, RayHit& hit) {
+	return intersectRayPlane(ray, plane._origin, plane._normal, hit);
+}
+

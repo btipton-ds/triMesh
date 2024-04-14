@@ -167,15 +167,20 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment& seg) const
 	if (contains(seg._pts[0]) || contains(seg._pts[1]))
 		return true;
 
-	const Vector3d x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
-	Plane planes[] = {
-		Plane(_min, x), Plane(_max, x),
-		Plane(_min, y), Plane(_max, y),
-		Plane(_min, z), Plane(_max, z)
+	static const Vector3d axes[] = { 
+		Vector3d(1, 0, 0), 
+		Vector3d(0, 1, 0), 
+		Vector3d(0, 0, 1) 
 	};
-	for (size_t i = 0; i < 6; i++) {
+
+	auto ray = seg.getRay();
+	for (size_t i = 0; i < 3; i++) {
 		RayHit hit;
-		if (intersectLineSegPlane(seg, planes[i], hit)) {
+		if (intersectRayPlane(ray, _min, axes[i], hit)) {
+			if (contains(hit.hitPt))
+				return true;
+		}
+		if (intersectRayPlane(ray, _max, axes[i], hit)) {
 			if (contains(hit.hitPt))
 				return true;
 		}

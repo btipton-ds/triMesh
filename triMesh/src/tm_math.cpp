@@ -115,19 +115,20 @@ double distanceFromPlane(const Vector3d& pt, const Plane& plane) {
 	return (pt - plane._origin).dot(plane._normal);
 }
 
-bool intersectRayPlane(const Ray& ray, const Plane& plane, RayHit& hit) {
-	auto dp = ray._dir.dot(plane._normal);
+bool intersectRayPlane(const Ray& ray, const Vector3d& origin, const Vector3d& normal, RayHit& hit)
+{
+	auto dp = ray._dir.dot(normal);
 	if (fabs(dp) < minNormalizeDivisor)
 		return false;
 
-	Vector3d v = plane._origin - ray._origin;
-	auto h = v.dot(plane._normal);
+	Vector3d v = origin - ray._origin;
+	auto h = v.dot(normal);
 	hit.dist = h / dp;
 	hit.hitPt = ray._origin + hit.dist * ray._dir;
 
 #if FULL_TESTS // Verification code
-	Vector3d vTest = hit.hitPt - plane._origin;
-	double testDist = vTest.dot(plane._normal);
+	Vector3d vTest = hit.hitPt - origin;
+	double testDist = vTest.dot(normal);
 	if (fabs(testDist) > SAME_DIST_TOL) {
 		assert(!"Point not on plane");
 	}
