@@ -36,6 +36,31 @@ This file is part of the TriMesh library.
 #define CSSB_DCL CSpatialSearchBase<BOX_TYPE, INDEX_TYPE, ENTRY_LIMIT>
 
 CSSB_TMPL
+inline CSSB_DCL::Entry::Entry(const BOX_TYPE& box, const INDEX_TYPE& idx)
+	: _index(idx)
+	, _bbox(box) {
+
+}
+
+CSSB_TMPL
+inline const INDEX_TYPE& CSSB_DCL::Entry::getIndex() const
+{
+	return _index;
+}
+
+CSSB_TMPL
+inline const BOX_TYPE& CSSB_DCL::Entry::getBBox() const
+{
+	return _bbox;
+}
+
+CSSB_TMPL
+inline bool CSSB_DCL::Entry::operator < (const Entry& rhs) const
+{
+	return _index < rhs._index;
+}
+
+CSSB_TMPL
 CSSB_DCL::CSpatialSearchBase(const BOX_TYPE& bbox, int axis)
 	: _bbox(bbox)
 	, _axis(axis)
@@ -57,19 +82,29 @@ void CSSB_DCL::clear() {
 }
 
 CSSB_TMPL
-std::vector<typename CSSB_DCL::Entry> CSSB_DCL::find(const BOX_TYPE& bbox, BoxTestType testType) const {
-	std::vector<Entry> result;
-	find(bbox, result, testType);
-	return result;
-}
-
-CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
 		for (const auto& entry : _contents) {
 			const auto& bb = entry.getBBox();
 			if (boxesMatch(_bbox, bbox, testType)) {
 				result.push_back(entry);
+			}
+		}
+		if (_left)
+			_left->find(bbox, result, testType);
+		if (_right)
+			_right->find(bbox, result, testType);
+	}
+	return result.size();
+}
+
+CSSB_TMPL
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType testType) const {
+	if (boxesMatch(_bbox, bbox, testType)) {
+		for (const auto& entry : _contents) {
+			const auto& bb = entry.getBBox();
+			if (boxesMatch(_bbox, bbox, testType)) {
+				result.push_back(entry.getIndex());
 			}
 		}
 		if (_left)

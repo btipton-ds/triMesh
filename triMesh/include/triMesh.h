@@ -131,8 +131,13 @@ namespace TriMesh {
 		size_t rayCast(const LineSegment& seg, std::vector<RayHit>& hits, double tol = 1.0e-6) const;
 
 		size_t findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
+
 		size_t findEdges(const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
+
 		size_t findTris(const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
 
 		Vector3d triCentroid(size_t triIdx) const;
 		Vector3d triUnitNormal(size_t triIdx) const;
@@ -256,9 +261,10 @@ namespace TriMesh {
 		if (!thisBBox.contains(pt)) {
 			std::cout << "CMesh::addVertex box intersects: Error\n";
 		}
-		auto results = _vertTree.find(ptBBox);
-		for (const auto& entry : results) {
-			size_t index = entry.getIndex();
+
+		std::vector<size_t> results;
+		_vertTree.find(ptBBox, results);
+		for (const auto& index : results) {
 			if ((_vertices[index]._pt - ptUnk).norm() < SAME_DIST_TOL) {
 				return index;
 			}
@@ -269,16 +275,16 @@ namespace TriMesh {
 
 #ifdef _DEBUG
 		// Testing
-		auto testResults = _vertTree.find(ptBBox);
+		std::vector<size_t> testResults;
+		_vertTree.find(ptBBox, testResults);
 		int numFound = 0;
-		for (const auto& e : testResults) {
-			size_t index = e.getIndex();
+		for (const auto& index : testResults) {
 			if (index == result)
 				numFound++;
 		}
 		if (numFound != 1) {
 			std::cout << "CMesh::addVertex numFound: Error. numFound: " << numFound << "\n";
-			testResults = _vertTree.find(ptBBox);
+			_vertTree.find(ptBBox, testResults);
 		}
 #endif
 		return result;

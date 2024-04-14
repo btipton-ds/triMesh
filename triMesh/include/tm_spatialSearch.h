@@ -46,22 +46,11 @@ public:
 	struct Entry {
 		Entry() = default;
 		Entry(const Entry& src) = default;
+		Entry(const BOX_TYPE& box, const INDEX_TYPE& idx);
 
-		inline Entry(const BOX_TYPE& box, const INDEX_TYPE& idx)
-			: _index(idx)
-			, _bbox(box) {
-
-		}
-
-		inline const INDEX_TYPE& getIndex() const
-		{
-			return _index;
-		}
-
-		inline const BOX_TYPE& getBBox() const
-		{
-			return _bbox;
-		}
+		const INDEX_TYPE& getIndex() const;
+		const BOX_TYPE& getBBox() const;
+		bool operator < (const Entry& rhs) const;
 
 	private:
 		INDEX_TYPE _index = {};
@@ -75,8 +64,8 @@ public:
 	size_t numInTree() const;
 	const BOX_TYPE& getBounds() const;
 
-	std::vector<Entry> find(const BOX_TYPE& bbox, BoxTestType contains = BoxTestType::Intersects) const;
 	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::Intersects) const;
+	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::Intersects) const;
 	size_t biDirRayCast(const Ray& ray, std::vector<INDEX_TYPE>& hits) const;
 
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);
