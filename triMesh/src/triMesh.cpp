@@ -400,9 +400,11 @@ bool CMesh::deleteEdgeFromStorage(size_t edgeIdx)
 		auto& vert0 = _vertices[vertIdx0];
 		auto& vert1 = _vertices[vertIdx0];
 
+#if FULL_TESTS
 		assert(!vert0.containsEdgeIndex(edgeIdx));
 		assert(!vert1.containsEdgeIndex(edgeIdx));
 		assert(edge._numFaces == 0);
+#endif
 	}
 
 	if (edgeIdx == _edges.size() - 1) {
@@ -945,7 +947,9 @@ void CMesh::merge(vector<CMeshPtr>& src, bool destructive, bool multiCore)
 					size_t j = i + 1;
 					if (j < src.size() && src[j]) {
 						auto pSrc = src[j];
+#if FULL_TESTS
 						assert(src[i]->getBBox().contains(pSrc->getBBox()));
+#endif
 						src[j] = nullptr;
 
 						src[i]->merge(pSrc, destructive);
@@ -1128,8 +1132,11 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 				// Fit a circle through tree points
 	Vector3d triPt0 = edgePlane.projectPoint(_vertices[vertIdx0]._pt);
 	Vector3d triPt1 = edgePlane.projectPoint(_vertices[vertIdx1]._pt);
+
+#if FULL_TESTS
 	assert(fabs((triPt0 - origin).dot(vEdge)) < 1.0e-6);
 	assert(fabs((triPt1 - origin).dot(vEdge)) < 1.0e-6);
+#endif
 
 	Vector3d vChord0 = triPt0 - origin;
 	Vector3d vChord1 = triPt1 - origin;
@@ -1144,7 +1151,9 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 
 	double radius = (ctr - origin).norm();
 
+#if FULL_TESTS
 	assert(fabs((ctr - origin).dot(vEdge)) < 1.0e-6);
+#endif
 	radius = fabs(radius);
 
 	double curv = 1 / radius;

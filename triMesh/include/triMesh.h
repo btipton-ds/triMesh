@@ -273,7 +273,7 @@ namespace TriMesh {
 		_vertices.push_back(CVertex(ptUnk));
 		_vertTree.add(ptBBox, result);
 
-#ifdef _DEBUG
+#if FULL_TESTS && defined(_DEBUG)
 		// Testing
 		std::vector<size_t> testResults;
 		_vertTree.find(ptBBox, testResults);

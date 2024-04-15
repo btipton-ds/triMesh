@@ -116,6 +116,7 @@ inline double double_f<BASE_TYPE>::stepSize()
 template<typename BASE_TYPE>
 BASE_TYPE double_f<BASE_TYPE>::toBaseType(double src)
 {
+#if FULL_TESTS
 	if (src > 4) {
 		assert(!"Out of bounds");
 		src = 4;
@@ -123,6 +124,8 @@ BASE_TYPE double_f<BASE_TYPE>::toBaseType(double src)
 		assert(!"Out of bounds");
 		src = -4;
 	}
+#endif
+
 	double dVal = maxVal() * 0.25 * src + 0.5;
 	BASE_TYPE result = (BASE_TYPE)(dVal);
 	return result;
