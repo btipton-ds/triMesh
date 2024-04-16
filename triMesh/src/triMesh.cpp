@@ -1120,8 +1120,11 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 	Vector3d norm0 = triUnitNormal(edge._faceIndices[0]);
 	Vector3d norm1 = triUnitNormal(edge._faceIndices[1]);
 
-	if (norm0.cross(norm1).norm() > sinEdgeAngle)
+	double magCp = norm0.cross(norm1).norm();
+	if (magCp > sinEdgeAngle)
 		return -1;
+	if (magCp < 1.0e-6)
+		return 0;
 
 	Plane edgePlane(origin, vEdge);
 	size_t vertIdx0 = getOtherVertIdx(edge, edge._faceIndices[0]);
@@ -1338,6 +1341,22 @@ double CMesh::triAspectRatio(size_t triIdx) const
 	}
 
 	return maxRatio / 2;
+}
+
+double CMesh::triGap(size_t triIdx) const
+{
+	if (_triGap.size() < _tris.size()) {
+		_triGap.resize(_tris.size(), -1);
+	}
+
+	if (_triGap[triIdx] == -1) {
+		double t = findTriMinimumGap(triIdx);
+		if (t < 0)
+			t = 0;
+		_triGap[triIdx] = t;
+	}
+
+	return _triGap[triIdx];
 }
 
 Vector3d CMesh::vertUnitNormal(size_t vertIdx) const

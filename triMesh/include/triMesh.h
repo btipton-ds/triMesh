@@ -143,6 +143,7 @@ namespace TriMesh {
 		Vector3d triUnitNormal(size_t triIdx) const;
 		double triArea(size_t triIdx) const;
 		double triAspectRatio(size_t triIdx) const;
+		double triGap(size_t triIdx) const;
 
 		Vector3d vertUnitNormal(size_t vertIdx) const;
 		double edgeCurvature(size_t edgeIdx) const;
@@ -224,7 +225,7 @@ namespace TriMesh {
 		mutable std::vector<std::vector<size_t>> _sharpEdgeLoops;
 		mutable bool _useNormalCache = true;
 		mutable std::vector<Vector3d> _normals;
-		mutable std::vector<double> _edgeCurvature, _vertCurvature;
+		mutable std::vector<double> _edgeCurvature, _vertCurvature, _triGap;
 
 	};
 
