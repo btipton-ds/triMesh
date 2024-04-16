@@ -1107,6 +1107,22 @@ void CMesh::calCurvatures(double edgeAngleRadians, bool multiCore) const
 	}
 }
 
+void CMesh::calGaps(bool multiCore) const
+{
+	if (_triGap.empty()) {
+		_triGap.resize(_tris.size());
+		MultiCore::runLambda([this](size_t threadNum, size_t numThreads)->bool {
+			for (size_t idx = threadNum; idx < _tris.size(); idx += numThreads) {
+				double t = findTriMinimumGap(idx);
+				if (t < 0)
+					t = 0;
+				_triGap[idx] = t;
+			}
+			return true;
+		}, multiCore);
+	}
+}
+
 double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 {
 	const auto& edge = _edges[edgeIdx];
@@ -1345,8 +1361,11 @@ double CMesh::triAspectRatio(size_t triIdx) const
 
 double CMesh::triGap(size_t triIdx) const
 {
-	if (_triGap.size() < _tris.size()) {
-		_triGap.resize(_tris.size(), -1);
+	if (_triGap.empty()) {
+		double t = findTriMinimumGap(triIdx);
+		if (t < 0)
+			t = 0;
+		return t;
 	}
 
 	if (_triGap[triIdx] == -1) {

@@ -155,6 +155,7 @@ namespace TriMesh {
 		void buildCentroids(bool multiCore = true) const;
 		void buildNormals(bool multiCore = true) const;
 		void calCurvatures(double edgeAngleRadians, bool multiCore = true) const;
+		void calGaps(bool multiCore = true) const;
 
 		bool verifyFindAllTris() const;
 
