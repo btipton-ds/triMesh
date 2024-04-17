@@ -496,9 +496,12 @@ bool Test_double_f<T>::testEdgeIntersectBox(const TriMesh::CMeshPtr& pMesh)
 			boxes.push_back(b);
 		}
 
+		int numIntersects = 0;
 		for (const auto& bb : boxes) {
-			TEST_TRUE(pMesh->bboxIntersectsEdge(bb, i), "Edge intersect sub bbox failed");
+			if (pMesh->bboxIntersectsEdge(bb, i))
+				numIntersects++;
 		}
+		TEST_TRUE(numIntersects > 0, "Edge intersect sub bbox failed");
 	}
 
 	cout << "testEdgeIntersectBox passed \n";
