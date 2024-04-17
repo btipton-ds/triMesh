@@ -217,17 +217,22 @@ class Test_double_f
 {
 public:
 	static double tol();
+	TriMesh::CMeshPtr makeCylinder(const Vector3d& origin, double height, double radius);
+
 	Test_double_f();
 	bool testAll();
 	bool testRemoveTri();
 	bool testSqueezeEdge();
+	bool testTriIntersectBox(const TriMesh::CMeshPtr& pMesh);
+	bool testEdgeIntersectBox(const TriMesh::CMeshPtr& pMesh);
+	bool testFindTri(const TriMesh::CMeshPtr& pMesh);
+	bool testFindEdge(const TriMesh::CMeshPtr& pMesh);
 
 private:
 	bool testCreate();
 	bool testAssign();
 	bool testCompare();
 	bool testMath();
-	TriMesh::CMeshPtr makeCylinder(const Vector3d& origin, double height, double radius);
 };
 
 template<>
@@ -426,8 +431,149 @@ bool Test_double_f<T>::testSqueezeEdge()
 	return true;
 }
 
+
+template<class T>
+bool Test_double_f<T>::testTriIntersectBox(const TriMesh::CMeshPtr& pMesh)
+{
+	for (size_t i = 0; i < pMesh->numTris(); i++) {
+		auto bbox = pMesh->getTriBBox(i);
+		TEST_TRUE(pMesh->bboxIntersectsTri(bbox, i), "Tri intersect bbox failed");
+
+		vector<TriMesh::CMesh::BoundingBox> boxes, tmp;
+		TriMesh::CMesh::BoundingBox a, b;
+		bbox.split(0, a, b);
+		tmp.push_back(a);
+		tmp.push_back(b);
+		for (const auto& bb : tmp) {
+			bb.split(1, a, b);
+			boxes.push_back(a);
+			boxes.push_back(b);
+		}
+
+		tmp = boxes;
+		boxes.clear();
+		for (const auto& bb : tmp) {
+			bb.split(2, a, b);
+			boxes.push_back(a);
+			boxes.push_back(b);
+		}
+
+		int numIntersects = 0;
+		for (const auto& bb : boxes) {
+			if (pMesh->bboxIntersectsTri(bb, i))
+				numIntersects++;
+		}
+		TEST_TRUE(numIntersects > 0, "Tri intersect sub bbox failed");
+	}
+
+	cout << "testTriIntersectBox passed \n";
+	return true;
+}
+
+template<class T>
+bool Test_double_f<T>::testEdgeIntersectBox(const TriMesh::CMeshPtr& pMesh)
+{
+	for (size_t i = 0; i < pMesh->numEdges(); i++) {
+		TriMesh::CMesh::BoundingBox bbox = pMesh->getEdgeBBox(i);
+		TEST_TRUE(pMesh->bboxIntersectsEdge(bbox, i), "Edge intersect bbox failed");
+
+		vector<TriMesh::CMesh::BoundingBox> boxes, tmp;
+		TriMesh::CMesh::BoundingBox a, b;
+		bbox.split(0, a, b);
+		tmp.push_back(a);
+		tmp.push_back(b);
+		for (const auto& bb : tmp) {
+			bb.split(1, a, b);
+			boxes.push_back(a);
+			boxes.push_back(b);
+		}
+
+		tmp = boxes;
+		boxes.clear();
+		for (const auto& bb : tmp) {
+			bb.split(2, a, b);
+			boxes.push_back(a);
+			boxes.push_back(b);
+		}
+
+		for (const auto& bb : boxes) {
+			TEST_TRUE(pMesh->bboxIntersectsEdge(bb, i), "Edge intersect sub bbox failed");
+		}
+	}
+
+	cout << "testEdgeIntersectBox passed \n";
+	return true;
+}
+
+template<class T>
+bool Test_double_f<T>::testFindTri(const TriMesh::CMeshPtr& pMesh)
+{
+	for (size_t i = 0; i < pMesh->numTris(); i += 20) {
+		auto bbox = pMesh->getTriBBox(i);
+		vector<size_t> indices;
+		TEST_TRUE(pMesh->findTris(bbox, indices) > 0, "Failed to find triangle");
+		auto iter = find(indices.begin(), indices.end(), i);
+		TEST_TRUE(iter != indices.end(), "Triangle not in list");
+	}
+
+	for (size_t i = 0; i < pMesh->numTris(); i += 20) {
+		auto bbox = pMesh->getTriBBox(i);
+		vector<TriMesh::CMesh::SearchEntry> indices;
+		TEST_TRUE(pMesh->findTris(bbox, indices) > 0, "Failed to find triangle");
+		bool found = false;
+		for (const auto entry : indices) {
+			if (entry.getIndex() == i) {
+				found = true;
+				break;
+			}
+		}
+		TEST_TRUE(found, "Triangle not in list");
+	}
+
+	cout << "testFindTri passed \n";
+	return true;
+}
+
+template<class T>
+bool Test_double_f<T>::testFindEdge(const TriMesh::CMeshPtr& pMesh)
+{
+	for (size_t i = 0; i < pMesh->numEdges(); i += 20) {
+		auto bbox = pMesh->getEdgeBBox(i);
+		vector<size_t> indices;
+		TEST_TRUE(pMesh->findEdges(bbox, indices) > 0, "Failed to find edge");
+		auto iter = find(indices.begin(), indices.end(), i);
+		TEST_TRUE(iter != indices.end(), "Edge not in list");
+	}
+
+	for (size_t i = 0; i < pMesh->numEdges(); i += 20) {
+		auto bbox = pMesh->getEdgeBBox(i);
+		vector<TriMesh::CMesh::SearchEntry> indices;
+		TEST_TRUE(pMesh->findEdges(bbox, indices) > 0, "Failed to find edge");
+		bool found = false;
+		for (const auto entry : indices) {
+			if (entry.getIndex() == i) {
+				found = true;
+				break;
+			}
+		}
+		TEST_TRUE(found, "Edge not in list");
+	}
+
+	cout << "testFindEdge passed \n";
+	return true;
+}
+
 int main(int numArgs, char** args)
 {
+	{
+		Test_double_f<int64_t> test64;
+		TriMesh::CMeshPtr pMesh = test64.makeCylinder(Vector3d(0, 0, 0), 1, 2);
+
+		if (!test64.testTriIntersectBox(pMesh)) return 1;
+		if (!test64.testEdgeIntersectBox(pMesh)) return 1;
+		if (!test64.testFindTri(pMesh)) return 1;
+		if (!test64.testFindEdge(pMesh)) return 1;
+	}
 	if (testBoundingBox() != 0)
 		cout << "Bounding box failed\n";
 
@@ -436,6 +582,7 @@ int main(int numArgs, char** args)
 
 	if (!test64.testRemoveTri()) return 1;
 	if (!test64.testSqueezeEdge()) return 1;
+
 
 	cout << "Passed int64_t tests\n";
 

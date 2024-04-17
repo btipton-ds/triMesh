@@ -31,6 +31,7 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 #include <tm_math.h>
+#include <tm_rectangle.h>
 
 template <class SCALAR_TYPE>
 class CBoundingBox3D {
@@ -54,12 +55,15 @@ public:
 	bool intersects(const CBoundingBox3D& otherBox) const;
 	bool intersects(const Ray& ray) const;
 	bool intersects(const LineSegment& seg) const;
-	bool intersectsTriangle(const POINT_TYPE pts[3]) const;
+	bool intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const;
+	bool intersects(const POINT_TYPE* pts[3]) const;
 	void split(int axis, CBoundingBox3D& left, CBoundingBox3D& right, Scalar overlap = 0) const;
 	void grow(Scalar dist);
 	void growPercent(double amount);
+	void getEdges(LineSegment edgeSegs[12]) const;
 private:
-	void getEdges(LineSegment edges[12]) const;
+	bool intersectsTriangle2d(bool isMin, int axis, const POINT_TYPE* pts[3]) const;
+
 	POINT_TYPE _min, _max;
 };
 
@@ -134,11 +138,11 @@ inline typename CBoundingBox3D<SCALAR_TYPE>::POINT_TYPE CBoundingBox3D<SCALAR_TY
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::contains(const POINT_TYPE& pt) const {
 	for (int i = 0; i < 3; i++) {
-		auto delta = pt[i] - (_min[i] - SAME_DIST_TOL);
-		if (delta < 0)
+		auto delta = pt[i] - _min[i];
+		if (delta < -SAME_DIST_TOL)
 			return false;
-		delta = pt[i] - (_max[i] + SAME_DIST_TOL);
-		if (delta > 0)
+		delta = pt[i] - _max[i];
+		if (delta > SAME_DIST_TOL)
 			return false;
 	}
 	return true;
@@ -164,14 +168,14 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox) con
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment& seg) const
 {
+	static const Vector3d axes[] = {
+		Vector3d(1, 0, 0),
+		Vector3d(0, 1, 0),
+		Vector3d(0, 0, 1)
+	};
+
 	if (contains(seg._pts[0]) || contains(seg._pts[1]))
 		return true;
-
-	static const Vector3d axes[] = { 
-		Vector3d(1, 0, 0), 
-		Vector3d(0, 1, 0), 
-		Vector3d(0, 0, 1) 
-	};
 
 	auto ray = seg.getRay();
 	for (size_t i = 0; i < 3; i++) {
@@ -207,35 +211,69 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray& ray) const {
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersectsTriangle(const POINT_TYPE pts[3]) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const
 {
+	const POINT_TYPE* pts[] = { &pt0, &pt1, &pt2 };
+	return intersectsTriangle(pts);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE* pts[3]) const
+{
+	static const Vector3d axes[] = {
+		Vector3d(1, 0, 0),
+		Vector3d(0, 1, 0),
+		Vector3d(0, 0, 1)
+	};
+
+	POINT_TYPE v0 = (*pts[2]) - (*pts[0]);
+	POINT_TYPE v1 = (*pts[1]) - (*pts[0]);
+	POINT_TYPE norm = v1.cross(v0);
+	auto mag = norm.norm();
+	if (mag <= 1.0e-12)
+		return false;
+
+	norm /= mag;
+
+	for (int axis = 0; axis < 3; axis++) {
+		auto magCp = axes[axis].cross(norm).norm();
+		if (magCp < 1.0e-8) {
+			// Triangle normal is parallel with axis, so tri is perpendicular to a principal axis
+			if (fabs(distanceFromPlane((*pts[0]), Plane(_min, norm))) < SAME_DIST_TOL) {
+				// Triangle lies within the plane of a min face within tolerance
+				return intersectsTriangle2d(true, axis, pts);
+			}
+
+			if (fabs(distanceFromPlane((*pts[0]), Plane(_max, norm))) < SAME_DIST_TOL) {
+				// Triangle lies within the plane of a max face within tolerance
+				return intersectsTriangle2d(false, axis, pts);
+			}
+		}
+
+	}
 	CBoundingBox3D triBox;
-	for (int i = 0; i < 3; i++)
-		triBox.merge(pts[i]);
+	for (int i = 0; i < 3; i++) {
+		if (contains((*pts[i])))
+			return true;
+		triBox.merge((*pts[i]));
+	}
 
 	if (contains(triBox))
 		return true;
 	if (!intersects(triBox))
 		return false;
 
-	LineSegment edges[12];
-	getEdges(edges);
+	LineSegment edgeSegs[12];
+	getEdges(edgeSegs);
 
-	POINT_TYPE v0 = pts[2] - pts[0];
-	POINT_TYPE v1 = pts[1] - pts[0];
-	POINT_TYPE norm = v1.cross(v0);
-	auto mag = norm.norm();
-	if (mag > 1.0e-8) {
-		norm /= mag;
-		Plane triPlane(pts[0], norm);
+	Plane triPlane((*pts[0]), norm);
 
-		for (int i = 0; i < 12; i++) {
-			const auto& seg = edges[i];
+	for (int i = 0; i < 12; i++) {
+		const auto& seg = edgeSegs[i];
+		if (seg.calLength() > 1.0e-6) {
 			RayHit hit;
-			if (intersectLineSegPlane(seg, triPlane, hit)) {
-				if (contains(hit.hitPt) && pointInTriangle(pts, hit.hitPt)) {
-					return true;
-				}
+			if (intersectLineSegPlane(seg, triPlane, hit) && contains(hit.hitPt) && pointInTriangle(pts, hit.hitPt)) {
+				return true;
 			}
 		}
 	}
@@ -244,7 +282,35 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsTriangle(const POINT_TYPE pts[3]) co
 }
 
 template <class SCALAR_TYPE>
-void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment edges[12]) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsTriangle2d(bool isMin, int axis, const POINT_TYPE* pts[3]) const
+{
+	static const Vector3d axes[] = {
+		Vector3d(1, 0, 0),
+		Vector3d(0, 1, 0),
+		Vector3d(0, 0, 1)
+	};
+
+	Vector3d xAxis(axes[(axis + 1) % 3]);
+	Vector3d yAxis(axes[(axis + 2) % 3]);
+
+	Eigen::Vector2d min2D(xAxis.dot(_min), yAxis.dot(_min));
+	Eigen::Vector2d max2D(xAxis.dot(_max), yAxis.dot(_max));
+	CRectangled rect(min2D, max2D);
+
+	Eigen::Vector2d pts2D[3];
+	for (int i = 0; i < 3; i++) {
+		Eigen::Vector2d pt2D(xAxis.dot(*pts[i]), yAxis.dot(*pts[i]));
+
+		if (rect.contains(pt2D))
+			return true; // One of the three points is in the rectangle
+
+		pts2D[i] = pt2D;
+	}
+	return rect.intersects(pts2D[0], pts2D[1], pts2D[2]);
+}
+
+template <class SCALAR_TYPE>
+void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment edgeSegs[12]) const
 {
 	Vector3d r = range();
 	Vector3d corners[] = {
@@ -259,23 +325,23 @@ void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment edges[12]) const
 		_min + Vector3d(0,    r[1], r[2]),
 	};
 
-	// x edges
-	edges[0] = LineSegment(corners[0], corners[1]);
-	edges[1] = LineSegment(corners[3], corners[2]);
-	edges[2] = LineSegment(corners[4], corners[5]);
-	edges[3] = LineSegment(corners[7], corners[6]);
+	// x edgeSegs
+	edgeSegs[0] = LineSegment(corners[0], corners[1]);
+	edgeSegs[1] = LineSegment(corners[3], corners[2]);
+	edgeSegs[2] = LineSegment(corners[4], corners[5]);
+	edgeSegs[3] = LineSegment(corners[7], corners[6]);
 
-	// y edges
-	edges[4] = LineSegment(corners[0], corners[3]);
-	edges[5] = LineSegment(corners[1], corners[2]);
-	edges[6] = LineSegment(corners[4], corners[7]);
-	edges[7] = LineSegment(corners[5], corners[6]);
+	// y edgeSegs
+	edgeSegs[4] = LineSegment(corners[0], corners[3]);
+	edgeSegs[5] = LineSegment(corners[1], corners[2]);
+	edgeSegs[6] = LineSegment(corners[4], corners[7]);
+	edgeSegs[7] = LineSegment(corners[5], corners[6]);
 
-	// z edges
-	edges[8] = LineSegment(corners[0], corners[4]);
-	edges[9] = LineSegment(corners[1], corners[5]);
-	edges[10] = LineSegment(corners[2], corners[6]);
-	edges[11] = LineSegment(corners[3], corners[7]);
+	// z edgeSegs
+	edgeSegs[8] = LineSegment(corners[0], corners[4]);
+	edgeSegs[9] = LineSegment(corners[1], corners[5]);
+	edgeSegs[10] = LineSegment(corners[2], corners[6]);
+	edgeSegs[11] = LineSegment(corners[3], corners[7]);
 
 }
 

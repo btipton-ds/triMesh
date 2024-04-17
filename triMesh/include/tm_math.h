@@ -194,7 +194,8 @@ bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit)
 bool intersectLineSegTri(const LineSegment& seg, Vector3d const* const pts[3], RayHit& hit);
 bool intersectLineSegPlane(const LineSegment& seg, const Plane& plane, RayHit& hit);
 bool intersectLineSegPlane(const LineSegment& seg, const Vector3d* pts[3], RayHit& hit);
-bool pointInTriangle(const Vector3d pts[3], const Vector3d& pt);
+bool pointInTriangle(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& pt);
+bool pointInTriangle(const Vector3d* pts[3], const Vector3d& pt);
 
 template<class T>
 Vector3<T> orthoganalizeVector(const Vector3<T>& v, const Vector3<T>& unitVector)

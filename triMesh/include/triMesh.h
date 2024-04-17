@@ -109,6 +109,8 @@ namespace TriMesh {
 		BoundingBox getTriBBox(size_t triIdx) const;
 		BoundingBox getEdgeBBox(size_t edgeIdx) const;
 		BoundingBox getVertBBox(size_t vertIdx) const;
+		bool bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const;
+		bool bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const;
 		LineSegment getEdgesLineSeg(size_t edgeIdx) const;
 		bool isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const;
 

@@ -675,12 +675,28 @@ CMesh::BoundingBox CMesh::getVertBBox(size_t vertIdx) const
 	return result;
 }
 
+bool CMesh::bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const
+{
+	const auto& tri = _tris[idx];
+	const Vector3d* pts[] = {
+		&_vertices[tri[0]]._pt,
+		&_vertices[tri[1]]._pt,
+		&_vertices[tri[2]]._pt,
+	};
+
+	return bbox.intersects(pts);
+}
+
+bool CMesh::bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const
+{
+	auto seg = getEdgesLineSeg(idx);
+	return bbox.intersects(seg);
+}
+
 LineSegment CMesh::getEdgesLineSeg(size_t edgeIdx) const 
 {
 	const CEdge& edge = _edges[edgeIdx];
-	size_t idx0 = edge._vertIndex[0];
-	size_t idx1 = edge._vertIndex[1];
-	return LineSegment(_vertices[idx0]._pt, _vertices[idx1]._pt);
+	return edge.getSeg(this);
 }
 
 bool CMesh::isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const {
@@ -1242,20 +1258,15 @@ size_t CMesh::findTris(const BoundingBox& bbox, vector<SearchEntry>& triIndices,
 	vector<SearchEntry> temp;
 	size_t numHits = _triTree.find(bbox, temp, contains);
 	if (numHits > 0) {
-		for (const auto& triEntry : temp) {
-			const auto& tri = getTri(triEntry.getIndex());
-			size_t triIdx = triEntry.getIndex();
-				
-			Vector3d pts[] = {
-				getVert(tri[0])._pt,
-				getVert(tri[1])._pt,
-				getVert(tri[2])._pt,
-			};
-
-			if (contains == BoxTestType::Contains && bbox.contains(triEntry.getBBox()))
-				triIndices.push_back(triEntry);
-			else if (bbox.intersectsTriangle(pts)) {
-				triIndices.push_back(triEntry);
+		if (contains == BoxTestType::Contains) {
+			for (const auto& triEntry : temp) {
+				if (bbox.contains(triEntry.getBBox()))
+					triIndices.push_back(triEntry);
+			}
+		} else {
+			for (const auto& triEntry : temp) {
+				if (bboxIntersectsTri(bbox, triEntry.getIndex()))
+					triIndices.push_back(triEntry);
 			}
 		}
 		numHits = triIndices.size();
@@ -1264,24 +1275,22 @@ size_t CMesh::findTris(const BoundingBox& bbox, vector<SearchEntry>& triIndices,
 }
 
 size_t CMesh::findTris(const BoundingBox& bbox, vector<size_t>& triIndices, BoxTestType contains) const {
-	vector<size_t> temp;
+	vector<SearchEntry> temp;
 	size_t numHits = _triTree.find(bbox, temp, contains);
 	if (numHits > 0) {
-		for (const auto& triIdx : temp) {
-			const auto& tri = getTri(triIdx);
-
-			Vector3d pts[] = {
-				getVert(tri[0])._pt,
-				getVert(tri[1])._pt,
-				getVert(tri[2])._pt,
-			};
-
-			if (contains == BoxTestType::Contains && bbox.contains(getTriBBox(triIdx)))
-				triIndices.push_back(triIdx);
-			else if (bbox.intersectsTriangle(pts)) {
-				triIndices.push_back(triIdx);
+		if (contains == BoxTestType::Contains) {
+			for (const auto& triEntry : temp) {
+				if (bbox.contains(triEntry.getBBox()))
+					triIndices.push_back(triEntry.getIndex());
+			}
+		} else {
+			for (const auto& triEntry : temp) {
+				size_t triIdx = triEntry.getIndex();
+				if (bboxIntersectsTri(bbox, triIdx))
+					triIndices.push_back(triIdx);
 			}
 		}
+
 		numHits = triIndices.size();
 	}
 	return numHits;
