@@ -31,34 +31,6 @@ This file is part of the TriMesh library.
 
 #include <tm_math.h>
 
-double LineSegment::distanceToPoint(const Vector3d& pt) const {
-	double t;
-	return distanceToPoint(pt, t);
-}
-
-double LineSegment::distanceToPoint(const Vector3d& pt, double& t) const {
-	Vector3d dir(_pts[1] - _pts[0]);
-	double len = dir.norm();
-	if (len < minNormalizeDivisor)
-		return DBL_MAX;
-	dir /= len;
-	Vector3d v0 = pt - _pts[0];
-	double dp = v0.dot(dir);
-	t = dp / len;
-	v0 = v0 - dir * dp;
-	double dist;
-	if (t < 0) {
-		t = -DBL_MAX;
-		dist = (pt - _pts[0]).norm();
-	} else if (t > 1) {
-		t = DBL_MAX;
-		dist = (pt - _pts[1]).norm();
-	} else
-		dist = v0.norm();
-
-	return dist;
-}
-
 double distanceFromPlane(const Vector3d& pt, const Plane& plane) {
 	return (pt - plane._origin).dot(plane._normal);
 }
@@ -108,23 +80,6 @@ bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit)
 	return true;
 }
 
-bool intersectLineSegTri(const LineSegment& seg, Vector3d const* const pts[3], RayHit& hit) {
-	Vector3d unitDir = seg._pts[1] - seg._pts[0];
-	double l = unitDir.norm();
-	unitDir /= l;
-	Ray ray(seg._pts[0], unitDir);
-	if (intersectRayTri(seg.getRay(), pts, hit)) {
-		Vector3d v1 = hit.hitPt - seg._pts[0];
-		double d = unitDir.dot(v1);
-		if (-SAME_DIST_TOL < d  && d < l + SAME_DIST_TOL) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	return false;
-}
-
 Vector3d triangleNormal(Vector3d const* const pts[3]) {
 	Vector3d v0 = *pts[1] - *pts[0];
 	Vector3d v1 = *pts[2] - *pts[0];
@@ -164,19 +119,6 @@ double volumeUnderTriangle(Vector3d const* const pts[3], const Vector3d& axis) {
 	double h = centroid.dot(axis);
 	double vol = area * h;
 	return vol;
-}
-
-bool intersectLineSegPlane(const LineSegment& seg, const Plane& plane, RayHit& hit) {
-	if (intersectRayPlane(seg.getRay(), plane, hit)) {
-		Vector3d v = hit.hitPt - seg._pts[0];
-		double t = v.dot(seg.calcDir()) / seg.calLength();
-		return 0 <= t && t <= 1;
-	}
-	return false;
-}
-
-bool intersectLineSegPlane(const LineSegment& seg, const Vector3d* pts[3], RayHit& hit) {
-	return intersectLineSegPlane(seg, Plane(pts), hit);
 }
 
 bool pointInTriangle(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& pt)

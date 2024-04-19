@@ -272,7 +272,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE* pts[3]) const
 		const auto& seg = edgeSegs[i];
 		if (seg.calLength() > 1.0e-6) {
 			RayHit hit;
-			if (intersectLineSegPlane(seg, triPlane, hit) && contains(hit.hitPt) && pointInTriangle(pts, hit.hitPt)) {
+			if (seg.intersectPlane(triPlane, hit) && contains(hit.hitPt) && pointInTriangle(pts, hit.hitPt)) {
 				return true;
 			}
 		}

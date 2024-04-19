@@ -43,6 +43,8 @@ This file is part of the TriMesh library.
 
 using lint = long long;
 
+struct LineSegment;
+
 constexpr double NUMERIC_DIFF_TOL = 1.0e-5;
 constexpr double SAME_DIST_TOL = 1.0e-8;
 constexpr double OPTIMIZER_TOL = 1.0e-6;
@@ -145,44 +147,11 @@ Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
 		return v / l;
 	throw "zero length vector";
 }
-struct LineSegment {
-	inline LineSegment(const Vector3d& p0 = Vector3d(0, 0, 0), const Vector3d& p1 = Vector3d(0, 0, 0))
-	{
-		_pts[0] = p0;
-		_pts[1] = p1;
-	}
-	inline double calLength() const {
-		return (_pts[1] - _pts[0]).norm();
-	}
-
-	inline Vector3d calcDir() const {
-		return safeNormalize<double>(_pts[1] - _pts[0]);
-	}
-
-	inline Vector3d interpolate(double t) const {
-		return _pts[0] + t * (_pts[1] - _pts[0]);
-	}
-	inline double parameterize(const Vector3d& pt) const {
-		return (pt - _pts[0]).dot(calcDir());
-	}
-
-	inline Ray getRay() const {
-		return Ray(_pts[0], calcDir());
-	}
-
-	double distanceToPoint(const Vector3d& pt, double& t) const;
-	double distanceToPoint(const Vector3d& pt) const;
-
-	Vector3d _pts[2];
-};
 
 double distanceFromPlane(const Vector3d& pt, const Plane& plane);
 bool intersectRayPlane(const Ray& ray, const Plane& plane, RayHit& hit);
 bool intersectRayPlane(const Ray& ray, const Vector3d& origin, const Vector3d& normal, RayHit& hit);
 bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit);
-bool intersectLineSegTri(const LineSegment& seg, Vector3d const* const pts[3], RayHit& hit);
-bool intersectLineSegPlane(const LineSegment& seg, const Plane& plane, RayHit& hit);
-bool intersectLineSegPlane(const LineSegment& seg, const Vector3d* pts[3], RayHit& hit);
 bool pointInTriangle(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& pt);
 bool pointInTriangle(const Vector3d* pts[3], const Vector3d& pt);
 

@@ -29,6 +29,7 @@ This file is part of the TriMesh library.
 
 #include <iostream>
 #include <tm_edge.h>
+#include <tm_lineSegment.h>
 #include <triMesh.h>
 
 using namespace std;

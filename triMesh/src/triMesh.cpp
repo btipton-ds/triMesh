@@ -37,6 +37,7 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 #include <cmath>
 
 #include <../../stlReader/include/readStl.h>
+#include <tm_lineSegment.h>
 #include <triMesh.h>
 #include <MultiCoreUtil.h>
 
@@ -807,7 +808,7 @@ size_t CMesh::rayCast(const LineSegment& seg, vector<RayHit>& hits, double tol) 
 			};
 
 			RayHit hit;
-			if (intersectLineSegTri(seg, pts, hit)) {
+			if (seg.intersectTri(pts, hit)) {
 				if ((hit.dist >= -tol) && (hit.dist <= segLen + tol)) {
 					if (hit.dist < 0)
 						hit.dist = 0;

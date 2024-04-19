@@ -31,6 +31,7 @@ This file is part of the TriMesh library.
 
 #include <string>
 #include <tm_math.h>
+#include <tm_lineSegment.h>
 #include <triMesh.h>
 
 namespace TriMesh {
