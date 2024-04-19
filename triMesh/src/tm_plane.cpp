@@ -71,13 +71,34 @@ bool Plane::intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt
 {
 	Ray ray(pt0, (pt1 - pt0).normalized());
 	RayHit hitPt;
-	if (intersectRayPlane(ray, *this, hitPt)) {
+	if (intersectRay(ray, hitPt)) {
 		pt = hitPt.hitPt;
 		dist = hitPt.dist;
 		return true;
 	}
 
 	return false;
+}
+
+bool Plane::intersectRay(const Ray& ray, RayHit& hit) const
+{
+	auto dp = ray._dir.dot(_normal);
+	if (fabs(dp) < minNormalizeDivisor)
+		return false;
+
+	Vector3d v = _origin - ray._origin;
+	auto h = v.dot(_normal);
+	hit.dist = h / dp;
+	hit.hitPt = ray._origin + hit.dist * ray._dir;
+
+#if FULL_TESTS // Verification code
+	Vector3d vTest = hit.hitPt - origin;
+	double testDist = vTest.dot(normal);
+	if (fabs(testDist) > SAME_DIST_TOL) {
+		assert(!"Point not on plane");
+	}
+#endif
+	return true;
 }
 
 Vector3d Plane::projectPoint(const Vector3d& pt) const

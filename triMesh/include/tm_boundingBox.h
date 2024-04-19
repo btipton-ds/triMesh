@@ -180,11 +180,14 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment& seg) const
 	auto ray = seg.getRay();
 	for (size_t i = 0; i < 3; i++) {
 		RayHit hit;
-		if (intersectRayPlane(ray, _min, axes[i], hit)) {
+		Plane minPlane(_min, axes[i]);
+		if (minPlane.intersectRay(ray, hit)) {
 			if (contains(hit.hitPt))
 				return true;
 		}
-		if (intersectRayPlane(ray, _max, axes[i], hit)) {
+
+		Plane maxPlane(_max, axes[i]);
+		if (maxPlane.intersectRay(ray, hit)) {
 			if (contains(hit.hitPt))
 				return true;
 		}
@@ -203,7 +206,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray& ray) const {
 
 	for (int i = 0; i < 6; i++) {
 		RayHit hit;
-		if (intersectRayPlane(ray, planes[i], hit) && contains(hit.hitPt))
+		if (planes[i].intersectRay(ray, hit) && contains(hit.hitPt))
 			return true;
 
 	}
@@ -249,8 +252,8 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE* pts[3]) const
 				return intersectsTriangle2d(false, axis, pts);
 			}
 		}
-
 	}
+
 	CBoundingBox3D triBox;
 	for (int i = 0; i < 3; i++) {
 		if (contains((*pts[i])))

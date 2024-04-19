@@ -107,7 +107,7 @@ bool LineSegment::intersectTri(Vector3d const* const pts[3], RayHit& hit) const
 
 bool LineSegment::intersectPlane(const Plane& plane, RayHit& hit) const
 {
-	if (intersectRayPlane(getRay(), plane, hit)) {
+	if (plane.intersectRay(getRay(), hit)) {
 		Vector3d v = hit.hitPt - _pts[0];
 		double t = v.dot(calcDir()) / calLength();
 		return 0 <= t && t <= 1;

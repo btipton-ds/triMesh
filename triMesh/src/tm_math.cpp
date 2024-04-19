@@ -32,7 +32,7 @@ This file is part of the TriMesh library.
 #include <tm_math.h>
 
 double distanceFromPlane(const Vector3d& pt, const Plane& plane) {
-	return (pt - plane._origin).dot(plane._normal);
+	return (pt - plane.getOrgin()).dot(plane.getNormal());
 }
 
 bool intersectRayPlane(const Ray& ray, const Vector3d& origin, const Vector3d& normal, RayHit& hit)
@@ -61,7 +61,8 @@ bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit)
 	Vector3d v1 = *pts[2] - *pts[0];
 	Vector3d norm = safeNormalize(v0.cross(v1));
 
-	if (!intersectRayPlane(ray, Plane(*(pts[0]), norm), hit))
+	Plane pl(*(pts[0]), norm);
+	if (!pl.intersectRay(ray, hit))
 		return false;
 
 	for (int i = 0; i < 3; i++) {

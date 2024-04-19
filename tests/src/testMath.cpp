@@ -51,19 +51,19 @@ int testDistToPlane() {
 int testRayPlaneIntersect() {
 	Plane plane0(Vector3d(0, 0, 0), Vector3d(0, 0, 1));
 	Vector3d dir0(-1, -1, -1);
-	Ray ray0(plane0._origin - dir0, dir0);
+	Ray ray0(plane0.getOrgin() - dir0, dir0);
 	RayHit hit;
 
-	TEST_TRUE(intersectRayPlane(ray0, plane0, hit), "Ray intersects plane?");
+	TEST_TRUE(plane0.intersectRay(ray0, hit), "Ray intersects plane?");
 	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
 
 	Vector3d delta(.1, -.023, 1.35);
 	ray0._origin += delta;
-	TEST_TRUE(intersectRayPlane(ray0, plane0, hit), "Ray + delta intersects plane?");
+	TEST_TRUE(plane0.intersectRay(ray0, hit), "Ray + delta intersects plane?");
 	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
 
-	plane0._normal = Vector3d(1,0,0).cross(dir0).normalized();
-	TEST_FALSE(intersectRayPlane(ray0, plane0, hit), "Ray does not intersect parrallel plane");
+	plane0.getNormal() = Vector3d(1,0,0).cross(dir0).normalized();
+	TEST_FALSE(plane0.intersectRay(ray0, hit), "Ray does not intersect parrallel plane");
 	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
 
 	cout << "testRayPlaneIntersect passed\n";

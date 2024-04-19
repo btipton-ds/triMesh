@@ -149,8 +149,6 @@ Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
 }
 
 double distanceFromPlane(const Vector3d& pt, const Plane& plane);
-bool intersectRayPlane(const Ray& ray, const Plane& plane, RayHit& hit);
-bool intersectRayPlane(const Ray& ray, const Vector3d& origin, const Vector3d& normal, RayHit& hit);
 bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit);
 bool pointInTriangle(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& pt);
 bool pointInTriangle(const Vector3d* pts[3], const Vector3d& pt);
@@ -215,9 +213,5 @@ template<class T>
 inline T TRI_LERP(const std::vector<T>& pts, double t, double u, double v)
 {
 	return TRI_LERP(pts.data(), t, u, v);
-}
-
-inline bool intersectRayPlane(const Ray& ray, const Plane& plane, RayHit& hit) {
-	return intersectRayPlane(ray, plane._origin, plane._normal, hit);
 }
 

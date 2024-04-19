@@ -38,7 +38,7 @@ This file is part of the TriMesh library.
 
 #include <tm_vector3.h>
 
-struct Plane;
+class Plane;
 struct Ray;
 struct RayHit;
 

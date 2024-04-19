@@ -38,14 +38,37 @@ This file is part of the TriMesh library.
 
 #include <tm_vector3.h>
 
-struct Plane {
+struct Ray;
+struct RayHit;
+
+class Plane {
+public:
 	Plane(const Vector3d& origin, const Vector3d& normal);
 	Plane(const Vector3d* pts[3]);
 
 	bool intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt, double& dist) const;
+	bool intersectRay(const Ray& ray, RayHit& hit) const;
 	Vector3d projectPoint(const Vector3d& pt) const;
-	inline double distanceToPoint(const Vector3d& pt) const {
-		return fabs((pt - _origin).dot(_normal));
-	}
+	double distanceToPoint(const Vector3d& pt) const;
+
+	Vector3d getOrgin() const;
+	Vector3d getNormal() const;
+
+private:
 	Vector3d _origin, _normal;
 };
+
+inline double Plane::distanceToPoint(const Vector3d& pt) const {
+	return fabs((pt - _origin).dot(_normal));
+}
+
+inline Vector3d Plane::getOrgin() const
+{
+	return _origin;
+}
+
+inline Vector3d Plane::getNormal() const
+{
+	return _normal;
+}
+
