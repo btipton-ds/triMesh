@@ -33,31 +33,34 @@ This file is part of the TriMesh library.
 #include <tm_plane.h>
 #include <tm_math.h>
 
-Plane::Plane(const Vector3d* pts[3])
+template<class T>
+Plane<T>::Plane(const POINT_TYPE* pts[3])
 	: Plane(*pts[0], triangleNormal(pts))
 {}
 
-Plane::Plane(const Vector3d& origin, const Vector3d& normal)
+
+template<class T>
+Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal)
 	: _origin(origin)
 	, _normal(normal)
 {
-	double tol = 1.0e-6;
+	T tol = (T)1.0e-6;
 
 	// Intersect the plan with principal axes to find a principal origin
-	double minDist = DBL_MAX;
-	Vector3d testOrigin;
+	T minDist = (T)FLT_MAX;
+	POINT_TYPE testOrigin;
 	for (int i = 0; i < 3; i++) {
-		Vector3d dir(0, 0, 0);
+		POINT_TYPE dir(0, 0, 0);
 		dir[i] = 1;
-		Vector3d pt;
-		double dist;
-		if (intersectLine(Vector3d(0, 0, 0), dir, pt, dist) && fabs(dist) < minDist) {
+		POINT_TYPE pt;
+		T dist;
+		if (intersectLine(POINT_TYPE(0, 0, 0), dir, pt, dist) && fabs(dist) < minDist) {
 			minDist = fabs(dist);
 			testOrigin = pt;
 		}
 	}
 #if FULL_TESTS
-	double testDist = distanceToPoint(testOrigin);
+	T testDist = distanceToPoint(testOrigin);
 	if (fabs(testDist) < tol) {
 		_origin = testOrigin;
 		testDist = distanceToPoint(origin);
@@ -68,10 +71,11 @@ Plane::Plane(const Vector3d& origin, const Vector3d& normal)
 #endif
 }
 
-bool Plane::intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt, double& dist) const
+template<class T>
+bool Plane<T>::intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, POINT_TYPE& pt, T& dist) const
 {
-	Ray<double> ray(pt0, (pt1 - pt0).normalized());
-	RayHit<double> hitPt;
+	Ray<T> ray(pt0, (pt1 - pt0).normalized());
+	RayHit<T> hitPt;
 	if (intersectRay(ray, hitPt)) {
 		pt = hitPt.hitPt;
 		dist = hitPt.dist;
@@ -81,20 +85,21 @@ bool Plane::intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt
 	return false;
 }
 
-bool Plane::intersectRay(const Ray<double>& ray, RayHit<double>& hit) const
+template<class T>
+bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit) const
 {
 	auto dp = ray._dir.dot(_normal);
 	if (fabs(dp) < minNormalizeDivisor)
 		return false;
 
-	Vector3d v = _origin - ray._origin;
+	POINT_TYPE v = _origin - ray._origin;
 	auto h = v.dot(_normal);
 	hit.dist = h / dp;
 	hit.hitPt = ray._origin + hit.dist * ray._dir;
 
 #if FULL_TESTS // Verification code
-	Vector3d vTest = hit.hitPt - origin;
-	double testDist = vTest.dot(normal);
+	POINT_TYPE vTest = hit.hitPt - origin;
+	T testDist = vTest.dot(normal);
 	if (fabs(testDist) > SAME_DIST_TOL) {
 		assert(!"Point not on plane");
 	}
@@ -102,14 +107,17 @@ bool Plane::intersectRay(const Ray<double>& ray, RayHit<double>& hit) const
 	return true;
 }
 
-Vector3d Plane::projectPoint(const Vector3d& pt) const
+template<class T>
+typename Plane<T>::POINT_TYPE Plane<T>::projectPoint(const POINT_TYPE& pt) const
 {
-	Vector3d v = pt - _origin;
+	POINT_TYPE v = pt - _origin;
 	v = v - _normal.dot(v) * _normal;
-	Vector3d result = _origin + v;
+	POINT_TYPE result = _origin + v;
 #if FULL_TESTS
 	assert(distanceToPoint(result) < 1.0e-8);
 #endif
 	return result;
 }
 
+template class Plane<double>;
+template class Plane<float>;

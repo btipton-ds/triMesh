@@ -180,13 +180,13 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment& seg) const
 	auto ray = seg.getRay();
 	for (size_t i = 0; i < 3; i++) {
 		RayHit<double> hit;
-		Plane minPlane(_min, axes[i]);
+		Plane<double> minPlane(_min, axes[i]);
 		if (minPlane.intersectRay(ray, hit)) {
 			if (contains(hit.hitPt))
 				return true;
 		}
 
-		Plane maxPlane(_max, axes[i]);
+		Plane<double> maxPlane(_max, axes[i]);
 		if (maxPlane.intersectRay(ray, hit)) {
 			if (contains(hit.hitPt))
 				return true;
@@ -198,10 +198,10 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment& seg) const
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<double>& ray) const {
 	const Vector3d x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
-	Plane planes[] = {
-		Plane(_min, x), Plane(_max, x),
-		Plane(_min, y), Plane(_max, y),
-		Plane(_min, z), Plane(_max, z)
+	Plane<SCALAR_TYPE> planes[] = {
+		Plane<SCALAR_TYPE>(_min, x), Plane<SCALAR_TYPE>(_max, x),
+		Plane<SCALAR_TYPE>(_min, y), Plane<SCALAR_TYPE>(_max, y),
+		Plane<SCALAR_TYPE>(_min, z), Plane<SCALAR_TYPE>(_max, z)
 	};
 
 	for (int i = 0; i < 6; i++) {
@@ -241,13 +241,15 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE* pts[3]) const
 	for (int axis = 0; axis < 3; axis++) {
 		auto magCp = axes[axis].cross(norm).norm();
 		if (magCp < 1.0e-8) {
+			Plane<SCALAR_TYPE> minPlane(_min, norm);
 			// Triangle normal is parallel with axis, so tri is perpendicular to a principal axis
-			if (fabs(distanceFromPlane((*pts[0]), Plane(_min, norm))) < SAME_DIST_TOL) {
+			if (fabs(distanceFromPlane((*pts[0]), minPlane)) < SAME_DIST_TOL) {
 				// Triangle lies within the plane of a min face within tolerance
 				return intersectsTriangle2d(true, axis, pts);
 			}
 
-			if (fabs(distanceFromPlane((*pts[0]), Plane(_max, norm))) < SAME_DIST_TOL) {
+			Plane<SCALAR_TYPE> maxPlane(_min, norm);
+			if (fabs(distanceFromPlane((*pts[0]), maxPlane)) < SAME_DIST_TOL) {
 				// Triangle lies within the plane of a max face within tolerance
 				return intersectsTriangle2d(false, axis, pts);
 			}
@@ -269,7 +271,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE* pts[3]) const
 	LineSegment edgeSegs[12];
 	getEdges(edgeSegs);
 
-	Plane triPlane((*pts[0]), norm);
+	Plane<double> triPlane((*pts[0]), norm);
 
 	for (int i = 0; i < 12; i++) {
 		const auto& seg = edgeSegs[i];

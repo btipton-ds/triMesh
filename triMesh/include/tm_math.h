@@ -122,7 +122,7 @@ Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
 	throw "zero length vector";
 }
 
-double distanceFromPlane(const Vector3d& pt, const Plane& plane);
+double distanceFromPlane(const Vector3d& pt, const Plane<double>& plane);
 bool intersectRayTri(const Ray<double>& ray, Vector3d const * const pts[3], RayHit<double>& hit);
 bool pointInTriangle(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& pt);
 bool pointInTriangle(const Vector3d* pts[3], const Vector3d& pt);
@@ -143,6 +143,8 @@ Vector3<T> orthoganalizePoint(const Vector3<T>& origin, const Vector3<T>& unitVe
 
 Vector3d triangleNormal(Vector3d const* const pts[3]);
 Vector3d triangleNormal(const Vector3d pts[3]);
+Vector3f triangleNormal(Vector3f const* const pts[3]);
+Vector3f triangleNormal(const Vector3f pts[3]);
 
 Vector3d ngonCentroid(int numPoints, Vector3d const* const pts[]);
 Vector3d ngonCentroid(int numPoints, const Vector3d pts[]);

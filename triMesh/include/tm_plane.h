@@ -43,33 +43,42 @@ struct Ray;
 template<class T>
 struct RayHit;
 
+template<class T>
 class Plane {
 public:
-	Plane(const Vector3d& origin, const Vector3d& normal);
-	Plane(const Vector3d* pts[3]);
+	using POINT_TYPE = Vector3<T>;
 
-	bool intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt, double& dist) const;
-	bool intersectRay(const Ray<double>& ray, RayHit<double>& hit) const;
-	Vector3d projectPoint(const Vector3d& pt) const;
-	double distanceToPoint(const Vector3d& pt) const;
+	Plane() = default;
+	Plane(const Plane& src) = default;
+	Plane(const POINT_TYPE& origin, const POINT_TYPE& normal);
+	Plane(const POINT_TYPE* pts[3]);
 
-	Vector3d getOrgin() const;
-	Vector3d getNormal() const;
+	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, POINT_TYPE& pt, T& dist) const;
+	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit) const;
+	POINT_TYPE projectPoint(const POINT_TYPE& pt) const;
+	T distanceToPoint(const POINT_TYPE& pt) const;
+
+	const POINT_TYPE& getOrgin() const;
+	const POINT_TYPE& getNormal() const;
 
 private:
-	Vector3d _origin, _normal;
+	POINT_TYPE _origin, _normal;
 };
 
-inline double Plane::distanceToPoint(const Vector3d& pt) const {
+
+template<class T>
+inline T Plane<T>::distanceToPoint(const POINT_TYPE& pt) const {
 	return fabs((pt - _origin).dot(_normal));
 }
 
-inline Vector3d Plane::getOrgin() const
+template<class T>
+inline const typename Plane<T>::POINT_TYPE& Plane<T>::getOrgin() const
 {
 	return _origin;
 }
 
-inline Vector3d Plane::getNormal() const
+template<class T>
+inline typename const Plane<T>::POINT_TYPE& Plane<T>::getNormal() const
 {
 	return _normal;
 }

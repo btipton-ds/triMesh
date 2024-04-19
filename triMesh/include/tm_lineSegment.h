@@ -38,6 +38,7 @@ This file is part of the TriMesh library.
 
 #include <tm_vector3.h>
 
+template<class T>
 class Plane;
 
 template<class T>
@@ -58,7 +59,7 @@ struct LineSegment {
 	double distanceToPoint(const Vector3d& pt) const;
 
 	bool intersectTri(Vector3d const* const pts[3], RayHit<double>& hit) const;
-	bool intersectPlane(const Plane& plane, RayHit<double>& hit) const;
+	bool intersectPlane(const Plane<double>& plane, RayHit<double>& hit) const;
 	bool intersectPlane(const Vector3d* pts[3], RayHit<double>& hit) const;
 
 	Vector3d _pts[2];

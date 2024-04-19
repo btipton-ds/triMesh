@@ -106,7 +106,7 @@ bool LineSegment::intersectTri(Vector3d const* const pts[3], RayHit<double>& hit
 	return false;
 }
 
-bool LineSegment::intersectPlane(const Plane& plane, RayHit<double>& hit) const
+bool LineSegment::intersectPlane(const Plane<double>& plane, RayHit<double>& hit) const
 {
 	if (plane.intersectRay(getRay(), hit)) {
 		Vector3d v = hit.hitPt - _pts[0];
@@ -118,6 +118,6 @@ bool LineSegment::intersectPlane(const Plane& plane, RayHit<double>& hit) const
 
 bool LineSegment::intersectPlane(const Vector3d* pts[3], RayHit<double>& hit) const
 {
-	return intersectPlane(Plane(pts), hit);
+	return intersectPlane(Plane<double>(pts), hit);
 }
 
