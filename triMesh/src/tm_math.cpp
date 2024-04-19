@@ -57,12 +57,14 @@ bool intersectRayPlane(const Ray<double>& ray, const Vector3d& origin, const Vec
 	return true;
 }
 
-bool intersectRayTri(const Ray<double>& ray, Vector3d const * const pts[3], RayHit<double>& hit) {
-	Vector3d v0 = *pts[1] - *pts[0];
-	Vector3d v1 = *pts[2] - *pts[0];
-	Vector3d norm = safeNormalize(v0.cross(v1));
+template<class T>
+bool intersectRayTriTpl(const Ray<T>& ray, Vector3<T> const* const pts[3], RayHit<T>& hit) {
 
-	Plane<double> pl(*(pts[0]), norm);
+	Vector3<T> v0 = *pts[1] - *pts[0];
+	Vector3<T> v1 = *pts[2] - *pts[0];
+	Vector3<T> norm = safeNormalize(v0.cross(v1));
+
+	Plane<T> pl(*(pts[0]), norm);
 	if (!pl.intersectRay(ray, hit))
 		return false;
 
@@ -70,16 +72,25 @@ bool intersectRayTri(const Ray<double>& ray, Vector3d const * const pts[3], RayH
 		int j = (i + 1) % 3;
 		v0 = *pts[j] - *pts[i];
 		v1 = hit.hitPt - *pts[i];
-		Vector3d cp = v0.cross(v1);
-		double v = cp.dot(norm);
+		Vector3<T> cp = v0.cross(v1);
+		T v = cp.dot(norm);
 		if (v < 0) {
 			v1 = v1 - v0 * v0.dot(v1);
-			double err = v1.squaredNorm() / SAME_DIST_TOL_SQR - 1;
+			T err = v1.squaredNorm() / (T)SAME_DIST_TOL_SQR - 1;
 			if (err > NUMERIC_DIFF_TOL)
 				return false;
 		}
 	}
 	return true;
+}
+
+bool intersectRayTri(const Ray<double>& ray, Vector3d const* const pts[3], RayHit<double>& hit) {
+	return intersectRayTriTpl(ray, pts, hit);
+}
+
+bool intersectRayTri(const Ray<float>& ray, Vector3f const* const pts[3], RayHit<float>& hit)
+{
+	return intersectRayTriTpl(ray, pts, hit);
 }
 
 Vector3d triangleNormal(Vector3d const* const pts[3]) {

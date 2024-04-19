@@ -54,13 +54,13 @@ public:
 	// This is actually intersects or contains
 	bool intersects(const CBoundingBox3D& otherBox) const;
 	bool intersects(const Ray<double>& ray) const;
-	bool intersects(const LineSegment& seg) const;
+	bool intersects(const LineSegment<SCALAR_TYPE>& seg) const;
 	bool intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const;
 	bool intersects(const POINT_TYPE* pts[3]) const;
 	void split(int axis, CBoundingBox3D& left, CBoundingBox3D& right, Scalar overlap = 0) const;
 	void grow(Scalar dist);
 	void growPercent(double amount);
-	void getEdges(LineSegment edgeSegs[12]) const;
+	void getEdges(LineSegment<SCALAR_TYPE> edgeSegs[12]) const;
 private:
 	bool intersectsTriangle2d(bool isMin, int axis, const POINT_TYPE* pts[3]) const;
 
@@ -166,7 +166,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox) con
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment& seg) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg) const
 {
 	static const Vector3d axes[] = {
 		Vector3d(1, 0, 0),
@@ -268,7 +268,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE* pts[3]) const
 	if (!intersects(triBox))
 		return false;
 
-	LineSegment edgeSegs[12];
+	LineSegment<SCALAR_TYPE> edgeSegs[12];
 	getEdges(edgeSegs);
 
 	Plane<double> triPlane((*pts[0]), norm);
@@ -315,7 +315,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsTriangle2d(bool isMin, int axis, con
 }
 
 template <class SCALAR_TYPE>
-void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment edgeSegs[12]) const
+void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment<SCALAR_TYPE> edgeSegs[12]) const
 {
 	Vector3d r = range();
 	Vector3d corners[] = {
@@ -331,22 +331,22 @@ void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment edgeSegs[12]) const
 	};
 
 	// x edgeSegs
-	edgeSegs[0] = LineSegment(corners[0], corners[1]);
-	edgeSegs[1] = LineSegment(corners[3], corners[2]);
-	edgeSegs[2] = LineSegment(corners[4], corners[5]);
-	edgeSegs[3] = LineSegment(corners[7], corners[6]);
+	edgeSegs[0] = LineSegment<SCALAR_TYPE>(corners[0], corners[1]);
+	edgeSegs[1] = LineSegment<SCALAR_TYPE>(corners[3], corners[2]);
+	edgeSegs[2] = LineSegment<SCALAR_TYPE>(corners[4], corners[5]);
+	edgeSegs[3] = LineSegment<SCALAR_TYPE>(corners[7], corners[6]);
 
 	// y edgeSegs
-	edgeSegs[4] = LineSegment(corners[0], corners[3]);
-	edgeSegs[5] = LineSegment(corners[1], corners[2]);
-	edgeSegs[6] = LineSegment(corners[4], corners[7]);
-	edgeSegs[7] = LineSegment(corners[5], corners[6]);
+	edgeSegs[4] = LineSegment<SCALAR_TYPE>(corners[0], corners[3]);
+	edgeSegs[5] = LineSegment<SCALAR_TYPE>(corners[1], corners[2]);
+	edgeSegs[6] = LineSegment<SCALAR_TYPE>(corners[4], corners[7]);
+	edgeSegs[7] = LineSegment<SCALAR_TYPE>(corners[5], corners[6]);
 
 	// z edgeSegs
-	edgeSegs[8] = LineSegment(corners[0], corners[4]);
-	edgeSegs[9] = LineSegment(corners[1], corners[5]);
-	edgeSegs[10] = LineSegment(corners[2], corners[6]);
-	edgeSegs[11] = LineSegment(corners[3], corners[7]);
+	edgeSegs[8] = LineSegment<SCALAR_TYPE>(corners[0], corners[4]);
+	edgeSegs[9] = LineSegment<SCALAR_TYPE>(corners[1], corners[5]);
+	edgeSegs[10] = LineSegment<SCALAR_TYPE>(corners[2], corners[6]);
+	edgeSegs[11] = LineSegment<SCALAR_TYPE>(corners[3], corners[7]);
 
 }
 

@@ -31,54 +31,62 @@ This file is part of the TriMesh library.
 #include <tm_ray.h>
 #include <tm_lineSegment.h>
 
-LineSegment::LineSegment(const Vector3d& p0, const Vector3d& p1)
+template<class T>
+LineSegment<T>::LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1)
 {
 	_pts[0] = p0;
 	_pts[1] = p1;
 }
 
-double LineSegment::calLength() const {
+template<class T>
+T LineSegment<T>::calLength() const {
 	return (_pts[1] - _pts[0]).norm();
 }
 
-Vector3d LineSegment::calcDir() const {
-	return safeNormalize<double>(_pts[1] - _pts[0]);
+template<class T>
+typename LineSegment<T>::POINT_TYPE LineSegment<T>::calcDir() const {
+	return safeNormalize<T>(_pts[1] - _pts[0]);
 }
 
-Vector3d LineSegment::interpolate(double t) const {
+template<class T>
+typename LineSegment<T>::POINT_TYPE LineSegment<T>::interpolate(T t) const {
 	return _pts[0] + t * (_pts[1] - _pts[0]);
 }
 
-double LineSegment::parameterize(const Vector3d& pt) const {
+template<class T>
+T LineSegment<T>::parameterize(const POINT_TYPE& pt) const {
 	return (pt - _pts[0]).dot(calcDir());
 }
 
-Ray<double> LineSegment::getRay() const {
-	return Ray<double>(_pts[0], calcDir());
+template<class T>
+Ray<T> LineSegment<T>::getRay() const {
+	return Ray<T>(_pts[0], calcDir());
 }
 
-double LineSegment::distanceToPoint(const Vector3d& pt) const {
-	double t;
+template<class T>
+T LineSegment<T>::distanceToPoint(const POINT_TYPE& pt) const {
+	T t;
 	return distanceToPoint(pt, t);
 }
 
-double LineSegment::distanceToPoint(const Vector3d& pt, double& t) const {
-	Vector3d dir(_pts[1] - _pts[0]);
-	double len = dir.norm();
+template<class T>
+T LineSegment<T>::distanceToPoint(const POINT_TYPE& pt, T& t) const {
+	POINT_TYPE dir(_pts[1] - _pts[0]);
+	T len = dir.norm();
 	if (len < minNormalizeDivisor)
-		return DBL_MAX;
+		return (T)FLT_MAX;
 	dir /= len;
-	Vector3d v0 = pt - _pts[0];
-	double dp = v0.dot(dir);
+	POINT_TYPE v0 = pt - _pts[0];
+	T dp = v0.dot(dir);
 	t = dp / len;
 	v0 = v0 - dir * dp;
-	double dist;
+	T dist;
 	if (t < 0) {
-		t = -DBL_MAX;
+		t = (T) -DBL_MAX;
 		dist = (pt - _pts[0]).norm();
 	}
 	else if (t > 1) {
-		t = DBL_MAX;
+		t = (T) DBL_MAX;
 		dist = (pt - _pts[1]).norm();
 	}
 	else
@@ -87,15 +95,16 @@ double LineSegment::distanceToPoint(const Vector3d& pt, double& t) const {
 	return dist;
 }
 
-bool LineSegment::intersectTri(Vector3d const* const pts[3], RayHit<double>& hit) const
+template<class T>
+bool LineSegment<T>::intersectTri(POINT_TYPE const* const pts[3], RayHit<T>& hit) const
 {
-	Vector3d unitDir = _pts[1] - _pts[0];
-	double l = unitDir.norm();
+	POINT_TYPE unitDir = _pts[1] - _pts[0];
+	T l = unitDir.norm();
 	unitDir /= l;
-	Ray<double> ray(_pts[0], unitDir);
+	Ray<T> ray(_pts[0], unitDir);
 	if (intersectRayTri(getRay(), pts, hit)) {
-		Vector3d v1 = hit.hitPt - _pts[0];
-		double d = unitDir.dot(v1);
+		POINT_TYPE v1 = hit.hitPt - _pts[0];
+		T d = unitDir.dot(v1);
 		if (-SAME_DIST_TOL < d && d < l + SAME_DIST_TOL) {
 			return true;
 		}
@@ -106,18 +115,22 @@ bool LineSegment::intersectTri(Vector3d const* const pts[3], RayHit<double>& hit
 	return false;
 }
 
-bool LineSegment::intersectPlane(const Plane<double>& plane, RayHit<double>& hit) const
+template<class T>
+bool LineSegment<T>::intersectPlane(const Plane<T>& plane, RayHit<T>& hit) const
 {
 	if (plane.intersectRay(getRay(), hit)) {
-		Vector3d v = hit.hitPt - _pts[0];
-		double t = v.dot(calcDir()) / calLength();
+		POINT_TYPE v = hit.hitPt - _pts[0];
+		T t = v.dot(calcDir()) / calLength();
 		return 0 <= t && t <= 1;
 	}
 	return false;
 }
 
-bool LineSegment::intersectPlane(const Vector3d* pts[3], RayHit<double>& hit) const
+template<class T>
+bool LineSegment<T>::intersectPlane(const POINT_TYPE* pts[3], RayHit<T>& hit) const
 {
-	return intersectPlane(Plane<double>(pts), hit);
+	return intersectPlane(Plane<T>(pts), hit);
 }
 
+template struct LineSegment<double>;
+template struct LineSegment<float>;

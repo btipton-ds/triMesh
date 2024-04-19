@@ -695,7 +695,7 @@ bool CMesh::bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const
 	return bbox.intersects(seg);
 }
 
-LineSegment CMesh::getEdgesLineSeg(size_t edgeIdx) const 
+LineSegment<double> CMesh::getEdgesLineSeg(size_t edgeIdx) const
 {
 	const CEdge& edge = _edges[edgeIdx];
 	return edge.getSeg(this);
@@ -705,7 +705,7 @@ bool CMesh::isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const {
 	const CEdge& edge = _edges[edgeIdx];
 	if (edge._numFaces < 2)
 		return true;
-	const LineSegment seg = getEdgesLineSeg(edgeIdx);
+	const auto seg = getEdgesLineSeg(edgeIdx);
 	const Vector3d edgeV = seg.calcDir();
 	if (edge._faceIndices[0] == edge._faceIndices[1]) {
 		cout << "Duplicated faceIndex\n";
@@ -796,7 +796,7 @@ size_t CMesh::rayCast(const Ray<double>& ray, vector<RayHit<double>>& hits, bool
 	return hits.size();
 }
 
-size_t CMesh::rayCast(const LineSegment& seg, vector<RayHit<double>>& hits, double tol) const {
+size_t CMesh::rayCast(const LineSegment<double>& seg, vector<RayHit<double>>& hits, double tol) const {
 	auto segLen = seg.calLength();
 	vector<size_t> hitIndices;
 	if (_triTree.biDirRayCast(seg.getRay(), hitIndices) > 0) {

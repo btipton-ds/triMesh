@@ -43,6 +43,7 @@ This file is part of the TriMesh library.
 
 using lint = long long;
 
+template<class T>
 struct LineSegment;
 
 constexpr double NUMERIC_DIFF_TOL = 1.0e-5;
@@ -124,6 +125,7 @@ Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
 
 double distanceFromPlane(const Vector3d& pt, const Plane<double>& plane);
 bool intersectRayTri(const Ray<double>& ray, Vector3d const * const pts[3], RayHit<double>& hit);
+bool intersectRayTri(const Ray<float>& ray, Vector3f const* const pts[3], RayHit<float>& hit);
 bool pointInTriangle(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& pt);
 bool pointInTriangle(const Vector3d* pts[3], const Vector3d& pt);
 

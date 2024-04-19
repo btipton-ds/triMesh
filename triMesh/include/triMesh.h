@@ -111,7 +111,7 @@ namespace TriMesh {
 		BoundingBox getVertBBox(size_t vertIdx) const;
 		bool bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const;
 		bool bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const;
-		LineSegment getEdgesLineSeg(size_t edgeIdx) const;
+		LineSegment<double> getEdgesLineSeg(size_t edgeIdx) const;
 		bool isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const;
 
 		const std::vector<size_t>& getSharpEdgeIndices(double edgeAngleRadians = 0) const;
@@ -130,7 +130,7 @@ namespace TriMesh {
 		void getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins, bool multiCore = true) const;
 		size_t rayCast(size_t triIdx, std::vector<RayHit<double>>& hits, bool biDir = true) const;
 		size_t rayCast(const Ray<double>& ray, std::vector<RayHit<double>>& hits, bool biDir = true) const;
-		size_t rayCast(const LineSegment& seg, std::vector<RayHit<double>>& hits, double tol = 1.0e-6) const;
+		size_t rayCast(const LineSegment<double>& seg, std::vector<RayHit<double>>& hits, double tol = 1.0e-6) const;
 
 		size_t findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
 		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;

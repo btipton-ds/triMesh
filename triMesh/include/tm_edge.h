@@ -36,6 +36,9 @@ This file is part of the TriMesh library.
 
 #include <tm_math.h>
 
+template<class T>
+struct LineSegment;
+
 namespace TriMesh {
 
 class CMesh;
@@ -53,8 +56,8 @@ public:
 	void removeFaceIndex(size_t faceIdx);
 	void changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx);
 
-	LineSegment getSeg(const CMesh* pMesh) const;
-	LineSegment getSeg(const CMeshPtr& pMesh) const;
+	LineSegment<double> getSeg(const CMesh* pMesh) const;
+	LineSegment<double> getSeg(const CMeshPtr& pMesh) const;
 
 	void dump(std::ostream& out) const;
 
