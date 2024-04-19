@@ -680,13 +680,8 @@ CMesh::BoundingBox CMesh::getVertBBox(size_t vertIdx) const
 bool CMesh::bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const
 {
 	const auto& tri = _tris[idx];
-	const Vector3d* pts[] = {
-		&_vertices[tri[0]]._pt,
-		&_vertices[tri[1]]._pt,
-		&_vertices[tri[2]]._pt,
-	};
 
-	return bbox.intersects(pts);
+	return bbox.intersects(_vertices[tri[0]]._pt, _vertices[tri[1]]._pt, _vertices[tri[2]]._pt);
 }
 
 bool CMesh::bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const

@@ -56,7 +56,6 @@ public:
 	bool intersects(const Ray<double>& ray) const;
 	bool intersects(const LineSegment<SCALAR_TYPE>& seg) const;
 	bool intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const;
-	bool intersects(const POINT_TYPE* pts[3]) const;
 	void split(int axis, CBoundingBox3D& left, CBoundingBox3D& right, Scalar overlap = 0) const;
 	void grow(Scalar dist);
 	void growPercent(double amount);
@@ -177,6 +176,9 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg
 	if (contains(seg._pts[0]) || contains(seg._pts[1]))
 		return true;
 
+	if (seg.calLength() < SAME_DIST_TOL)
+		return false;
+
 	auto ray = seg.getRay();
 	for (size_t i = 0; i < 3; i++) {
 		RayHit<double> hit;
@@ -216,70 +218,25 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<double>& ray) const {
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const
 {
-	const POINT_TYPE* pts[] = { &pt0, &pt1, &pt2 };
-	return intersectsTriangle(pts);
-}
-
-template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE* pts[3]) const
-{
 	static const Vector3d axes[] = {
 		Vector3d(1, 0, 0),
 		Vector3d(0, 1, 0),
 		Vector3d(0, 0, 1)
 	};
 
-	POINT_TYPE v0 = (*pts[2]) - (*pts[0]);
-	POINT_TYPE v1 = (*pts[1]) - (*pts[0]);
-	POINT_TYPE norm = v1.cross(v0);
-	auto mag = norm.norm();
-	if (mag <= 1.0e-12)
-		return false;
-
-	norm /= mag;
-
-	for (int axis = 0; axis < 3; axis++) {
-		auto magCp = axes[axis].cross(norm).norm();
-		if (magCp < 1.0e-8) {
-			Plane<SCALAR_TYPE> minPlane(_min, norm);
-			// Triangle normal is parallel with axis, so tri is perpendicular to a principal axis
-			if (fabs(distanceFromPlane((*pts[0]), minPlane)) < SAME_DIST_TOL) {
-				// Triangle lies within the plane of a min face within tolerance
-				return intersectsTriangle2d(true, axis, pts);
-			}
-
-			Plane<SCALAR_TYPE> maxPlane(_min, norm);
-			if (fabs(distanceFromPlane((*pts[0]), maxPlane)) < SAME_DIST_TOL) {
-				// Triangle lies within the plane of a max face within tolerance
-				return intersectsTriangle2d(false, axis, pts);
-			}
-		}
-	}
-
-	CBoundingBox3D triBox;
-	for (int i = 0; i < 3; i++) {
-		if (contains((*pts[i])))
-			return true;
-		triBox.merge((*pts[i]));
-	}
-
-	if (contains(triBox))
+	if (contains(pt0) || contains(pt1) || contains(pt2))
 		return true;
-	if (!intersects(triBox))
-		return false;
 
-	LineSegment<SCALAR_TYPE> edgeSegs[12];
-	getEdges(edgeSegs);
+	LineSegment<SCALAR_TYPE> seg;
+	for (int i = 0; i < 3; i++) {
+		Plane<SCALAR_TYPE> minPlane(_min, axes[i]);
+		if (minPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg)) {
+			return true;
+		}
 
-	Plane<double> triPlane((*pts[0]), norm);
-
-	for (int i = 0; i < 12; i++) {
-		const auto& seg = edgeSegs[i];
-		if (seg.calLength() > 1.0e-6) {
-			RayHit<double> hit;
-			if (seg.intersectPlane(triPlane, hit) && contains(hit.hitPt) && pointInTriangle(pts, hit.hitPt)) {
-				return true;
-			}
+		Plane<SCALAR_TYPE> maxPlane(_max, axes[i]);
+		if (maxPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg)) {
+			return true;
 		}
 	}
 

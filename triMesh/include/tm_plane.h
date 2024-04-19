@@ -42,6 +42,8 @@ template<class T>
 struct Ray;
 template<class T>
 struct RayHit;
+template<class T>
+struct LineSegment;
 
 template<class T>
 class Plane {
@@ -55,6 +57,8 @@ public:
 
 	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, POINT_TYPE& pt, T& dist) const;
 	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit) const;
+	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg) const;
+
 	POINT_TYPE projectPoint(const POINT_TYPE& pt) const;
 	T distanceToPoint(const POINT_TYPE& pt) const;
 
