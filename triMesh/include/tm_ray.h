@@ -34,27 +34,32 @@ This file is part of the TriMesh library.
 #include <tm_vector3.h>
 
 struct Ray {
-	inline Ray(const Vector3d& origin, const Vector3d& dir)
-		: _origin(origin)
-		, _dir(dir)
-	{
-		_dir.normalize();
-	}
+	Ray(const Vector3d& origin, const Vector3d& dir);
 
 	Vector3d _origin, _dir;
 };
 
 struct RayHit {
+	RayHit();
+	bool operator < (const RayHit& rhs) const;
+
 	size_t triIdx;
 	double dist;
 	Vector3d hitPt;
-
-	inline RayHit()
-		: triIdx(stm1)
-		, dist(0)
-	{}
-
-	inline bool operator < (const RayHit& rhs) const {
-		return fabs(dist) < fabs(rhs.dist);
-	}
 };
+
+inline Ray::Ray(const Vector3d& origin, const Vector3d& dir)
+	: _origin(origin)
+	, _dir(dir)
+{
+	_dir.normalize();
+}
+
+inline RayHit::RayHit()
+	: triIdx(stm1)
+	, dist(0)
+{}
+
+inline bool RayHit::operator < (const RayHit& rhs) const {
+	return fabs(dist) < fabs(rhs.dist);
+}
