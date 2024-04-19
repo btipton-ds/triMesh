@@ -51,6 +51,7 @@ add_library (
     "src/tm_vector3.cpp"
     "src/tm_fixedMath.cpp"
     "src/tm_edge.cpp"
+    "src/tm_plane.cpp"
 )
 
 add_executable (
@@ -64,8 +65,8 @@ add_executable (
     "include/tm_fixedMath.h"
     "src/tm_fixedMath.cpp"
     "src/tm_edge.cpp"
-    "../stlReader/src/readStl.cpp"
-)
+    "src/tm_plane.cpp"
+    "../stlReader/src/readStl.cpp")
 
 
 link_directories(

@@ -37,6 +37,7 @@ This file is part of the TriMesh library.
 #include <cfloat>
 
 #include <tm_vector3.h>
+#include <tm_plane.h>
 
 #include <set>
 
@@ -137,18 +138,6 @@ struct RayHit {
 	}
 };
 
-struct Plane {
-	Plane(const Vector3d& origin, const Vector3d& normal);
-	Plane(const Vector3d* pts[3]);
-
-	bool intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt, double& dist) const;
-	Vector3d projectPoint(const Vector3d& pt) const;
-	inline double distanceToPoint(const Vector3d& pt) const {
-		return fabs((pt - _origin).dot(_normal));
-	}
-	Vector3d _origin, _normal;
-};
-
 template<typename SCALAR_TYPE>
 Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
 	auto l = v.norm();
@@ -225,10 +214,6 @@ inline Vector3d triangleCentroid(const Vector3d pts[]) {
 }
 
 double volumeUnderTriangle(Vector3d const* const pts[3], const Vector3d& axis);
-
-inline Plane::Plane(const Vector3d* pts[3]) 
-	: Plane(*pts[0], triangleNormal(pts))
-{}
 
 // LERP functions are usually used for points, but can be used for any kind of value that supports +, -  and *
 template<class T>
