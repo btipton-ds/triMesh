@@ -56,8 +56,8 @@ namespace TriMesh {
 
 	class CMesh {
 	public:
-		using BoundingBox = CBoundingBox3Dd;
-		using SearchTree = CSpatialSearchST<BoundingBox>;
+		using SearchTree = CSpatialSearchST<double>;
+		using BoundingBox = SearchTree::BOX_TYPE;
 		using BoxTestType = SearchTree::BoxTestType;
 		using SearchEntry = SearchTree::Entry;
 

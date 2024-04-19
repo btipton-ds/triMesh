@@ -36,9 +36,11 @@ This file is part of the TriMesh library.
 #include <tm_math.h>
 #include <tm_boundingBox.h>
 
-template <class BOX_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
+template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
 class CSpatialSearchBase {
 public:
+	using BOX_TYPE = CBoundingBox3D<SCALAR_TYPE>;
+
 	enum class BoxTestType {
 		Contains, Intersects
 	};
@@ -89,23 +91,23 @@ private:
 	std::shared_ptr<CSpatialSearchBase> _left, _right;
 };
 
-template <class BOX_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
-inline size_t CSpatialSearchBase<BOX_TYPE, INDEX_TYPE, ENTRY_LIMIT>::numInTree() const {
+template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
+inline size_t CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>::numInTree() const {
 	return _numInTree;
 }
 
-template <class BOX_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
-const BOX_TYPE& CSpatialSearchBase<BOX_TYPE, INDEX_TYPE, ENTRY_LIMIT>::getBounds() const {
+template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
+const typename CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>::BOX_TYPE& CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>::getBounds() const {
 	return _bbox;
 }
 
-template <typename BOX_TYPE, typename INDEX_TYPE>
-using CSpatialSearch = CSpatialSearchBase<BOX_TYPE, INDEX_TYPE, 25>;
+template <typename SCALAR_TYPE, typename INDEX_TYPE>
+using CSpatialSearch = CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, 25>;
 
-template <typename BOX_TYPE>
-using CSpatialSearchST = CSpatialSearch<BOX_TYPE, size_t>;
+template <typename SCALAR_TYPE>
+using CSpatialSearchST = CSpatialSearch<SCALAR_TYPE, size_t>;
 
-using CSpatialSearchSTd = CSpatialSearchST<CBoundingBox3D<double>>;
-using CSpatialSearchSTf = CSpatialSearchST<CBoundingBox3D<float>>;
+using CSpatialSearchSTd = CSpatialSearchST<double>;
+using CSpatialSearchSTf = CSpatialSearchST<float>;
 
 #include <tm_spatialSearch.hpp>

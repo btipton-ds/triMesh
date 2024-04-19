@@ -32,8 +32,8 @@ This file is part of the TriMesh library.
 #include <iostream>
 #include <tm_spatialSearch.h>
 
-#define CSSB_TMPL template <class BOX_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
-#define CSSB_DCL CSpatialSearchBase<BOX_TYPE, INDEX_TYPE, ENTRY_LIMIT>
+#define CSSB_TMPL template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
+#define CSSB_DCL CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>
 
 CSSB_TMPL
 inline CSSB_DCL::Entry::Entry(const BOX_TYPE& box, const INDEX_TYPE& idx)
@@ -49,7 +49,7 @@ inline const INDEX_TYPE& CSSB_DCL::Entry::getIndex() const
 }
 
 CSSB_TMPL
-inline const BOX_TYPE& CSSB_DCL::Entry::getBBox() const
+inline const typename CSSB_DCL::BOX_TYPE& CSSB_DCL::Entry::getBBox() const
 {
 	return _bbox;
 }
