@@ -32,6 +32,7 @@ This file is part of the TriMesh library.
 #include <string>
 
 #include <tm_boundingBox.h>
+#include <tm_ray.h>
 
 using namespace std;
 

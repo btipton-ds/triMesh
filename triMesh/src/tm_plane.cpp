@@ -29,6 +29,7 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
+#include <tm_ray.h>
 #include <tm_plane.h>
 #include <tm_math.h>
 

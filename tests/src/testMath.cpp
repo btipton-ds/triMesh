@@ -33,6 +33,7 @@ This file is part of the TriMesh library.
 #include <iostream>
 #include <string>
 #include <tm_math.h>
+#include <tm_ray.h>
 
 using namespace std;
 int testDistToPlane() {

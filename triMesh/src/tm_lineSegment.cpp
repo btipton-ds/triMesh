@@ -27,8 +27,9 @@ This file is part of the TriMesh library.
 
 */
 
-#include <tm_lineSegment.h>
 #include <tm_math.h>
+#include <tm_ray.h>
+#include <tm_lineSegment.h>
 
 LineSegment::LineSegment(const Vector3d& p0, const Vector3d& p1)
 {

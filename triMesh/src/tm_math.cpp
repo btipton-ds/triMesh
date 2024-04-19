@@ -30,6 +30,7 @@ This file is part of the TriMesh library.
 #include <tm_defines.h>
 
 #include <tm_math.h>
+#include <tm_ray.h>
 
 double distanceFromPlane(const Vector3d& pt, const Plane& plane) {
 	return (pt - plane.getOrgin()).dot(plane.getNormal());

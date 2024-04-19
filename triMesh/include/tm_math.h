@@ -114,32 +114,6 @@ public:
 
 using Vector3dSet = Vector3Set<Vector3d>;
 
-struct Ray {
-	inline Ray (const Vector3d& origin, const Vector3d& dir)
-		: _origin(origin)
-		, _dir(dir)
-	{
-		_dir.normalize();
-	}
-
-	Vector3d _origin, _dir;
-};
-
-struct RayHit {
-	size_t triIdx;
-	double dist;
-	Vector3d hitPt;
-
-	inline RayHit() 
-		: triIdx(stm1)
-		, dist(0)
-	{}
-
-	inline bool operator < (const RayHit& rhs) const {
-		return fabs(dist) < fabs(rhs.dist);
-	}
-};
-
 template<typename SCALAR_TYPE>
 Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
 	auto l = v.norm();

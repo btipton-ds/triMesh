@@ -34,6 +34,7 @@ This file is part of the TriMesh library.
 
 #include <tm_fixedMath.h>
 #include <tm_boundingBox.h>
+#include <tm_ray.h>
 #include <triMesh.h>
 
 using namespace std;

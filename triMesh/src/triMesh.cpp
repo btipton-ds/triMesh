@@ -38,6 +38,7 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 
 #include <../../stlReader/include/readStl.h>
 #include <tm_lineSegment.h>
+#include <tm_ray.h>
 #include <triMesh.h>
 #include <MultiCoreUtil.h>
 
