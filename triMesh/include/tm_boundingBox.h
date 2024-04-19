@@ -53,7 +53,7 @@ public:
 	bool contains(const CBoundingBox3D& other) const;
 	// This is actually intersects or contains
 	bool intersects(const CBoundingBox3D& otherBox) const;
-	bool intersects(const Ray& ray) const;
+	bool intersects(const Ray<double>& ray) const;
 	bool intersects(const LineSegment& seg) const;
 	bool intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const;
 	bool intersects(const POINT_TYPE* pts[3]) const;
@@ -179,7 +179,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment& seg) const
 
 	auto ray = seg.getRay();
 	for (size_t i = 0; i < 3; i++) {
-		RayHit hit;
+		RayHit<double> hit;
 		Plane minPlane(_min, axes[i]);
 		if (minPlane.intersectRay(ray, hit)) {
 			if (contains(hit.hitPt))
@@ -196,7 +196,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment& seg) const
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray& ray) const {
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<double>& ray) const {
 	const Vector3d x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
 	Plane planes[] = {
 		Plane(_min, x), Plane(_max, x),
@@ -205,7 +205,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray& ray) const {
 	};
 
 	for (int i = 0; i < 6; i++) {
-		RayHit hit;
+		RayHit<double> hit;
 		if (planes[i].intersectRay(ray, hit) && contains(hit.hitPt))
 			return true;
 
@@ -274,7 +274,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE* pts[3]) const
 	for (int i = 0; i < 12; i++) {
 		const auto& seg = edgeSegs[i];
 		if (seg.calLength() > 1.0e-6) {
-			RayHit hit;
+			RayHit<double> hit;
 			if (seg.intersectPlane(triPlane, hit) && contains(hit.hitPt) && pointInTriangle(pts, hit.hitPt)) {
 				return true;
 			}

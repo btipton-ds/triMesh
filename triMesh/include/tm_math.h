@@ -123,7 +123,7 @@ Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
 }
 
 double distanceFromPlane(const Vector3d& pt, const Plane& plane);
-bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit);
+bool intersectRayTri(const Ray<double>& ray, Vector3d const * const pts[3], RayHit<double>& hit);
 bool pointInTriangle(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& pt);
 bool pointInTriangle(const Vector3d* pts[3], const Vector3d& pt);
 

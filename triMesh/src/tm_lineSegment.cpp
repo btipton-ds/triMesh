@@ -53,8 +53,8 @@ double LineSegment::parameterize(const Vector3d& pt) const {
 	return (pt - _pts[0]).dot(calcDir());
 }
 
-Ray LineSegment::getRay() const {
-	return Ray(_pts[0], calcDir());
+Ray<double> LineSegment::getRay() const {
+	return Ray<double>(_pts[0], calcDir());
 }
 
 double LineSegment::distanceToPoint(const Vector3d& pt) const {
@@ -87,12 +87,12 @@ double LineSegment::distanceToPoint(const Vector3d& pt, double& t) const {
 	return dist;
 }
 
-bool LineSegment::intersectTri(Vector3d const* const pts[3], RayHit& hit) const
+bool LineSegment::intersectTri(Vector3d const* const pts[3], RayHit<double>& hit) const
 {
 	Vector3d unitDir = _pts[1] - _pts[0];
 	double l = unitDir.norm();
 	unitDir /= l;
-	Ray ray(_pts[0], unitDir);
+	Ray<double> ray(_pts[0], unitDir);
 	if (intersectRayTri(getRay(), pts, hit)) {
 		Vector3d v1 = hit.hitPt - _pts[0];
 		double d = unitDir.dot(v1);
@@ -106,7 +106,7 @@ bool LineSegment::intersectTri(Vector3d const* const pts[3], RayHit& hit) const
 	return false;
 }
 
-bool LineSegment::intersectPlane(const Plane& plane, RayHit& hit) const
+bool LineSegment::intersectPlane(const Plane& plane, RayHit<double>& hit) const
 {
 	if (plane.intersectRay(getRay(), hit)) {
 		Vector3d v = hit.hitPt - _pts[0];
@@ -116,7 +116,7 @@ bool LineSegment::intersectPlane(const Plane& plane, RayHit& hit) const
 	return false;
 }
 
-bool LineSegment::intersectPlane(const Vector3d* pts[3], RayHit& hit) const
+bool LineSegment::intersectPlane(const Vector3d* pts[3], RayHit<double>& hit) const
 {
 	return intersectPlane(Plane(pts), hit);
 }

@@ -39,7 +39,11 @@ This file is part of the TriMesh library.
 #include <tm_vector3.h>
 
 class Plane;
+
+template<class T>
 struct Ray;
+
+template<class T>
 struct RayHit;
 
 struct LineSegment {
@@ -48,14 +52,14 @@ struct LineSegment {
 	Vector3d calcDir() const;
 	Vector3d interpolate(double t) const;
 	double parameterize(const Vector3d& pt) const;
-	Ray getRay() const;
+	Ray<double> getRay() const;
 
 	double distanceToPoint(const Vector3d& pt, double& t) const;
 	double distanceToPoint(const Vector3d& pt) const;
 
-	bool intersectTri(Vector3d const* const pts[3], RayHit& hit) const;
-	bool intersectPlane(const Plane& plane, RayHit& hit) const;
-	bool intersectPlane(const Vector3d* pts[3], RayHit& hit) const;
+	bool intersectTri(Vector3d const* const pts[3], RayHit<double>& hit) const;
+	bool intersectPlane(const Plane& plane, RayHit<double>& hit) const;
+	bool intersectPlane(const Vector3d* pts[3], RayHit<double>& hit) const;
 
 	Vector3d _pts[2];
 };

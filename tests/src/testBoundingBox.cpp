@@ -84,33 +84,33 @@ int testRayIntersect() {
 	Vector3d pt2 = ctr + Vector3d(1, 0.5 + SAME_DIST_TOL, 0);
 	Vector3d pt3 = ctr + Vector3d(1, 0.5 + 1.01 * SAME_DIST_TOL, 0);
 
-	TEST_TRUE(a.intersects(Ray(ctr, Vector3d(1, 0, 0))), "Box centroid in (1, 0, 0) intersects box?");
-	TEST_TRUE(a.intersects(Ray(ctr, Vector3d(0, 1, 0))), "Box centroid in (0, 1, 0) intersects box?");
-	TEST_TRUE(a.intersects(Ray(ctr, Vector3d(0, 0, 1))), "Box centroid in (0, 0, 1) intersects box?");
-	TEST_TRUE(a.intersects(Ray(ctr, Vector3d(1, 1, 1).normalized())), "Box centroid in (1, 1, 1) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(ctr, Vector3d(1, 0, 0))), "Box centroid in (1, 0, 0) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(ctr, Vector3d(0, 1, 0))), "Box centroid in (0, 1, 0) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(ctr, Vector3d(0, 0, 1))), "Box centroid in (0, 0, 1) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(ctr, Vector3d(1, 1, 1).normalized())), "Box centroid in (1, 1, 1) intersects box?");
 
-	TEST_TRUE(a.intersects(Ray(ctr, Vector3d(-1, 0, 0))), "Box centroid in (-1, 0, 0) intersects box?");
-	TEST_TRUE(a.intersects(Ray(ctr, Vector3d(0, -1, 0))), "Box centroid in (0, -1, 0) intersects box?");
-	TEST_TRUE(a.intersects(Ray(ctr, Vector3d(0, 0, -1))), "Box centroid in (0, 0, -1) intersects box?");
-	TEST_TRUE(a.intersects(Ray(ctr, Vector3d(-1, -1, -1).normalized())), "Box centroid in (-1, -1, -1) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(ctr, Vector3d(-1, 0, 0))), "Box centroid in (-1, 0, 0) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(ctr, Vector3d(0, -1, 0))), "Box centroid in (0, -1, 0) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(ctr, Vector3d(0, 0, -1))), "Box centroid in (0, 0, -1) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(ctr, Vector3d(-1, -1, -1).normalized())), "Box centroid in (-1, -1, -1) intersects box?");
 
-	TEST_TRUE(a.intersects(Ray(pt0, Vector3d(1, 0, 0))), "Box centroid + (1,0,0) in (1, 0, 0) intersects box?");
-	TEST_TRUE(a.intersects(Ray(pt0, Vector3d(-1, 0, 0))), "Box centroid + (1,0,0) in (-1, 0, 0) intersects box?");
-	TEST_FALSE(a.intersects(Ray(pt0, Vector3d(0, 1, 0))), "Box centroid + (1,0,0) in (0, 1, 0) does not intersect box?");
+	TEST_TRUE(a.intersects(Ray<double>(pt0, Vector3d(1, 0, 0))), "Box centroid + (1,0,0) in (1, 0, 0) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(pt0, Vector3d(-1, 0, 0))), "Box centroid + (1,0,0) in (-1, 0, 0) intersects box?");
+	TEST_FALSE(a.intersects(Ray<double>(pt0, Vector3d(0, 1, 0))), "Box centroid + (1,0,0) in (0, 1, 0) does not intersect box?");
 
-	TEST_TRUE(a.intersects(Ray(pt0, Vector3d(-1, 1, 0).normalized())), "Box centroid + (1,0,0) in (-1, 1, 0) intersect box?");
-	TEST_FALSE(a.intersects(Ray(pt0, Vector3d(-1, 1.1, 0).normalized())), "Box centroid + (1,0,0) in (-1, 1.1, 0) does not intersect box?");
+	TEST_TRUE(a.intersects(Ray<double>(pt0, Vector3d(-1, 1, 0).normalized())), "Box centroid + (1,0,0) in (-1, 1, 0) intersect box?");
+	TEST_FALSE(a.intersects(Ray<double>(pt0, Vector3d(-1, 1.1, 0).normalized())), "Box centroid + (1,0,0) in (-1, 1.1, 0) does not intersect box?");
 
-	TEST_TRUE(a.intersects(Ray(pt1, Vector3d(1, 0, 0))), "Box centroid + (1,0.5,0) in (1, 0, 0) intersects box?");
-	TEST_TRUE(a.intersects(Ray(pt1, Vector3d(-1, 0, 0))), "Box centroid + (1,0.5,0) in (-1, 0, 0) intersects box?");
-	TEST_FALSE(a.intersects(Ray(pt1, Vector3d(0, 1, 0))), "Box centroid + (1,0.5,0) in (0, 1, 0) does not intersect box?");
+	TEST_TRUE(a.intersects(Ray<double>(pt1, Vector3d(1, 0, 0))), "Box centroid + (1,0.5,0) in (1, 0, 0) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(pt1, Vector3d(-1, 0, 0))), "Box centroid + (1,0.5,0) in (-1, 0, 0) intersects box?");
+	TEST_FALSE(a.intersects(Ray<double>(pt1, Vector3d(0, 1, 0))), "Box centroid + (1,0.5,0) in (0, 1, 0) does not intersect box?");
 
-	TEST_TRUE(a.intersects(Ray(pt2, Vector3d(1, 0, 0))), "Box centroid + (1,0.5 + tol,0) in (1, 0, 0) intersects box?");
-	TEST_TRUE(a.intersects(Ray(pt2, Vector3d(-1, 0, 0))), "Box centroid + (1,0.5 + tol,0) in (-1, 0, 0) intersects box?");
-	TEST_FALSE(a.intersects(Ray(pt2, Vector3d(0, 1, 0))), "Box centroid + (1,0.5 + tol,0) in (0, 1, 0) does not intersect box?");
+	TEST_TRUE(a.intersects(Ray<double>(pt2, Vector3d(1, 0, 0))), "Box centroid + (1,0.5 + tol,0) in (1, 0, 0) intersects box?");
+	TEST_TRUE(a.intersects(Ray<double>(pt2, Vector3d(-1, 0, 0))), "Box centroid + (1,0.5 + tol,0) in (-1, 0, 0) intersects box?");
+	TEST_FALSE(a.intersects(Ray<double>(pt2, Vector3d(0, 1, 0))), "Box centroid + (1,0.5 + tol,0) in (0, 1, 0) does not intersect box?");
 
-	TEST_FALSE(a.intersects(Ray(pt3, Vector3d(1, 0, 0))), "Box centroid + (1,0.5 + 1.01 * tol,0) in (1, 0, 0) does not intersects box?");
-	TEST_FALSE(a.intersects(Ray(pt3, Vector3d(-1, 0, 0))), "Box centroid + (1,0.5 + 1.01 * tol,0) in (-1, 0, 0) does not intersects box?");
+	TEST_FALSE(a.intersects(Ray<double>(pt3, Vector3d(1, 0, 0))), "Box centroid + (1,0.5 + 1.01 * tol,0) in (1, 0, 0) does not intersects box?");
+	TEST_FALSE(a.intersects(Ray<double>(pt3, Vector3d(-1, 0, 0))), "Box centroid + (1,0.5 + 1.01 * tol,0) in (-1, 0, 0) does not intersects box?");
 
 	cout << "testRayIntersect passed \n";
 	return 0;
@@ -131,15 +131,15 @@ int testRayIntersect1() {
 		Vector3d(0, 0, -SAME_DIST_TOL),
 	};
 	for (int i = 0; i < 5; i++) {
-		TEST_TRUE(a.intersects(Ray(pt0 + delta[i] + Vector3d(0, 0.0, 0.0), xAxis)), "Ray hits corner 0 with delta " + to_string(i) + "?");
-		TEST_TRUE(a.intersects(Ray(pt0 + delta[i] + Vector3d(0, 1.0, 0.0), xAxis)), "Ray hits corner 1 with delta " + to_string(i) + "?");
-		TEST_TRUE(a.intersects(Ray(pt0 + delta[i] + Vector3d(0, 1.0, 1.0), xAxis)), "Ray hits corner 2 with delta " + to_string(i) + "?");
-		TEST_TRUE(a.intersects(Ray(pt0 + delta[i] + Vector3d(0, 0.0, 1.0), xAxis)), "Ray hits corner 3 with delta " + to_string(i) + "?");
+		TEST_TRUE(a.intersects(Ray<double>(pt0 + delta[i] + Vector3d(0, 0.0, 0.0), xAxis)), "Ray hits corner 0 with delta " + to_string(i) + "?");
+		TEST_TRUE(a.intersects(Ray<double>(pt0 + delta[i] + Vector3d(0, 1.0, 0.0), xAxis)), "Ray hits corner 1 with delta " + to_string(i) + "?");
+		TEST_TRUE(a.intersects(Ray<double>(pt0 + delta[i] + Vector3d(0, 1.0, 1.0), xAxis)), "Ray hits corner 2 with delta " + to_string(i) + "?");
+		TEST_TRUE(a.intersects(Ray<double>(pt0 + delta[i] + Vector3d(0, 0.0, 1.0), xAxis)), "Ray hits corner 3 with delta " + to_string(i) + "?");
 
-		TEST_TRUE(a.intersects(Ray(pt0 + delta[i] + Vector3d(0, 0.5, 0.0), xAxis)), "Ray hits edge 0 with delta " + to_string(i) + "?");
-		TEST_TRUE(a.intersects(Ray(pt0 + delta[i] + Vector3d(0, 1.0, 0.5), xAxis)), "Ray hits edge 1 with delta " + to_string(i) + "?");
-		TEST_TRUE(a.intersects(Ray(pt0 + delta[i] + Vector3d(0, 0.5, 1.0), xAxis)), "Ray hits edge 2 with delta " + to_string(i) + "?");
-		TEST_TRUE(a.intersects(Ray(pt0 + delta[i] + Vector3d(0, 0.0, 0.5), xAxis)), "Ray hits edge 3 with delta " + to_string(i) + "?");
+		TEST_TRUE(a.intersects(Ray<double>(pt0 + delta[i] + Vector3d(0, 0.5, 0.0), xAxis)), "Ray hits edge 0 with delta " + to_string(i) + "?");
+		TEST_TRUE(a.intersects(Ray<double>(pt0 + delta[i] + Vector3d(0, 1.0, 0.5), xAxis)), "Ray hits edge 1 with delta " + to_string(i) + "?");
+		TEST_TRUE(a.intersects(Ray<double>(pt0 + delta[i] + Vector3d(0, 0.5, 1.0), xAxis)), "Ray hits edge 2 with delta " + to_string(i) + "?");
+		TEST_TRUE(a.intersects(Ray<double>(pt0 + delta[i] + Vector3d(0, 0.0, 0.5), xAxis)), "Ray hits edge 3 with delta " + to_string(i) + "?");
 	}
 
 	cout << "testRayIntersect1 passed \n";

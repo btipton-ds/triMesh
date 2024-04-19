@@ -771,7 +771,7 @@ bool CMesh::isClosed() const {
 	return numLaminarEdges() == 0;
 }
 
-size_t CMesh::rayCast(const Ray& ray, vector<RayHit>& hits, bool biDir) const {
+size_t CMesh::rayCast(const Ray<double>& ray, vector<RayHit<double>>& hits, bool biDir) const {
 	buildNormals();
 	vector<size_t> hitIndices;
 	if (_triTree.biDirRayCast(ray, hitIndices) > 0) {
@@ -783,7 +783,7 @@ size_t CMesh::rayCast(const Ray& ray, vector<RayHit>& hits, bool biDir) const {
 				&_vertices[tri[2]]._pt,
 			};
 
-			RayHit hit;
+			RayHit<double> hit;
 			if (intersectRayTri(ray, pts, hit)) {
 				if (biDir || hit.dist > 0) {
 					hit.triIdx = triIdx2;
@@ -796,7 +796,7 @@ size_t CMesh::rayCast(const Ray& ray, vector<RayHit>& hits, bool biDir) const {
 	return hits.size();
 }
 
-size_t CMesh::rayCast(const LineSegment& seg, vector<RayHit>& hits, double tol) const {
+size_t CMesh::rayCast(const LineSegment& seg, vector<RayHit<double>>& hits, double tol) const {
 	auto segLen = seg.calLength();
 	vector<size_t> hitIndices;
 	if (_triTree.biDirRayCast(seg.getRay(), hitIndices) > 0) {
@@ -808,7 +808,7 @@ size_t CMesh::rayCast(const LineSegment& seg, vector<RayHit>& hits, double tol) 
 				&_vertices[tri[2]]._pt,
 			};
 
-			RayHit hit;
+			RayHit<double> hit;
 			if (seg.intersectTri(pts, hit)) {
 				if ((hit.dist >= -tol) && (hit.dist <= segLen + tol)) {
 					if (hit.dist < 0)
@@ -826,12 +826,12 @@ size_t CMesh::rayCast(const LineSegment& seg, vector<RayHit>& hits, double tol) 
 	return hits.size();
 }
 
-size_t CMesh::rayCast(size_t triIdx, vector<RayHit>& hits, bool biDir) const {
+size_t CMesh::rayCast(size_t triIdx, vector<RayHit<double>>& hits, bool biDir) const {
 	Vector3d ctr = triCentroid(triIdx);
 	Vector3d norm = triUnitNormal(triIdx);
-	Ray ray(ctr, norm);
+	Ray<double> ray(ctr, norm);
 
-	vector<RayHit> temp;
+	vector<RayHit<double>> temp;
 	rayCast(ray, temp);
 
 	for (const auto& hit : temp) {
@@ -842,7 +842,7 @@ size_t CMesh::rayCast(size_t triIdx, vector<RayHit>& hits, bool biDir) const {
 }
 
 double CMesh::findTriMinimumGap(size_t i) const {
-	vector<RayHit> hits;
+	vector<RayHit<double>> hits;
 	if (rayCast(i, hits) == 0)
 		return FLT_MAX;
 	else
@@ -858,7 +858,7 @@ double CMesh::findMinGap(double tol, bool multiCore) const {
 		auto& minGap = minGapVec[threadNum];
 		size_t num = numTris();
 		for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads) {
-			vector<RayHit> hits;
+			vector<RayHit<double>> hits;
 			if (rayCast(triIdx, hits) > 0) {
 				double d = fabs(hits[0].dist);
 				if (d > tol && d < minGap)
@@ -894,9 +894,9 @@ void CMesh::getGapHistogram(const vector<double>& binSizes, vector<size_t>& bins
 		auto& bins = binSet[threadNum];
 		size_t num = numTris();
 		for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads) {
-			vector<RayHit> hits;
+			vector<RayHit<double>> hits;
 			if (rayCast(triIdx, hits) != 0) {
-				for (const RayHit& hit : hits) {
+				for (const auto& hit : hits) {
 					if (hit.dist < 0)
 						continue;
 					for (size_t i = 0; i < binSizes.size(); i++) {
@@ -1473,7 +1473,7 @@ bool CMesh::verifyFindAllTris() const {
 		for (int i = 0; i < 3; i++) {
 			Vector3d origin = _vertices[tri[i]]._pt;
 			origin[0] = -1;
-			Ray ray(origin, Vector3d(1, 0, 0));
+			Ray<double> ray(origin, Vector3d(1, 0, 0));
 			vector<size_t> hits;
 			_triTree.biDirRayCast(ray, hits);
 			bool found = false;

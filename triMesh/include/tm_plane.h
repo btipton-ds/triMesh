@@ -38,7 +38,9 @@ This file is part of the TriMesh library.
 
 #include <tm_vector3.h>
 
+template<class T>
 struct Ray;
+template<class T>
 struct RayHit;
 
 class Plane {
@@ -47,7 +49,7 @@ public:
 	Plane(const Vector3d* pts[3]);
 
 	bool intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt, double& dist) const;
-	bool intersectRay(const Ray& ray, RayHit& hit) const;
+	bool intersectRay(const Ray<double>& ray, RayHit<double>& hit) const;
 	Vector3d projectPoint(const Vector3d& pt) const;
 	double distanceToPoint(const Vector3d& pt) const;
 

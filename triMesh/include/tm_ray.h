@@ -33,33 +33,42 @@ This file is part of the TriMesh library.
 #include <tm_math.h>
 #include <tm_vector3.h>
 
+template<class T>
 struct Ray {
-	Ray(const Vector3d& origin, const Vector3d& dir);
+	using POINT_TYPE = Vector3<T>;
 
-	Vector3d _origin, _dir;
+	Ray(const POINT_TYPE& origin, const POINT_TYPE& dir);
+
+	POINT_TYPE _origin, _dir;
 };
 
+template<class T>
 struct RayHit {
+	using POINT_TYPE = Vector3<T>;
+
 	RayHit();
 	bool operator < (const RayHit& rhs) const;
 
 	size_t triIdx;
-	double dist;
-	Vector3d hitPt;
+	T dist;
+	POINT_TYPE hitPt;
 };
 
-inline Ray::Ray(const Vector3d& origin, const Vector3d& dir)
+template<class T>
+inline Ray<T>::Ray(const POINT_TYPE& origin, const POINT_TYPE& dir)
 	: _origin(origin)
 	, _dir(dir)
 {
 	_dir.normalize();
 }
 
-inline RayHit::RayHit()
+template<class T>
+inline RayHit<T>::RayHit()
 	: triIdx(stm1)
 	, dist(0)
 {}
 
-inline bool RayHit::operator < (const RayHit& rhs) const {
+template<class T>
+inline bool RayHit<T>::operator < (const RayHit& rhs) const {
 	return fabs(dist) < fabs(rhs.dist);
 }

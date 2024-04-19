@@ -52,8 +52,8 @@ int testDistToPlane() {
 int testRayPlaneIntersect() {
 	Plane plane0(Vector3d(0, 0, 0), Vector3d(0, 0, 1));
 	Vector3d dir0(-1, -1, -1);
-	Ray ray0(plane0.getOrgin() - dir0, dir0);
-	RayHit hit;
+	Ray<double> ray0(plane0.getOrgin() - dir0, dir0);
+	RayHit<double> hit;
 
 	TEST_TRUE(plane0.intersectRay(ray0, hit), "Ray intersects plane?");
 	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
@@ -82,7 +82,7 @@ int testRayTriIntersectVerts() {
 
 	Vector3d pt, dir(0, 1.0 / 3.0, 1), ctr(0, 0, 0);
 	dir.normalize();
-	RayHit hit;
+	RayHit<double> hit;
 	for (int i = 0; i < 3; i++) {
 		ctr += *pts[i];
 	}
@@ -90,7 +90,7 @@ int testRayTriIntersectVerts() {
 
 	for (int i = 0; i < 3; i++) {
 		pt = *pts[i];
-		Ray ray(pt - dir, dir);
+		Ray<double> ray(pt - dir, dir);
 		TEST_TRUE(intersectRayTri(ray, pts, hit), "Test on vert " + to_string(i));
 	}
 
@@ -98,7 +98,7 @@ int testRayTriIntersectVerts() {
 		pt = *pts[i];
 		Vector3d v = (ctr - pt).normalized();
 		pt += SAME_DIST_TOL * v;
-		Ray ray(pt - dir, dir);
+		Ray<double> ray(pt - dir, dir);
 		TEST_TRUE(intersectRayTri(ray, pts, hit), "Test inside vert " + to_string(i));
 	}
 
@@ -108,7 +108,7 @@ int testRayTriIntersectVerts() {
 		Vector3d v2 = (pt - *pts[(i + 1) % 3]).normalized();
 		v = (v - v2.dot(v) * v2).normalized();
 		pt -= SAME_DIST_TOL * v;
-		Ray ray(pt - dir, dir);
+		Ray<double> ray(pt - dir, dir);
 		TEST_TRUE(intersectRayTri(ray, pts, hit), "Test outside vert within tol " + to_string(i));
 	}
 
@@ -118,7 +118,7 @@ int testRayTriIntersectVerts() {
 		Vector3d v2 = (pt - *pts[(i + 1) % 3]).normalized();
 		v = (v - v2.dot(v) * v2).normalized();
 		pt -= 2 * SAME_DIST_TOL * v;
-		Ray ray(pt - dir, dir);
+		Ray<double> ray(pt - dir, dir);
 		TEST_FALSE(intersectRayTri(ray, pts, hit), "Test outside vert " + to_string(i));
 	}
 
@@ -135,11 +135,11 @@ int testRayTriIntersectEdges() {
 	};
 
 	Vector3d pt, dir(0, 0, 1);
-	RayHit hit;
+	RayHit<double> hit;
 
 	for (int i = 0; i < 3; i++) {
 		pt = (*pts[i] + *pts[(i + 1) % 3]) / 2;
-		Ray ray(pt - dir, dir);
+		Ray<double> ray(pt - dir, dir);
 		if (!intersectRayTri(ray, pts, hit)) return 1;
 	}
 
@@ -161,8 +161,8 @@ int testRayTriIntersect() {
 			for (int k = 0; k < steps; k++) {
 				Vector3d dir(.01 + i/(steps - 1.0), .01 + j / (steps - 1.0), .01 + k / (steps - 1.0));
 				dir.normalize();
-				Ray ray(*pts[0] - dir, dir);
-				RayHit hit;
+				Ray<double> ray(*pts[0] - dir, dir);
+				RayHit<double> hit;
 
 				if (!intersectRayTri(ray, pts, hit)) return 1;
 				if ((hit.hitPt - pt0).norm() > SAME_DIST_TOL) return 1;

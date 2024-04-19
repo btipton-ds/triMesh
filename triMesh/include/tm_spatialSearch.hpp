@@ -116,7 +116,7 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, Box
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::biDirRayCast(const Ray& ray, std::vector<INDEX_TYPE>& hits) const {
+size_t CSSB_DCL::biDirRayCast(const Ray<double>& ray, std::vector<INDEX_TYPE>& hits) const {
 	hits.clear();
 
 	biDirRayCastRecursive(ray, hits);
@@ -191,7 +191,7 @@ bool CSSB_DCL::remove(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
 }
 
 CSSB_TMPL
-void CSSB_DCL::biDirRayCastRecursive(const Ray& ray, std::vector<INDEX_TYPE>& hits) const {
+void CSSB_DCL::biDirRayCastRecursive(const Ray<double>& ray, std::vector<INDEX_TYPE>& hits) const {
 	if (_bbox.intersects(ray)) {
 		for (const auto& entry : _contents) {
 			if (entry.getBBox().intersects(ray)) {

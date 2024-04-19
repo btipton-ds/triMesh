@@ -36,7 +36,7 @@ double distanceFromPlane(const Vector3d& pt, const Plane& plane) {
 	return (pt - plane.getOrgin()).dot(plane.getNormal());
 }
 
-bool intersectRayPlane(const Ray& ray, const Vector3d& origin, const Vector3d& normal, RayHit& hit)
+bool intersectRayPlane(const Ray<double>& ray, const Vector3d& origin, const Vector3d& normal, RayHit<double>& hit)
 {
 	auto dp = ray._dir.dot(normal);
 	if (fabs(dp) < minNormalizeDivisor)
@@ -57,7 +57,7 @@ bool intersectRayPlane(const Ray& ray, const Vector3d& origin, const Vector3d& n
 	return true;
 }
 
-bool intersectRayTri(const Ray& ray, Vector3d const * const pts[3], RayHit& hit) {
+bool intersectRayTri(const Ray<double>& ray, Vector3d const * const pts[3], RayHit<double>& hit) {
 	Vector3d v0 = *pts[1] - *pts[0];
 	Vector3d v1 = *pts[2] - *pts[0];
 	Vector3d norm = safeNormalize(v0.cross(v1));

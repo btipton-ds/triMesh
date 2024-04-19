@@ -70,8 +70,8 @@ Plane::Plane(const Vector3d& origin, const Vector3d& normal)
 
 bool Plane::intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt, double& dist) const
 {
-	Ray ray(pt0, (pt1 - pt0).normalized());
-	RayHit hitPt;
+	Ray<double> ray(pt0, (pt1 - pt0).normalized());
+	RayHit<double> hitPt;
 	if (intersectRay(ray, hitPt)) {
 		pt = hitPt.hitPt;
 		dist = hitPt.dist;
@@ -81,7 +81,7 @@ bool Plane::intersectLine(const Vector3d& pt0, const Vector3d& pt1, Vector3d& pt
 	return false;
 }
 
-bool Plane::intersectRay(const Ray& ray, RayHit& hit) const
+bool Plane::intersectRay(const Ray<double>& ray, RayHit<double>& hit) const
 {
 	auto dp = ray._dir.dot(_normal);
 	if (fabs(dp) < minNormalizeDivisor)

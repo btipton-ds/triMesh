@@ -66,14 +66,14 @@ public:
 
 	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::Intersects) const;
 	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::Intersects) const;
-	size_t biDirRayCast(const Ray& ray, std::vector<INDEX_TYPE>& hits) const;
+	size_t biDirRayCast(const Ray<double>& ray, std::vector<INDEX_TYPE>& hits) const;
 
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);
 
 	bool remove(const Entry& newEntry);
 	bool remove(const BOX_TYPE& bbox, const INDEX_TYPE& index);
 
-	void biDirRayCastRecursive(const Ray& ray, std::vector<INDEX_TYPE>& hits) const;
+	void biDirRayCastRecursive(const Ray<double>& ray, std::vector<INDEX_TYPE>& hits) const;
 
 	void dump(std::wostream& out, size_t depth = 0) const;
 
