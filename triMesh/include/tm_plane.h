@@ -65,7 +65,7 @@ public:
 
 	Plane() = default;
 	Plane(const Plane& src) = default;
-	Plane(const POINT_TYPE& origin, const POINT_TYPE& normal);
+	Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool makePrincipal);
 	Plane(const POINT_TYPE* pts[3]);
 
 	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, POINT_TYPE& pt, T& t) const;
@@ -96,7 +96,7 @@ inline const typename Plane<T>::POINT_TYPE& Plane<T>::getOrgin() const
 }
 
 template<class T>
-inline typename const Plane<T>::POINT_TYPE& Plane<T>::getNormal() const
+inline const typename Plane<T>::POINT_TYPE& Plane<T>::getNormal() const
 {
 	return _normal;
 }

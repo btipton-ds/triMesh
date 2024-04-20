@@ -37,7 +37,7 @@ This file is part of the TriMesh library.
 
 using namespace std;
 int testDistToPlane() {
-	Plane<double> plane(Vector3d(0, 0, 0), Vector3d(0, 0, 1));
+	Plane<double> plane(Vector3d(0, 0, 0), Vector3d(0, 0, 1), true);
 	Vector3d pt0(0, 0, 1);
 	Vector3d pt1(0, 0, -1);
 	Vector3d pt2(1, 1, 1);
@@ -50,7 +50,7 @@ int testDistToPlane() {
 }
 
 int testRayPlaneIntersect() {
-	Plane<double> plane0(Vector3d(0, 0, 0), Vector3d(0, 0, 1));
+	Plane<double> plane0(Vector3d(0, 0, 0), Vector3d(0, 0, 1), true);
 	Vector3d dir0(-1, -1, -1);
 	Ray<double> ray0(plane0.getOrgin() - dir0, dir0);
 	RayHit<double> hit;

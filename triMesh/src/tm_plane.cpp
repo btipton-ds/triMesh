@@ -36,40 +36,42 @@ This file is part of the TriMesh library.
 
 template<class T>
 Plane<T>::Plane(const POINT_TYPE* pts[3])
-	: Plane(*pts[0], triangleNormal(pts))
+	: Plane(*pts[0], triangleNormal(pts), false)
 {}
 
 
 template<class T>
-Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal)
+Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool makePrincipal)
 	: _origin(origin)
 	, _normal(normal)
 {
-	T tol = (T)1.0e-6;
+	if (makePrincipal) {
+		T tol = (T)1.0e-6;
 
-	// Intersect the plane with principal axes to find a principal origin
-	T minDist = (T)FLT_MAX;
-	POINT_TYPE testOrigin;
-	for (int i = 0; i < 3; i++) {
-		POINT_TYPE dir(0, 0, 0);
-		dir[i] = 1;
-		POINT_TYPE pt;
-		T dist;
-		if (intersectLine(POINT_TYPE(0, 0, 0), dir, pt, dist) && fabs(dist) < minDist) {
-			minDist = fabs(dist);
-			testOrigin = pt;
+		// Intersect the plane with principal axes to find a principal origin
+		T minDist = (T)FLT_MAX;
+		POINT_TYPE testOrigin;
+		for (int i = 0; i < 3; i++) {
+			POINT_TYPE dir(0, 0, 0);
+			dir[i] = 1;
+			POINT_TYPE pt;
+			T dist;
+			if (intersectLine(POINT_TYPE(0, 0, 0), dir, pt, dist) && fabs(dist) < minDist) {
+				minDist = fabs(dist);
+				testOrigin = pt;
+			}
 		}
-	}
 #if FULL_TESTS
-	T testDist = distanceToPoint(testOrigin);
-	if (fabs(testDist) < tol) {
-		_origin = testOrigin;
-		testDist = distanceToPoint(origin);
-		assert(fabs(testDist) < tol);
-	}
-	else
-		assert(!"Principal origin out of tolerance");
+		T testDist = distanceToPoint(testOrigin);
+		if (fabs(testDist) < tol) {
+			_origin = testOrigin;
+			testDist = distanceToPoint(origin);
+			assert(fabs(testDist) < tol);
+		}
+		else
+			assert(!"Principal origin out of tolerance");
 #endif
+	}
 }
 
 template<class T>

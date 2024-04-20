@@ -64,7 +64,7 @@ bool intersectRayTriTpl(const Ray<T>& ray, Vector3<T> const* const pts[3], RayHi
 	Vector3<T> v1 = *pts[2] - *pts[0];
 	Vector3<T> norm = safeNormalize(v0.cross(v1));
 
-	Plane<T> pl(*(pts[0]), norm);
+	Plane<T> pl(*(pts[0]), norm, false);
 	if (!pl.intersectRay(ray, hit))
 		return false;
 
