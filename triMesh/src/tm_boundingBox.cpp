@@ -129,10 +129,10 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox) con
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg) const
 {
-	static const Vector3<SCALAR_TYPE> axes[] = {
-		Vector3<SCALAR_TYPE>(1, 0, 0),
-		Vector3<SCALAR_TYPE>(0, 1, 0),
-		Vector3<SCALAR_TYPE>(0, 0, 1)
+	static const POINT_TYPE axes[] = {
+		POINT_TYPE(1, 0, 0),
+		POINT_TYPE(0, 1, 0),
+		POINT_TYPE(0, 0, 1)
 	};
 
 	if (contains(seg._pts[0]) || contains(seg._pts[1]))
@@ -161,7 +161,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg
 
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray) const {
-	const Vector3<SCALAR_TYPE> x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
+	const POINT_TYPE x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
 	Plane<SCALAR_TYPE> planes[] = {
 		Plane<SCALAR_TYPE>(_min, x), Plane<SCALAR_TYPE>(_max, x),
 		Plane<SCALAR_TYPE>(_min, y), Plane<SCALAR_TYPE>(_max, y),
@@ -180,10 +180,10 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray) const 
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const
 {
-	static const Vector3<SCALAR_TYPE> axes[] = {
-		Vector3<SCALAR_TYPE>(1, 0, 0),
-		Vector3<SCALAR_TYPE>(0, 1, 0),
-		Vector3<SCALAR_TYPE>(0, 0, 1)
+	static const POINT_TYPE axes[] = {
+		POINT_TYPE(1, 0, 0),
+		POINT_TYPE(0, 1, 0),
+		POINT_TYPE(0, 0, 1)
 	};
 
 	if (contains(pt0) || contains(pt1) || contains(pt2))
@@ -208,17 +208,17 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE& pt0, const POINT_
 template <class SCALAR_TYPE>
 void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment<SCALAR_TYPE> edgeSegs[12]) const
 {
-	Vector3<SCALAR_TYPE> r = range();
-	Vector3<SCALAR_TYPE> corners[] = {
+	POINT_TYPE r = range();
+	POINT_TYPE corners[] = {
 		_min,
-		_min + Vector3<SCALAR_TYPE>(r[0],    0, 0),
-		_min + Vector3<SCALAR_TYPE>(r[0], r[1], 0),
-		_min + Vector3<SCALAR_TYPE>(0,    r[1], 0),
+		_min + POINT_TYPE(r[0],    0, 0),
+		_min + POINT_TYPE(r[0], r[1], 0),
+		_min + POINT_TYPE(0,    r[1], 0),
 
-		_min + Vector3<SCALAR_TYPE>(0,       0, r[2]),
-		_min + Vector3<SCALAR_TYPE>(r[0],    0, r[2]),
-		_min + Vector3<SCALAR_TYPE>(r[0], r[1], r[2]),
-		_min + Vector3<SCALAR_TYPE>(0,    r[1], r[2]),
+		_min + POINT_TYPE(0,       0, r[2]),
+		_min + POINT_TYPE(r[0],    0, r[2]),
+		_min + POINT_TYPE(r[0], r[1], r[2]),
+		_min + POINT_TYPE(0,    r[1], r[2]),
 	};
 
 	// x edgeSegs
