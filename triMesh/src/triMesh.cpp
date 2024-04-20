@@ -1252,45 +1252,34 @@ size_t CMesh::findEdges(const BoundingBox& bbox, vector<size_t>& edgeIndices, Bo
 }
 
 size_t CMesh::findTris(const BoundingBox& bbox, vector<SearchEntry>& triIndices, BoxTestType contains) const {
+	bool useContains = contains == BoxTestType::Contains;
 	vector<SearchEntry> temp;
-	size_t numHits = _triTree.find(bbox, temp, contains);
-	if (numHits > 0) {
-		if (contains == BoxTestType::Contains) {
-			for (const auto& triEntry : temp) {
-				if (bbox.contains(triEntry.getBBox()))
-					triIndices.push_back(triEntry);
-			}
-		} else {
-			for (const auto& triEntry : temp) {
-				if (bboxIntersectsTri(bbox, triEntry.getIndex()))
-					triIndices.push_back(triEntry);
+	if (_triTree.find(bbox, temp, contains) > 0) {
+		for (const auto& triEntry : temp) {
+			size_t idx = triEntry.getIndex();
+			bool useEntry = useContains ? bbox.contains(triEntry.getBBox()) : bboxIntersectsTri(bbox, idx);
+			if (useEntry && bboxIntersectsTri(bbox, idx)) {
+				triIndices.push_back(triEntry);
 			}
 		}
-		numHits = triIndices.size();
 	}
-	return numHits;
+
+	return triIndices.size();
 }
 
 size_t CMesh::findTris(const BoundingBox& bbox, vector<size_t>& triIndices, BoxTestType contains) const {
-	vector<SearchEntry> temp;
-	size_t numHits = _triTree.find(bbox, temp, contains);
-	if (numHits > 0) {
-		if (contains == BoxTestType::Contains) {
-			for (const auto& triEntry : temp) {
-				if (bbox.contains(triEntry.getBBox()))
-					triIndices.push_back(triEntry.getIndex());
-			}
-		} else {
-			for (const auto& triEntry : temp) {
-				size_t triIdx = triEntry.getIndex();
-				if (bboxIntersectsTri(bbox, triIdx))
-					triIndices.push_back(triIdx);
+	bool useContains = contains == BoxTestType::Contains;
+	vector<size_t> temp;
+	if (_triTree.find(bbox, temp, contains) > 0) {
+		for (size_t idx : temp) {
+			bool useEntry = useContains ? bbox.contains(getTriBBox(idx)) : bboxIntersectsTri(bbox, idx);
+			if (useEntry && bboxIntersectsTri(bbox, idx)) {
+				triIndices.push_back(idx);
 			}
 		}
-
-		numHits = triIndices.size();
 	}
-	return numHits;
+
+	return triIndices.size();
 }
 
 Vector3d CMesh::triCentroid(size_t triIdx) const {
