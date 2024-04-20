@@ -53,7 +53,7 @@ add_library (
     "src/tm_edge.cpp"
     "src/tm_plane.cpp"
     "src/tm_lineSegment.cpp"
- "src/tm_boundingBox.cpp")
+ "src/tm_boundingBox.cpp" "src/tm_spatialSearch.cpp")
 
 add_executable (
     testTriMesh 
@@ -67,7 +67,7 @@ add_executable (
     "src/tm_edge.cpp"
     "src/tm_plane.cpp"
     "src/tm_lineSegment.cpp"
-    "../stlReader/src/readStl.cpp"  "src/tm_boundingBox.cpp")
+    "../stlReader/src/readStl.cpp"  "src/tm_boundingBox.cpp" "src/tm_spatialSearch.cpp")
 
 
 link_directories(
