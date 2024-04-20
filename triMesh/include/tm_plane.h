@@ -39,6 +39,19 @@ This file is part of the TriMesh library.
 #include <tm_vector3.h>
 
 template<class T>
+inline const T& ptOf3(int idx, const T& pt0, const T& pt1, const T& pt2) {
+	switch (idx) {
+		default:
+		case 0:
+			return pt0;
+		case 1:
+			return pt1;
+		case 2:
+			return pt2;
+	}
+}
+
+template<class T>
 struct Ray;
 template<class T>
 struct RayHit;
@@ -55,7 +68,8 @@ public:
 	Plane(const POINT_TYPE& origin, const POINT_TYPE& normal);
 	Plane(const POINT_TYPE* pts[3]);
 
-	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, POINT_TYPE& pt, T& dist) const;
+	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, POINT_TYPE& pt, T& t) const;
+	bool intersectLineSegment(const LineSegment<T>& seg, POINT_TYPE& pt, T& t) const;
 	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit) const;
 	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg) const;
 

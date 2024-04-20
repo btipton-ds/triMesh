@@ -47,7 +47,7 @@ Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal)
 {
 	T tol = (T)1.0e-6;
 
-	// Intersect the plan with principal axes to find a principal origin
+	// Intersect the plane with principal axes to find a principal origin
 	T minDist = (T)FLT_MAX;
 	POINT_TYPE testOrigin;
 	for (int i = 0; i < 3; i++) {
@@ -73,17 +73,30 @@ Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal)
 }
 
 template<class T>
-bool Plane<T>::intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, POINT_TYPE& pt, T& dist) const
+bool Plane<T>::intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, POINT_TYPE& pt, T& t) const
 {
-	Ray<T> ray(pt0, (pt1 - pt0).normalized());
+	const double tol = 1.0e-8;
+	POINT_TYPE v = pt1 - pt0;
+	T l = v.norm();
+	if (l < tol)
+		return false;
+	
+	Ray<T> ray(pt0, v / l);
 	RayHit<T> hitPt;
 	if (intersectRay(ray, hitPt)) {
 		pt = hitPt.hitPt;
-		dist = hitPt.dist;
+		t = hitPt.dist / l;
 		return true;
 	}
 
 	return false;
+}
+
+template<class T>
+bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, POINT_TYPE& pt, T& t) const
+{
+	const double tol = 1.0e-8;
+	return intersectLine(seg._pts[0], seg._pts[1], pt, t) && t <= -tol && t >= t + tol;
 }
 
 template<class T>
@@ -111,43 +124,27 @@ bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit) const
 template<class T>
 bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg) const
 {
-	LineSegment<T> seg0(pt0, pt1);
-	LineSegment<T> seg1(pt1, pt2);
-	LineSegment<T> seg2(pt2, pt0);
 
 	int numHits = 0;
 
 	POINT_TYPE iPt0, iPt1;
 	RayHit<T> hit;
-	if (seg0.intersectPlane(*this, hit)) {
-		numHits++;
-		iPt0 = hit.hitPt;
-	}
+	for (int i = 0; i < 3; i++) {
+		int j = (i + 1) % 3;
+		const auto& ptA = ptOf3(i, pt0, pt1, pt2);
+		const auto& ptB = ptOf3(j, pt0, pt1, pt2);
+		LineSegment<T> seg(ptA, ptB);
 
-	if (seg1.intersectPlane(*this, hit)) {
-		if (numHits == 1) {
+		if (seg.intersectPlane(*this, hit)) {
+			if (numHits == 0)
+				iPt0 = hit.hitPt;
+			else if (numHits == 1) {
+				iPt1 = hit.hitPt;
+				iSeg = LineSegment<T>(iPt0, iPt1);
+				return true;
+			}
 			numHits++;
-			iPt1 = hit.hitPt;
-		} else {
-			numHits++;
-			iPt0 = hit.hitPt;
 		}
-	}
-
-	if (numHits < 2 && seg2.intersectPlane(*this, hit)) {
-		if (numHits == 1) {
-			numHits++;
-			iPt1 = hit.hitPt;
-		}
-		else {
-			numHits++;
-			iPt0 = hit.hitPt;
-		}
-	}
-
-	if (numHits == 2) {
-		iSeg = LineSegment<T>(iPt0, iPt1);
-		return true;
 	}
 
 	return false;
