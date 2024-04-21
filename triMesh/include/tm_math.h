@@ -55,209 +55,84 @@ constexpr double minNormalizeDivisor = 1.0e-12;
 #ifndef stm1
 #define stm1 0xffffffffffffffff
 #endif
-
-template <class SCALAR_TYPE>
-inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1) {
-	return fabs(v1 - v0) < SAME_DIST_TOL;
-}
-
-template <class SCALAR_TYPE>
-inline bool tolerantEquals(const Vector3< SCALAR_TYPE>& pt0, const Vector3< SCALAR_TYPE>& pt1) {
-	return (pt1 - pt0).squaredNorm() < SAME_DIST_TOL * SAME_DIST_TOL;
-}
-
 #define CHECK_NAN 1
 
 template <class SCALAR_TYPE>
-inline void checkNAN(SCALAR_TYPE val) {
-#if CHECK_NAN
-	if (std::isnan(val) || std::isinf(val))
-		assert(!"nan");
-#endif
-}
+bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1);
 
 template <class SCALAR_TYPE>
-inline void checkNAN(const Vector3<SCALAR_TYPE>& pt) {
-#if CHECK_NAN
-	for (int i = 0; i < 3; i++)
-		checkNAN(pt[i]);
-#endif
-}
+bool tolerantEquals(const Vector3< SCALAR_TYPE>& pt0, const Vector3< SCALAR_TYPE>& pt1);
+
+
+template <class SCALAR_TYPE>
+void checkNAN(SCALAR_TYPE val);
+
+template <class SCALAR_TYPE>
+void checkNAN(const Vector3<SCALAR_TYPE>& pt);
 
 struct Vector3Comp {
 	template <class V>
-	inline bool operator()(const V& lhs, const V& rhs) const {
-		for (int i = 0; i < 3; i++) {
-			if (lhs[i] < rhs[i])
-				return true;
-			else if (lhs[i] > rhs[i])
-				return false;
-		}
-		return false;
-	}
-
+	bool operator()(const V& lhs, const V& rhs) const;
 };
 
 template <class V>
 class Vector3Set : public std::set<V, Vector3Comp> {
 public:
-	size_t count(const V& v) const {
-		size_t result = 0;
-		V delta(SAME_DIST_TOL, SAME_DIST_TOL, SAME_DIST_TOL);
-		const auto lb = this->lower_bound(v - delta);
-		const auto ub = this->upper_bound(v + delta);
-		for (auto i = lb; i != ub; i++)
-			result++;
-
-		return result;
-	}
+	size_t count(const V& v) const;
 };
 
 using Vector3dSet = Vector3Set<Vector3d>;
 
 template<typename SCALAR_TYPE>
-Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
-	auto l = v.norm();
-	if (l > minNormalizeDivisor)
-		return v / l;
-	throw "zero length vector";
-}
+Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v);
+template<class T>
+double distanceFromPlane(const Vector3<T>& pt, const Plane<T>& plane);
 
 template<class T>
-double distanceFromPlane(const Vector3<T>& pt, const Plane<T>& plane) {
-	return (pt - plane.getOrgin()).dot(plane.getNormal());
-}
+bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt);
 
 template<class T>
-bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt)
-{
-	const Vector3<T>* pts[] = { &pt0, &pt1, &pt2 };
-	return pointInTriangle(pts, pt);
-}
+bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt);
 
 template<class T>
-bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt)
-{
-	Vector3<T> v0 = (*pts[1]) - (*pts[0]);
-	Vector3<T> v1 = (*pts[2]) - (*pts[0]);
-
-	Vector3<T> norm = triangleNormal(pts);
-	norm.normalize();
-
-	v0 = pt - (*pts[0]);
-	T dp = v0.dot(norm);
-	if (fabs(dp) > 1.0e-6) {
-		return false; // Pt not in plane
-	}
-
-	for (size_t i = 0; i < 3; i++) {
-		size_t j = (i + 1) % 3;
-		v0 = pt - (*pts[i]);
-		v1 = (*pts[j]) - (*pts[i]);
-		v1.normalize();
-		v0 = v0 - v1.dot(v0) * v1;
-		assert(fabs(v0.dot(v1)) < 1.0e-8);
-		Vector3<T> v2 = v1.cross(v0);
-		T cp = v2.dot(norm);
-		if (cp < -SAME_DIST_TOL)
-			return false;
-	}
-
-	return true;
-}
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit);
 
 template<class T>
-bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit) {
-	const Vector3<T>* pts[] = { &pt0, &pt1, &pt2 };
-	return intersectRayTri(ray, pts, hit);
-}
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit);
 
 template<class T>
-bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit) {
-
-	Vector3<T> v0 = *pts[1] - *pts[0];
-	Vector3<T> v1 = *pts[2] - *pts[0];
-	Vector3<T> norm = safeNormalize(v0.cross(v1));
-
-	Plane<T> pl(*(pts[0]), norm, false);
-	if (!pl.intersectRay(ray, hit))
-		return false;
-
-	return pointInTriangle(pts, hit.hitPt);
-}
+Vector3<T> orthoganalizeVector(const Vector3<T>& v, const Vector3<T>& unitVector);
 
 template<class T>
-Vector3<T> orthoganalizeVector(const Vector3<T>& v, const Vector3<T>& unitVector)
-{
-	return v - unitVector * unitVector.dot(v);
-}
+Vector3<T> orthoganalizePoint(const Vector3<T>& origin, const Vector3<T>& unitVector, const Vector3<T>& pt);
 
 template<class T>
-Vector3<T> orthoganalizePoint(const Vector3<T>& origin, const Vector3<T>& unitVector, const Vector3<T>& pt)
-{
-	Vector3<T> v = pt - origin;
-	v = orthoganalize(v, unitVector);
-	return origin + v;
-}
+Vector3<T> triangleNormal(const Vector3<T>* pts[3]);
 
 template<class T>
-Vector3<T> triangleNormal(const Vector3<T>* pts[3]) {
-	Vector3<T> v0 = *pts[1] - *pts[0];
-	Vector3<T> v1 = *pts[2] - *pts[0];
-	Vector3<T> n = safeNormalize(v0.cross(v1));
-	return n;
-}
-
-template<class T>
-Vector3<T> triangleNormal(const Vector3<T> pts[3]) {
-	Vector3<T> v0 = pts[1] - pts[0];
-	Vector3<T> v1 = pts[2] - pts[0];
-	Vector3<T> n = safeNormalize(v0.cross(v1));
-	return n;
-}
+Vector3<T> triangleNormal(const Vector3<T> pts[3]);
 
 Vector3d ngonCentroid(int numPoints, Vector3d const* const pts[]);
 Vector3d ngonCentroid(int numPoints, const Vector3d pts[]);
 
-inline Vector3d triangleCentroid(Vector3d const* const pts[3]) {
-	return ngonCentroid(3, pts);
-}
-inline Vector3d triangleCentroid(const Vector3d pts[]) {
-	return ngonCentroid(3, pts);
-}
+Vector3d triangleCentroid(Vector3d const* const pts[3]);
+Vector3d triangleCentroid(const Vector3d pts[]);
 
 double volumeUnderTriangle(Vector3d const* const pts[3], const Vector3d& axis);
 
 // LERP functions are usually used for points, but can be used for any kind of value that supports +, -  and *
 template<class T>
-inline T LERP(const T& p0, const T& p1, double t)
-{
-	return p0 + t * (p1 - p0);
-}
+T LERP(const T& p0, const T& p1, double t);
 
 template<class T>
-inline T BI_LERP(const T& p0, const T& p1, const T& p2, const T& p3, double t, double u)
-{
-	T pt0 = LERP(p0, p1, t);
-	T pt1 = LERP(p3, p2, t);
-
-	return pt0 + u * (pt1 - pt0);
-}
+T BI_LERP(const T& p0, const T& p1, const T& p2, const T& p3, double t, double u);
 
 // pts must be size 8 or greater. No bounds checking is done.
 template<class T>
-inline T TRI_LERP(const T pts[8], double t, double u, double v)
-{
-	T pt0 = BI_LERP(pts[0], pts[1], pts[2], pts[3], t, u);
-	T pt1 = BI_LERP(pts[4], pts[5], pts[6], pts[7], t, u);
-
-	return pt0 + v * (pt1 - pt0);
-}
+T TRI_LERP(const T pts[8], double t, double u, double v);
 
 // pts must be size 8 or greater. No bounds checking is done.
 template<class T>
-inline T TRI_LERP(const std::vector<T>& pts, double t, double u, double v)
-{
-	return TRI_LERP(pts.data(), t, u, v);
-}
+T TRI_LERP(const std::vector<T>& pts, double t, double u, double v);
 
+#include <tm_math.hpp>
