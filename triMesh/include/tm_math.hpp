@@ -181,17 +181,12 @@ Vector3<T> triangleNormal(const Vector3<T> pts[3]) {
 	return n;
 }
 
-Vector3d ngonCentroid(int numPoints, Vector3d const* const pts[]);
-Vector3d ngonCentroid(int numPoints, const Vector3d pts[]);
-
 inline Vector3d triangleCentroid(Vector3d const* const pts[3]) {
 	return ngonCentroid(3, pts);
 }
 inline Vector3d triangleCentroid(const Vector3d pts[]) {
 	return ngonCentroid(3, pts);
 }
-
-double volumeUnderTriangle(Vector3d const* const pts[3], const Vector3d& axis);
 
 // LERP functions are usually used for points, but can be used for any kind of value that supports +, -  and *
 template<class T>
