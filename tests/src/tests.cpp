@@ -254,14 +254,14 @@ bool Test_double_f<T>::testRemoveTri()
 {
 	TriMesh::CMeshPtr pMesh = makeCylinder(Vector3d(0, 0, 0), 1, 2);
 
-	TEST_TRUE(pMesh->testRemoveTri(1), "testRemoveTri(1) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology 1 failed");
-	TEST_TRUE(pMesh->testRemoveTri(0), "testRemoveTri(0) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology 0 failed");
-	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() - 1), "testRemoveTri(pMesh->numTris() - 1) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology n-1 failed");
-	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() / 2), "testRemoveTri(pMesh->numTris() / 2) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology n/2 failed");
+	TEST_TRUE(pMesh->testRemoveTri(1), "testRemoveTri(1)");
+	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology 1");
+	TEST_TRUE(pMesh->testRemoveTri(0), "testRemoveTri(0)");
+	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology 0");
+	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() - 1), "testRemoveTri(pMesh->numTris() - 1)");
+	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology n-1");
+	TEST_TRUE(pMesh->testRemoveTri(pMesh->numTris() / 2), "testRemoveTri(pMesh->numTris() / 2)");
+	TEST_TRUE(pMesh->verifyTopology(false), "testRemoveTri::verifyTopology n/2");
 
 	cout << "testRemoveTri passed \n";
 	return true;
@@ -272,14 +272,14 @@ bool Test_double_f<T>::testSqueezeEdge()
 {
 	TriMesh::CMeshPtr pMesh = makeCylinder(Vector3d(0, 0, 0), 1, 2);
 
-	TEST_TRUE(pMesh->testSqueezeEdge(1), "testSqueezeEdge(1) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology 1 failed");
-	TEST_TRUE(pMesh->testSqueezeEdge(0), "testRemoveTri(0) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology 0 failed");
-	TEST_TRUE(pMesh->testSqueezeEdge(pMesh->numTris() - 1), "testRemoveTri(pMesh->numTris() - 1) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology n-1 failed");
-	TEST_TRUE(pMesh->testSqueezeEdge(pMesh->numTris() / 2), "testRemoveTri(pMesh->numTris() / 2) failed");
-	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology n/2 failed");
+	TEST_TRUE(pMesh->testSqueezeEdge(1), "testSqueezeEdge(1)");
+	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology 1");
+	TEST_TRUE(pMesh->testSqueezeEdge(0), "testRemoveTri(0)");
+	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology 0");
+	TEST_TRUE(pMesh->testSqueezeEdge(pMesh->numTris() - 1), "testRemoveTri(pMesh->numTris() - 1)");
+	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology n-1");
+	TEST_TRUE(pMesh->testSqueezeEdge(pMesh->numTris() / 2), "testRemoveTri(pMesh->numTris() / 2)");
+	TEST_TRUE(pMesh->verifyTopology(false), "testSqueezeEdge::verifyTopology n/2");
 
 	cout << "testSqueezeEdge passed \n";
 
@@ -292,7 +292,7 @@ bool Test_double_f<T>::testTriIntersectBox(const TriMesh::CMeshPtr& pMesh)
 {
 	for (size_t i = 0; i < pMesh->numTris(); i++) {
 		auto bbox = pMesh->getTriBBox(i);
-		TEST_TRUE(pMesh->bboxIntersectsTri(bbox, i), "Tri intersect bbox failed");
+		TEST_TRUE(pMesh->bboxIntersectsTri(bbox, i), "Tri intersect bbox");
 
 		vector<TriMesh::CMesh::BoundingBox> boxes, tmp;
 		TriMesh::CMesh::BoundingBox a, b;
@@ -318,7 +318,7 @@ bool Test_double_f<T>::testTriIntersectBox(const TriMesh::CMeshPtr& pMesh)
 			if (pMesh->bboxIntersectsTri(bb, i))
 				numIntersects++;
 		}
-		TEST_TRUE(numIntersects > 0, "Tri intersect sub bbox failed");
+		TEST_TRUE(numIntersects > 0, "Tri intersect sub bbox");
 	}
 
 	cout << "testTriIntersectBox passed \n";
@@ -330,7 +330,7 @@ bool Test_double_f<T>::testEdgeIntersectBox(const TriMesh::CMeshPtr& pMesh)
 {
 	for (size_t i = 0; i < pMesh->numEdges(); i++) {
 		TriMesh::CMesh::BoundingBox bbox = pMesh->getEdgeBBox(i);
-		TEST_TRUE(pMesh->bboxIntersectsEdge(bbox, i), "Edge intersect bbox failed");
+		TEST_TRUE(pMesh->bboxIntersectsEdge(bbox, i), "Edge intersect bbox");
 
 		vector<TriMesh::CMesh::BoundingBox> boxes, tmp;
 		TriMesh::CMesh::BoundingBox a, b;
@@ -356,7 +356,7 @@ bool Test_double_f<T>::testEdgeIntersectBox(const TriMesh::CMeshPtr& pMesh)
 			if (pMesh->bboxIntersectsEdge(bb, i))
 				numIntersects++;
 		}
-		TEST_TRUE(numIntersects > 0, "Edge intersect sub bbox failed");
+		TEST_TRUE(numIntersects > 0, "Edge intersect sub bbox");
 	}
 
 	cout << "testEdgeIntersectBox passed \n";
@@ -368,16 +368,17 @@ bool Test_double_f<T>::testFindTri(const TriMesh::CMeshPtr& pMesh)
 {
 	for (size_t i = 0; i < pMesh->numTris(); i += 20) {
 		auto bbox = pMesh->getTriBBox(i);
-		vector<size_t> indices;
-		TEST_TRUE(pMesh->findTris(bbox, indices) > 0, "Failed to find triangle");
+		vector<size_t> indices, branchStack;
+		TEST_TRUE(pMesh->findTris(bbox, indices, branchStack) > 0, "Failed to find triangle");
 		auto iter = find(indices.begin(), indices.end(), i);
 		TEST_TRUE(iter != indices.end(), "Triangle not in list");
 	}
 
 	for (size_t i = 0; i < pMesh->numTris(); i += 20) {
 		auto bbox = pMesh->getTriBBox(i);
+		vector<size_t> branchStack;
 		vector<TriMesh::CMesh::SearchEntry> indices;
-		TEST_TRUE(pMesh->findTris(bbox, indices) > 0, "Failed to find triangle");
+		TEST_TRUE(pMesh->findTris(bbox, indices, branchStack) > 0, "Failed to find triangle");
 		bool found = false;
 		for (const auto entry : indices) {
 			if (entry.getIndex() == i) {
@@ -397,16 +398,17 @@ bool Test_double_f<T>::testFindEdge(const TriMesh::CMeshPtr& pMesh)
 {
 	for (size_t i = 0; i < pMesh->numEdges(); i += 20) {
 		auto bbox = pMesh->getEdgeBBox(i);
-		vector<size_t> indices;
-		TEST_TRUE(pMesh->findEdges(bbox, indices) > 0, "Failed to find edge");
+		vector<size_t> indices, branchStack;
+		TEST_TRUE(pMesh->findEdges(bbox, indices, branchStack) > 0, "Failed to find edge");
 		auto iter = find(indices.begin(), indices.end(), i);
 		TEST_TRUE(iter != indices.end(), "Edge not in list");
 	}
 
 	for (size_t i = 0; i < pMesh->numEdges(); i += 20) {
 		auto bbox = pMesh->getEdgeBBox(i);
+		vector<size_t> branchStack;
 		vector<TriMesh::CMesh::SearchEntry> indices;
-		TEST_TRUE(pMesh->findEdges(bbox, indices) > 0, "Failed to find edge");
+		TEST_TRUE(pMesh->findEdges(bbox, indices, branchStack) > 0, "Failed to find edge");
 		bool found = false;
 		for (const auto entry : indices) {
 			if (entry.getIndex() == i) {

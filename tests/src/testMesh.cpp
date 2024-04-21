@@ -100,9 +100,9 @@ bool test2() {
 }
 
 bool testMesh() {
-	TEST_TRUE(test0(), "Failed test0");
-	TEST_TRUE(test1(), "Failed test1");
-	TEST_TRUE(test2(), "Failed test2");
+	TEST_TRUE(test0(), "Test0");
+	TEST_TRUE(test1(), "Test1");
+	TEST_TRUE(test2(), "Test2");
 
 	cout << "Test mesh passed\n";
 

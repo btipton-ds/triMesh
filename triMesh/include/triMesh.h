@@ -158,14 +158,14 @@ namespace TriMesh {
 		size_t rayCast(const Ray<double>& ray, std::vector<RayHit<double>>& hits, bool biDir = true) const;
 		size_t rayCast(const LineSegment<double>& seg, std::vector<RayHit<double>>& hits, double tol = 1.0e-6) const;
 
-		size_t findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
-		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, std::vector<size_t>& branchStack, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, std::vector<size_t>& branchStack, BoxTestType contains = BoxTestType::Intersects) const;
 
-		size_t findEdges(const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
-		size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findEdges(const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, std::vector<size_t>& branchStack, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, std::vector<size_t>& branchStack, BoxTestType contains = BoxTestType::Intersects) const;
 
-		size_t findTris(const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
-		size_t findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findTris(const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, std::vector<size_t>& branchStack, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, std::vector<size_t>& branchStack, BoxTestType contains = BoxTestType::Intersects) const;
 
 		Vector3d triCentroid(size_t triIdx) const;
 		Vector3d triUnitNormal(size_t triIdx) const;
@@ -297,8 +297,8 @@ namespace TriMesh {
 			std::cout << "CMesh::addVertex box intersects: Error\n";
 		}
 
-		std::vector<size_t> results;
-		_pVertTree->find(ptBBox, results);
+		std::vector<size_t> results, branchStack;
+		_pVertTree->find(ptBBox, results, branchStack);
 		for (const auto& index : results) {
 			if ((_vertices[index]._pt - ptUnk).norm() < SAME_DIST_TOL) {
 				return index;

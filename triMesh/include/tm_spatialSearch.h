@@ -73,8 +73,8 @@ public:
 	size_t numInTree() const;
 	const BOX_TYPE& getBounds() const;
 
-	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::Intersects) const;
-	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::Intersects) const;
+	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, std::vector<size_t>& branchStack, BoxTestType contains = BoxTestType::Intersects) const;
+	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, std::vector<size_t>& branchStack, BoxTestType contains = BoxTestType::Intersects) const;
 	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
 	CSpatialSearchBasePtr getSubTree(const BOX_TYPE& bbox) const;
 
@@ -93,6 +93,7 @@ private:
 	static bool boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType);
 
 	size_t _numInTree = 0;
+	size_t _id = 0;
 	BOX_TYPE _bbox;
 	int _axis = 0;
 	std::vector<Entry> _contents;

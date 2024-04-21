@@ -480,8 +480,8 @@ bool CMesh::verifyTris(size_t triIdx) const
 {
 	{
 		BoundingBox bbox = getTriBBox(triIdx);
-		vector<size_t> foundTris;
-		_pTriTree->find(bbox, foundTris);
+		vector<size_t> foundTris, branchStack;
+		_pTriTree->find(bbox, foundTris, branchStack);
 		bool found = false;
 		for (const auto& idx : foundTris) {
 			if (idx == triIdx) {
@@ -515,8 +515,8 @@ bool CMesh::verifyVerts(size_t vertIdx) const
 {
 	{
 		BoundingBox bbox = getVertBBox(vertIdx);
-		vector<size_t> foundTris;
-		_pVertTree->find(bbox, foundTris);
+		vector<size_t> foundTris, branchStack;
+		_pVertTree->find(bbox, foundTris, branchStack);
 		bool found = false;
 		for (const auto& idx : foundTris) {
 			if (idx == vertIdx) {
@@ -547,8 +547,8 @@ bool CMesh::verifyEdges(size_t edgeIdx, bool allowEmpty) const
 {
 	{
 		BoundingBox bbox = getEdgeBBox(edgeIdx);
-		vector<size_t> foundTris;
-		_pEdgeTree->find(bbox, foundTris);
+		vector<size_t> foundTris, branchStack;
+		_pEdgeTree->find(bbox, foundTris, branchStack);
 		bool found = false;
 		for (const auto& idx : foundTris) {
 			if (idx == edgeIdx) {
@@ -628,8 +628,8 @@ size_t CMesh::addTriangle(const Vector3i& tri) {
 		triBox.merge(vert._pt);
 	}
 
-	vector<size_t> triIndices;
-	_pTriTree->find(triBox, triIndices);
+	vector<size_t> triIndices, branchStack;
+	_pTriTree->find(triBox, triIndices, branchStack);
 	for (const auto& triIdx : triIndices) {
 		if (sameTri(_tris[triIdx], tri))
 			return triIdx;
@@ -1195,23 +1195,24 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 	return curv;
 }
 
-size_t CMesh::findVerts(const BoundingBox& bbox, vector<SearchEntry>& vertIndices, BoxTestType contains) const {
-	return _pVertTree->find(bbox, vertIndices, contains);
+size_t CMesh::findVerts(const BoundingBox& bbox, vector<SearchEntry>& vertIndices, vector<size_t>& branchStack, BoxTestType contains) const {
+	return _pVertTree->find(bbox, vertIndices, branchStack, contains);
 }
 
-size_t CMesh::findVerts(const BoundingBox& bbox, vector<size_t>& vertIndices, BoxTestType contains) const {
-	return _pVertTree->find(bbox, vertIndices, contains);
+size_t CMesh::findVerts(const BoundingBox& bbox, vector<size_t>& vertIndices, vector<size_t>& branchStack, BoxTestType contains) const {
+	return _pVertTree->find(bbox, vertIndices, branchStack, contains);
 }
 
-size_t CMesh::findEdges(const BoundingBox& bbox, vector<SearchEntry>& edgeIndices, BoxTestType contains) const {
+size_t CMesh::findEdges(const BoundingBox& bbox, vector<SearchEntry>& edgeIndices, vector<size_t>& branchStack, BoxTestType contains) const {
 	vector<SearchEntry> allHits;
-	if (_pEdgeTree->find(bbox, allHits, contains))
+
+	if (_pEdgeTree->find(bbox, allHits, branchStack, contains))
 		return processFoundEdges(allHits, bbox, edgeIndices, contains);
 
 	return false;
 }
 
-size_t CMesh::processFoundEdges(const std::vector<SearchEntry>& allHits, const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains) const
+size_t CMesh::processFoundEdges(const vector<SearchEntry>& allHits, const BoundingBox& bbox, vector<SearchEntry>& edgeIndices, BoxTestType contains) const
 {
 	for (const auto& hit : allHits) {
 		const auto& edge = _edges[hit.getIndex()];
@@ -1234,15 +1235,15 @@ size_t CMesh::processFoundEdges(const std::vector<SearchEntry>& allHits, const B
 	return !edgeIndices.empty();
 }
 
-size_t CMesh::findEdges(const BoundingBox& bbox, vector<size_t>& edgeIndices, BoxTestType contains) const {
+size_t CMesh::findEdges(const BoundingBox& bbox, vector<size_t>& edgeIndices, vector<size_t>& branchStack, BoxTestType contains) const {
 	vector<size_t> allHits;
-	if (_pEdgeTree->find(bbox, allHits, contains))
+	if (_pEdgeTree->find(bbox, allHits, branchStack, contains))
 		return processFoundEdges(allHits, bbox, edgeIndices, contains);
 
 	return false;
 }
 
-size_t CMesh::processFoundEdges(const std::vector<size_t>& allHits, const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains) const
+size_t CMesh::processFoundEdges(const vector<size_t>& allHits, const BoundingBox& bbox, vector<size_t>& edgeIndices, BoxTestType contains) const
 {
 
 	for (const auto& hit : allHits) {
@@ -1266,16 +1267,17 @@ size_t CMesh::processFoundEdges(const std::vector<size_t>& allHits, const Boundi
 	return !edgeIndices.empty();
 }
 
-size_t CMesh::findTris(const BoundingBox& bbox, vector<SearchEntry>& triIndices, BoxTestType contains) const {
+size_t CMesh::findTris(const BoundingBox& bbox, vector<SearchEntry>& triIndices, vector<size_t>& branchStack, BoxTestType contains) const {
 	vector<SearchEntry> allHits;
-	if (_pTriTree->find(bbox, allHits, contains) > 0) {
+
+	if (_pTriTree->find(bbox, allHits, branchStack, contains) > 0) {
 		return processFoundTris(allHits, bbox, triIndices, contains);
 	}
 
 	return false;
 }
 
-size_t CMesh::processFoundTris(const std::vector<SearchEntry>& allHits, const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains) const
+size_t CMesh::processFoundTris(const vector<SearchEntry>& allHits, const BoundingBox& bbox, vector<SearchEntry>& triIndices, BoxTestType contains) const
 {
 	bool useContains = contains == BoxTestType::Contains;
 	for (const auto& triEntry : allHits) {
@@ -1289,16 +1291,16 @@ size_t CMesh::processFoundTris(const std::vector<SearchEntry>& allHits, const Bo
 	return triIndices.size();
 }
 
-size_t CMesh::findTris(const BoundingBox& bbox, vector<size_t>& triIndices, BoxTestType contains) const {
+size_t CMesh::findTris(const BoundingBox& bbox, vector<size_t>& triIndices, vector<size_t>& branchStack, BoxTestType contains) const {
 	vector<size_t> allHits;
-	if (_pTriTree->find(bbox, allHits, contains) > 0) {
+	if (_pTriTree->find(bbox, allHits, branchStack, contains) > 0) {
 		return processFoundTris(allHits, bbox, triIndices, contains);
 	}
 
 	return false;
 }
 
-size_t CMesh::processFoundTris(const std::vector<size_t>& allHits, const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains) const
+size_t CMesh::processFoundTris(const vector<size_t>& allHits, const BoundingBox& bbox, vector<size_t>& triIndices, BoxTestType contains) const
 {
 	bool useContains = contains == BoxTestType::Contains;
 	for (const auto& idx : allHits) {
@@ -1469,8 +1471,8 @@ bool CMesh::verifyFindAllTris() const {
 	for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
 		BoundingBox triBox = getTriBBox(triIdx);
 
-		vector<size_t> entries;
-		_pTriTree->find(triBox, entries);
+		vector<size_t> entries, branchStack;
+		_pTriTree->find(triBox, entries, branchStack);
 		bool found = false;
 		for (const auto& idx : entries) {
 			found = found || idx == triIdx;
@@ -1561,7 +1563,7 @@ const vector<unsigned int>& CMesh::getGlTriIndices() const
 	return _glTriIndices;
 }
 
-void CMesh::getGlEdges(std::vector<float>& points, std::vector<unsigned int>& indices, bool multiCore) // size = GlPoints.size() / 3
+void CMesh::getGlEdges(vector<float>& points, vector<unsigned int>& indices, bool multiCore) // size = GlPoints.size() / 3
 {
 	points.clear();
 	indices.clear();
@@ -1728,8 +1730,12 @@ bool CMesh::testSqueezeEdge(size_t idx)
 	return true;
 }
 
-void CMesh::SubMesh::set(const CMeshConstPtr& pMesh, const BoundingBox& bbox, double growFactor)
+void CMesh::SubMesh::set(const CMeshConstPtr& pMesh, const BoundingBox& bboxIn, double growFactor)
 {
+	BoundingBox bbox(bboxIn);
+	auto r = bbox.range();
+	bbox.grow(r.norm() * growFactor);
+
 	_pMesh = pMesh;
 
 	_pVertTree = _pMesh->_pVertTree->getSubTree(bbox);
@@ -1737,8 +1743,12 @@ void CMesh::SubMesh::set(const CMeshConstPtr& pMesh, const BoundingBox& bbox, do
 	_pTriTree = _pMesh->_pTriTree->getSubTree(bbox);
 }
 
-void CMesh::SubMesh::set(const SubMesh& subMesh, const BoundingBox& bbox, double growFactor)
+void CMesh::SubMesh::set(const SubMesh& subMesh, const BoundingBox& bboxIn, double growFactor)
 {
+	BoundingBox bbox(bboxIn);
+	auto r = bbox.range();
+	bbox.grow(r.norm() * growFactor);
+
 	_pMesh = subMesh._pMesh;
 
 	_pVertTree = _pMesh->_pVertTree->getSubTree(bbox);
@@ -1746,58 +1756,64 @@ void CMesh::SubMesh::set(const SubMesh& subMesh, const BoundingBox& bbox, double
 	_pTriTree = _pMesh->_pTriTree->getSubTree(bbox);
 }
 
-size_t CMesh::SubMesh::findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, BoxTestType contains) const
+size_t CMesh::SubMesh::findVerts(const BoundingBox& bbox, vector<SearchEntry>& vertIndices, BoxTestType contains) const
 {
+	vector<size_t> branchStack;
 	if (_pVertTree)
-		return _pVertTree->find(bbox, vertIndices, contains);
+		return _pVertTree->find(bbox, vertIndices, branchStack, contains);
 
 	return 0;
 }
 
-size_t CMesh::SubMesh::findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains) const
+size_t CMesh::SubMesh::findVerts(const BoundingBox& bbox, vector<size_t>& vertIndices, BoxTestType contains) const
 {
+	vector<size_t> branchStack;
 	if (_pVertTree)
-		return _pVertTree->find(bbox, vertIndices, contains);
+		return _pVertTree->find(bbox, vertIndices, branchStack, contains);
 
 	return 0;
 }
 
-size_t CMesh::SubMesh::findEdges(const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains) const
+size_t CMesh::SubMesh::findEdges(const BoundingBox& bbox, vector<SearchEntry>& edgeIndices, BoxTestType contains) const
 {
 	vector<SearchEntry> allHits;
-	if (_pMesh && _pEdgeTree && _pEdgeTree->find(bbox, allHits, contains))
+	vector<size_t> branchStack;
+	if (_pMesh && _pEdgeTree && _pEdgeTree->find(bbox, allHits, branchStack, contains))
 		return _pMesh->processFoundEdges(allHits, bbox, edgeIndices, contains);
 
 	return 0;
 }
 
-size_t CMesh::SubMesh::findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains) const
+size_t CMesh::SubMesh::findEdges(const BoundingBox& bbox, vector<size_t>& edgeIndices, BoxTestType contains) const
 {
 	vector<size_t> allHits;
-	if (_pMesh && _pEdgeTree && _pEdgeTree->find(bbox, allHits, contains))
+	vector<size_t> branchStack;
+	if (_pMesh && _pEdgeTree && _pEdgeTree->find(bbox, allHits, branchStack, contains))
 		return _pMesh->processFoundEdges(allHits, bbox, edgeIndices, contains);
 
 	return 0;
 }
 
-size_t CMesh::SubMesh::findTris(const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains) const
+size_t CMesh::SubMesh::findTris(const BoundingBox& bbox, vector<SearchEntry>& triIndices, BoxTestType contains) const
 {
 	vector<SearchEntry> allHits;
-	if (_pMesh && _pTriTree && _pTriTree->find(bbox, allHits, contains))
-		return _pMesh->processFoundEdges(allHits, bbox, triIndices, contains);
+	vector<size_t> branchStack;
+	if (_pMesh && _pTriTree && _pTriTree->find(bbox, allHits, branchStack, contains))
+		return _pMesh->processFoundTris(allHits, bbox, triIndices, contains);
 
 	return 0;
 }
 
-size_t CMesh::SubMesh::findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains) const
+size_t CMesh::SubMesh::findTris(const BoundingBox& bbox, vector<size_t>& triIndices, BoxTestType contains) const
 {
 	vector<size_t> allHits;
+	vector<size_t> branchStack;
 	if (_pMesh && _pTriTree) {
-		bool result = _pTriTree->find(bbox, allHits, contains);
+		bool result = _pTriTree->find(bbox, allHits, branchStack, contains);
 
 #if 1 && defined(_DEBUG)
-		vector<size_t> tmp;
-		bool referenceResult = _pMesh->_pTriTree->find(bbox, tmp);
+		vector<size_t> tmp, tmpBranchStack;
+		bool referenceResult = _pMesh->_pTriTree->find(bbox, tmp, tmpBranchStack);
 		if (referenceResult != result || allHits.size() != tmp.size()) {
 			// assert the fast result found everything the canonical result did
 			for (size_t idx : tmp) {
@@ -1806,7 +1822,7 @@ size_t CMesh::SubMesh::findTris(const BoundingBox& bbox, std::vector<size_t>& tr
 		}
 #endif
 		if (result)
-			_pMesh->processFoundEdges(allHits, bbox, triIndices, contains);
+			_pMesh->processFoundTris(allHits, bbox, triIndices, contains);
 	}
 
 	return triIndices.size();

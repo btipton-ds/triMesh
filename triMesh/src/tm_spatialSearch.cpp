@@ -27,7 +27,10 @@ This file is part of the TriMesh library.
 
 */
 
+using namespace std;
+
 #include <iostream>
+#include <thread>
 #include <tm_spatialSearch.h>
 
 #define CSSB_TMPL template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
@@ -66,6 +69,8 @@ CSSB_DCL::CSpatialSearchBase(const BOX_TYPE& bbox, int axis)
 	, _bbox(bbox)
 	, _axis(axis)
 {
+	static atomic<size_t> s_count;
+	_id = s_count++;
 }
 
 CSSB_TMPL
@@ -83,7 +88,8 @@ void CSSB_DCL::clear() {
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType testType) const {
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, vector<size_t>& branchStack, BoxTestType testType) const {
+	branchStack.push_back(_id);
 	if (boxesMatch(_bbox, bbox, testType)) {
 		for (const auto& entry : _contents) {
 			const auto& bb = entry.getBBox();
@@ -92,15 +98,16 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestT
 			}
 		}
 		if (_left)
-			_left->find(bbox, result, testType);
+			_left->find(bbox, result, branchStack, testType);
 		if (_right)
-			_right->find(bbox, result, testType);
+			_right->find(bbox, result, branchStack, testType);
 	}
 	return result.size();
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType testType) const {
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, vector<size_t>& branchStack, BoxTestType testType) const {
+	branchStack.push_back(_id);
 	if (boxesMatch(_bbox, bbox, testType)) {
 		for (const auto& entry : _contents) {
 			const auto& bb = entry.getBBox();
@@ -109,15 +116,15 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, Box
 			}
 		}
 		if (_left)
-			_left->find(bbox, result, testType);
+			_left->find(bbox, result, branchStack, testType);
 		if (_right)
-			_right->find(bbox, result, testType);
+			_right->find(bbox, result, branchStack, testType);
 	}
 	return result.size();
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const {
+size_t CSSB_DCL::biDirRayCast(const Ray<SCALAR_TYPE>& ray, vector<INDEX_TYPE>& hits) const {
 	hits.clear();
 
 	biDirRayCastRecursive(ray, hits);
@@ -128,6 +135,9 @@ size_t CSSB_DCL::biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYP
 CSSB_TMPL
 typename CSSB_DCL::CSpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox) const
 {
+#if 0
+	return shared_from_this();
+#else
 	bool useLeft = _left && (bbox.intersects(_left->_bbox) || bbox.contains(_left->_bbox) || _left->_bbox.contains(bbox));
 	bool useRight = _right && (bbox.intersects(_right->_bbox) || bbox.contains(_right->_bbox) || _right->_bbox.contains(bbox));
 	if (useLeft && useRight)
@@ -145,6 +155,7 @@ typename CSSB_DCL::CSpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bb
 		return _right->getSubTree(bbox);
 
 	return nullptr;
+#endif
 }
 
 CSSB_TMPL
@@ -214,7 +225,7 @@ bool CSSB_DCL::remove(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
 }
 
 CSSB_TMPL
-void CSSB_DCL::biDirRayCastRecursive(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const {
+void CSSB_DCL::biDirRayCastRecursive(const Ray<SCALAR_TYPE>& ray, vector<INDEX_TYPE>& hits) const {
 	if (_bbox.intersects(ray)) {
 		for (const auto& entry : _contents) {
 			if (entry.getBBox().intersects(ray)) {
@@ -229,12 +240,12 @@ void CSSB_DCL::biDirRayCastRecursive(const Ray<SCALAR_TYPE>& ray, std::vector<IN
 }
 
 CSSB_TMPL
-void CSSB_DCL::dump(std::wostream& out, size_t depth) const
+void CSSB_DCL::dump(wostream& out, size_t depth) const
 {
-	std::wstring pad = L"";
+	wstring pad = L"";
 	for (size_t i = 0; i < depth; i++)
 		pad += L"   ";
-	std::wstring axisStr = L"XAxis";
+	wstring axisStr = L"XAxis";
 	if (_axis == 1)
 		axisStr = L"YAxis";
 	else if (_axis == 2)
@@ -259,10 +270,10 @@ void CSSB_DCL::split(int depth) {
 	BOX_TYPE leftBBox, rightBBox;
 	_bbox.split(_axis, leftBBox, rightBBox, (SCALAR_TYPE)0.10);
 	int nextAxis = (_axis + 1) % 3;
-	_left = std::make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
-	_right = std::make_shared<CSpatialSearchBase>(rightBBox, nextAxis);
+	_left = make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
+	_right = make_shared<CSpatialSearchBase>(rightBBox, nextAxis);
 
-	const std::vector<Entry> temp(_contents);
+	const vector<Entry> temp(_contents);
 	_contents.clear();
 
 	for (const auto& entry : temp) {
