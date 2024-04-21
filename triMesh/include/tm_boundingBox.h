@@ -54,7 +54,7 @@ public:
 	// This is actually intersects or contains
 	bool intersects(const CBoundingBox3D& otherBox) const;
 	bool intersects(const Ray<SCALAR_TYPE>& ray) const;
-	bool intersects(const LineSegment<SCALAR_TYPE>& seg) const;
+	bool intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis = -1) const;
 	bool intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const;
 	void split(int axis, CBoundingBox3D& left, CBoundingBox3D& right, Scalar overlap = 0) const;
 	void grow(Scalar dist);

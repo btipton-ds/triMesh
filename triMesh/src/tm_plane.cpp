@@ -110,8 +110,9 @@ bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit) const
 
 	POINT_TYPE v = _origin - ray._origin;
 	auto h = v.dot(_normal);
-	hit.dist = h / dp;
-	hit.hitPt = ray._origin + hit.dist * ray._dir;
+	double t = h / dp;
+	hit.hitPt = ray._origin + t * ray._dir;
+	hit.dist = (hit.hitPt - ray._origin).norm();
 
 #if FULL_TESTS // Verification code
 	POINT_TYPE vTest = hit.hitPt - origin;

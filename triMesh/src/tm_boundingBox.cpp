@@ -139,7 +139,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox) con
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis) const
 {
 	static const POINT_TYPE axes[] = {
 		POINT_TYPE(1, 0, 0),
@@ -153,18 +153,21 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg
 	if (seg.calLength() < SAME_DIST_TOL)
 		return false;
 
-	auto ray = seg.getRay();
 	for (size_t i = 0; i < 3; i++) {
-		RayHit<SCALAR_TYPE> hit;
+		if (skipAxis == i)
+			continue;
+
+		SCALAR_TYPE t;
+		POINT_TYPE pt;
 		Plane<SCALAR_TYPE> minPlane(_min, axes[i], false);
-		if (minPlane.intersectRay(ray, hit)) {
-			if (contains(hit.hitPt))
+		if (minPlane.intersectLineSegment(seg, pt, t)) {
+			if (contains(pt))
 				return true;
 		}
 
 		Plane<SCALAR_TYPE> maxPlane(_max, axes[i], false);
-		if (maxPlane.intersectRay(ray, hit)) {
-			if (contains(hit.hitPt))
+		if (maxPlane.intersectLineSegment(seg, pt, t)) {
+			if (contains(pt))
 				return true;
 		}
 	}
@@ -204,12 +207,12 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE& pt0, const POINT_
 	LineSegment<SCALAR_TYPE> seg;
 	for (int i = 0; i < 3; i++) {
 		Plane<SCALAR_TYPE> minPlane(_min, axes[i], false);
-		if (minPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg)) {
+		if (minPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg, i)) {
 			return true;
 		}
 
 		Plane<SCALAR_TYPE> maxPlane(_max, axes[i], false);
-		if (maxPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg)) {
+		if (maxPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg, i)) {
 			return true;
 		}
 	}

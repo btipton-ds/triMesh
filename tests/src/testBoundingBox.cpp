@@ -184,9 +184,24 @@ bool testTriInterset() {
 		Vector3d(2, 0.5, 0.5), 
 		Vector3d(2, 1, 0.5)), "Intersects triangle point lies on face?");
 
+	TEST_TRUE(a.intersects(
+		Vector3d(0.5, -0.5, 0.5), 
+		Vector3d(1.1, -0.5, 0.5), 
+		Vector3d(1.1,  0.5, 0.5)), "Intersects triangle with no point inside the box?");
+
+	TEST_TRUE(a.intersects(
+		Vector3d(0.5, -0.5, 0.5),
+		Vector3d(1.5, -0.5, 0.5),
+		Vector3d(1.5,  0.5, 0.5)), "Intersects triangle with edge intersecting box edge?");
+
 	TEST_FALSE(a.intersects(
-		Vector3d(1 + 1.1 * SAME_DIST_TOL, 0.5, 0.5), 
-		Vector3d(2, 0.5, 0.5), 
+		Vector3d(0.5, -0.51, 0.5),
+		Vector3d(1.5, -0.51, 0.5),
+		Vector3d(1.5, 0.5, 0.5)), "Intersects triangle with no point inside the box?");
+
+	TEST_FALSE(a.intersects(
+		Vector3d(1 + 1.1 * SAME_DIST_TOL, 0.5, 0.5),
+		Vector3d(2, 0.5, 0.5),
 		Vector3d(2, 1, 0.5)), "Fails to intersects triangle point lies out of tolerance on face?");
 
 	return true;
