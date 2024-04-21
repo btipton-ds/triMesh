@@ -775,7 +775,7 @@ size_t CMesh::rayCast(const Ray<double>& ray, vector<RayHit<double>>& hits, bool
 	if (_pTriTree->biDirRayCast(ray, hitIndices) > 0) {
 		for (size_t triIdx2 : hitIndices) {
 			const auto& tri = _tris[triIdx2];
-			Vector3d const* const pts[] = {
+			const Vector3d* pts[] = {
 				&_vertices[tri[0]]._pt,
 				&_vertices[tri[1]]._pt,
 				&_vertices[tri[2]]._pt,
@@ -800,7 +800,7 @@ size_t CMesh::rayCast(const LineSegment<double>& seg, vector<RayHit<double>>& hi
 	if (_pTriTree->biDirRayCast(seg.getRay(), hitIndices) > 0) {
 		for (size_t triIdx2 : hitIndices) {
 			const auto& tri = _tris[triIdx2];
-			Vector3d const* const pts[] = {
+			const Vector3d* pts[] = {
 				&_vertices[tri[0]]._pt,
 				&_vertices[tri[1]]._pt,
 				&_vertices[tri[2]]._pt,

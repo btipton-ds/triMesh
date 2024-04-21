@@ -123,11 +123,68 @@ Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
 	throw "zero length vector";
 }
 
-double distanceFromPlane(const Vector3d& pt, const Plane<double>& plane);
-bool intersectRayTri(const Ray<double>& ray, Vector3d const * const pts[3], RayHit<double>& hit);
-bool intersectRayTri(const Ray<float>& ray, Vector3f const* const pts[3], RayHit<float>& hit);
-bool pointInTriangle(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& pt);
-bool pointInTriangle(const Vector3d* pts[3], const Vector3d& pt);
+template<class T>
+double distanceFromPlane(const Vector3<T>& pt, const Plane<T>& plane) {
+	return (pt - plane.getOrgin()).dot(plane.getNormal());
+}
+
+template<class T>
+bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt)
+{
+	const Vector3<T>* pts[] = { &pt0, &pt1, &pt2 };
+	return pointInTriangle(pts, pt);
+}
+
+template<class T>
+bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt)
+{
+	Vector3<T> v0 = (*pts[1]) - (*pts[0]);
+	Vector3<T> v1 = (*pts[2]) - (*pts[0]);
+
+	Vector3<T> norm = triangleNormal(pts);
+	norm.normalize();
+
+	v0 = pt - (*pts[0]);
+	T dp = v0.dot(norm);
+	if (fabs(dp) > 1.0e-6) {
+		return false; // Pt not in plane
+	}
+
+	for (size_t i = 0; i < 3; i++) {
+		size_t j = (i + 1) % 3;
+		v0 = pt - (*pts[i]);
+		v1 = (*pts[j]) - (*pts[i]);
+		v1.normalize();
+		v0 = v0 - v1.dot(v0) * v1;
+		assert(fabs(v0.dot(v1)) < 1.0e-8);
+		Vector3<T> v2 = v1.cross(v0);
+		T cp = v2.dot(norm);
+		if (cp < -SAME_DIST_TOL)
+			return false;
+	}
+
+	return true;
+}
+
+template<class T>
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit) {
+	const Vector3<T>* pts[] = { &pt0, &pt1, &pt2 };
+	return intersectRayTri(ray, pts, hit);
+}
+
+template<class T>
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit) {
+
+	Vector3<T> v0 = *pts[1] - *pts[0];
+	Vector3<T> v1 = *pts[2] - *pts[0];
+	Vector3<T> norm = safeNormalize(v0.cross(v1));
+
+	Plane<T> pl(*(pts[0]), norm, false);
+	if (!pl.intersectRay(ray, hit))
+		return false;
+
+	return pointInTriangle(pts, hit.hitPt);
+}
 
 template<class T>
 Vector3<T> orthoganalizeVector(const Vector3<T>& v, const Vector3<T>& unitVector)
@@ -143,10 +200,21 @@ Vector3<T> orthoganalizePoint(const Vector3<T>& origin, const Vector3<T>& unitVe
 	return origin + v;
 }
 
-Vector3d triangleNormal(Vector3d const* const pts[3]);
-Vector3d triangleNormal(const Vector3d pts[3]);
-Vector3f triangleNormal(Vector3f const* const pts[3]);
-Vector3f triangleNormal(const Vector3f pts[3]);
+template<class T>
+Vector3<T> triangleNormal(const Vector3<T>* pts[3]) {
+	Vector3<T> v0 = *pts[1] - *pts[0];
+	Vector3<T> v1 = *pts[2] - *pts[0];
+	Vector3<T> n = safeNormalize(v0.cross(v1));
+	return n;
+}
+
+template<class T>
+Vector3<T> triangleNormal(const Vector3<T> pts[3]) {
+	Vector3<T> v0 = pts[1] - pts[0];
+	Vector3<T> v1 = pts[2] - pts[0];
+	Vector3<T> n = safeNormalize(v0.cross(v1));
+	return n;
+}
 
 Vector3d ngonCentroid(int numPoints, Vector3d const* const pts[]);
 Vector3d ngonCentroid(int numPoints, const Vector3d pts[]);

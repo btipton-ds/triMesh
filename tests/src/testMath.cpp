@@ -91,7 +91,7 @@ bool testRayTriIntersectVerts() {
 	for (int i = 0; i < 3; i++) {
 		pt = *pts[i];
 		Ray<double> ray(pt - dir, dir);
-		TEST_TRUE(intersectRayTri(ray, pts, hit), "Test on vert " + to_string(i));
+		TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Test on vert " + to_string(i));
 	}
 
 	for (int i = 0; i < 3; i++) {
@@ -99,7 +99,7 @@ bool testRayTriIntersectVerts() {
 		Vector3d v = (ctr - pt).normalized();
 		pt += SAME_DIST_TOL * v;
 		Ray<double> ray(pt - dir, dir);
-		TEST_TRUE(intersectRayTri(ray, pts, hit), "Test inside vert " + to_string(i));
+		TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Test inside vert " + to_string(i));
 	}
 
 	for (int i = 0; i < 3; i++) {
@@ -109,7 +109,7 @@ bool testRayTriIntersectVerts() {
 		v = (v - v2.dot(v) * v2).normalized();
 		pt -= SAME_DIST_TOL * v;
 		Ray<double> ray(pt - dir, dir);
-		TEST_TRUE(intersectRayTri(ray, pts, hit), "Test outside vert within tol " + to_string(i));
+		TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Test outside vert within tol " + to_string(i));
 	}
 
 	for (int i = 0; i < 3; i++) {
@@ -119,7 +119,7 @@ bool testRayTriIntersectVerts() {
 		v = (v - v2.dot(v) * v2).normalized();
 		pt -= 2 * SAME_DIST_TOL * v;
 		Ray<double> ray(pt - dir, dir);
-		TEST_FALSE(intersectRayTri(ray, pts, hit), "Test outside vert " + to_string(i));
+		TEST_FALSE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Test outside vert " + to_string(i));
 	}
 
 	cout << "testRayTriIntersectVerts passed\n";
@@ -140,7 +140,7 @@ bool testRayTriIntersectEdges() {
 	for (int i = 0; i < 3; i++) {
 		pt = (*pts[i] + *pts[(i + 1) % 3]) / 2;
 		Ray<double> ray(pt - dir, dir);
-		if (!intersectRayTri(ray, pts, hit)) return 1;
+		if (!intersectRayTri(ray, pt0, pt1, pt2, hit)) return 1;
 	}
 
 	cout << "testRayTriIntersectEdges passed\n";
@@ -164,23 +164,23 @@ bool testRayTriIntersect() {
 				Ray<double> ray(*pts[0] - dir, dir);
 				RayHit<double> hit;
 
-				if (!intersectRayTri(ray, pts, hit)) return 1;
-				if ((hit.hitPt - pt0).norm() > SAME_DIST_TOL) return 1;
+				if (!intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
+				if ((hit.hitPt - pt0).norm() > SAME_DIST_TOL) return false;
 
 				ray._origin = pt0 + Vector3d(-0.1, 0, 0) - dir;
-				if (intersectRayTri(ray, pts, hit)) return 1;
+				if (intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
 
 				ray._origin = pt0 + Vector3d(0.1, 0, 0) - dir;
-				if (!intersectRayTri(ray, pts, hit)) return 1;
+				if (!intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
 
 				ray._origin = pt0 + Vector3d(0, -2 * SAME_DIST_TOL, 0) - dir;
-				if (intersectRayTri(ray, pts, hit)) return 1;
+				if (intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
 
 				ray._origin = pt0 + Vector3d(0, -0.5 * SAME_DIST_TOL, 0) - dir;
-				if (!intersectRayTri(ray, pts, hit)) return 1;
+				if (!intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
 
 				ray._origin[1] = 0.5 * SAME_DIST_TOL;
-				if (intersectRayTri(ray, pts, hit)) return 1;
+				if (intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
 
 			}
 		}
@@ -191,11 +191,11 @@ bool testRayTriIntersect() {
 }
 
 bool testMath() {
-	TEST_TRUE(testDistToPlane(), "Failed testDistToPlane");
-	TEST_TRUE(testRayPlaneIntersect(), "Failed testDistToPlane");
-	TEST_TRUE(testRayTriIntersectVerts(), "Failed testDistToPlane");
-	TEST_TRUE(testRayTriIntersectEdges(), "Failed testDistToPlane");
-	TEST_TRUE(testRayTriIntersect(), "Failed testDistToPlane");
+	TEST_TRUE(testDistToPlane(), "testDistToPlane");
+	TEST_TRUE(testRayPlaneIntersect(), "testDistToPlane");
+	TEST_TRUE(testRayTriIntersectVerts(), "testDistToPlane");
+	TEST_TRUE(testRayTriIntersectEdges(), "testDistToPlane");
+	TEST_TRUE(testRayTriIntersect(), "testDistToPlane");
 
 	cout << "testMath passed\n";
 	return true;

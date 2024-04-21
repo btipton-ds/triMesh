@@ -96,7 +96,7 @@ T LineSegment<T>::distanceToPoint(const POINT_TYPE& pt, T& t) const {
 }
 
 template<class T>
-bool LineSegment<T>::intersectTri(POINT_TYPE const* const pts[3], RayHit<T>& hit) const
+bool LineSegment<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<T>& hit) const
 {
 	POINT_TYPE unitDir = _pts[1] - _pts[0];
 	T l = unitDir.norm();

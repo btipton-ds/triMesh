@@ -32,10 +32,6 @@ This file is part of the TriMesh library.
 #include <tm_math.h>
 #include <tm_ray.h>
 
-double distanceFromPlane(const Vector3d& pt, const Plane<double>& plane) {
-	return (pt - plane.getOrgin()).dot(plane.getNormal());
-}
-
 bool intersectRayPlane(const Ray<double>& ray, const Vector3d& origin, const Vector3d& normal, RayHit<double>& hit)
 {
 	auto dp = ray._dir.dot(normal);
@@ -55,70 +51,6 @@ bool intersectRayPlane(const Ray<double>& ray, const Vector3d& origin, const Vec
 	}
 #endif
 	return true;
-}
-
-template<class T>
-bool intersectRayTriTpl(const Ray<T>& ray, Vector3<T> const* const pts[3], RayHit<T>& hit) {
-
-	Vector3<T> v0 = *pts[1] - *pts[0];
-	Vector3<T> v1 = *pts[2] - *pts[0];
-	Vector3<T> norm = safeNormalize(v0.cross(v1));
-
-	Plane<T> pl(*(pts[0]), norm, false);
-	if (!pl.intersectRay(ray, hit))
-		return false;
-
-	for (int i = 0; i < 3; i++) {
-		int j = (i + 1) % 3;
-		v0 = *pts[j] - *pts[i];
-		v1 = hit.hitPt - *pts[i];
-		Vector3<T> cp = v0.cross(v1);
-		T v = cp.dot(norm);
-		if (v < 0) {
-			v1 = v1 - v0 * v0.dot(v1);
-			T err = v1.squaredNorm() / (T)SAME_DIST_TOL_SQR - 1;
-			if (err > NUMERIC_DIFF_TOL)
-				return false;
-		}
-	}
-	return true;
-}
-
-bool intersectRayTri(const Ray<double>& ray, Vector3d const* const pts[3], RayHit<double>& hit) {
-	return intersectRayTriTpl(ray, pts, hit);
-}
-
-bool intersectRayTri(const Ray<float>& ray, Vector3f const* const pts[3], RayHit<float>& hit)
-{
-	return intersectRayTriTpl(ray, pts, hit);
-}
-
-Vector3d triangleNormal(Vector3d const* const pts[3]) {
-	Vector3d v0 = *pts[1] - *pts[0];
-	Vector3d v1 = *pts[2] - *pts[0];
-	Vector3d n = safeNormalize(v0.cross(v1));
-	return n;
-}
-
-Vector3d triangleNormal(const Vector3d pts[3]) {
-	Vector3d v0 = pts[1] - pts[0];
-	Vector3d v1 = pts[2] - pts[0];
-	Vector3d n = safeNormalize(v0.cross(v1));
-	return n;
-}
-
-Vector3f triangleNormal(Vector3f const* const pts[3]) {
-	Vector3f v0 = *pts[1] - *pts[0];
-	Vector3f v1 = *pts[2] - *pts[0];
-	Vector3f n = safeNormalize(v0.cross(v1));
-	return n;
-}
-
-Vector3f triangleNormal(const Vector3f pts[3]) {
-	Vector3f v0 = pts[1] - pts[0];
-	Vector3f v1 = pts[2] - pts[0];
-	Vector3f n = safeNormalize(v0.cross(v1));
-	return n;
 }
 
 Vector3d ngonCentroid(int numPoints, Vector3d const* const pts[]) {
@@ -148,34 +80,3 @@ double volumeUnderTriangle(Vector3d const* const pts[3], const Vector3d& axis) {
 	return vol;
 }
 
-bool pointInTriangle(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& pt)
-{
-	const Vector3d* pts[] = { &pt0, &pt1, &pt2 };
-	return pointInTriangle(pts, pt);
-}
-
-bool pointInTriangle(const Vector3d* pts[3], const Vector3d& pt)
-{
-	Vector3d v0 = (*pts[1]) - (*pts[0]);
-	Vector3d v1 = (*pts[2]) - (*pts[0]);
-
-	Vector3d norm = triangleNormal(pts);
-	norm.normalize();
-
-	v0 = pt - (*pts[0]);
-	double dp = v0.dot(norm);
-	if (fabs(dp) > 1.0e-6) {
-		return false; // Pt not in plane
-	}
-
-	for (size_t i = 0; i < 3; i++) {
-		size_t j = (i + 1) % 3;
-		v0 = pt - (*pts[i]);
-		v1 = (*pts[j]) - (*pts[i]);
-		double cp = v1.cross(v0).dot(norm);
-		if (cp < 0)
-			return false;
-	}
-
-	return true;
-}
