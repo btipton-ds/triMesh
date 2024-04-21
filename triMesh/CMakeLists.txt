@@ -57,24 +57,6 @@ add_library (
     "src/tm_spatialSearch.cpp"
 )
 
-add_executable (
-    testTriMesh 
-    "src/mainTest.cpp" 
-    "src/tm_math.cpp" 
-    "src/tm_polyLine.cpp" 
-    "src/triMesh.cpp" 
-    "src/tm_vertex.cpp" 
-    "src/tm_vector3.cpp"
-    "src/tm_fixedMath.cpp"
-    "src/tm_edge.cpp"
-    "src/tm_plane.cpp"
-    "src/tm_lineSegment.cpp"
-    "src/tm_boundingBox.cpp" 
-    "src/tm_spatialSearch.cpp"
-    "../stlReader/src/readStl.cpp"  
-)
-
-
 link_directories(
 ../${CMAKE_BUILD_TYPE}
 )

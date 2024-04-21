@@ -37,9 +37,16 @@ This file is part of the TriMesh library.
 #include <tm_boundingBox.h>
 
 template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
-class CSpatialSearchBase {
+class CSpatialSearchBase;
+
+template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
+using CSpatialSearchBasePtr = std::shared_ptr<const CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>;
+
+template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
+class CSpatialSearchBase : public std::enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>> {
 public:
 	using BOX_TYPE = CBoundingBox3D<SCALAR_TYPE>;
+	using CSpatialSearchBasePtr = CSpatialSearchBasePtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>;
 
 	enum class BoxTestType {
 		Contains, Intersects
@@ -69,6 +76,7 @@ public:
 	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::Intersects) const;
 	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::Intersects) const;
 	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
+	CSpatialSearchBasePtr getSubTree(const BOX_TYPE& bbox) const;
 
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);
 

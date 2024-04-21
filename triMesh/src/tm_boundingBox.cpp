@@ -117,12 +117,24 @@ bool CBoundingBox3D<SCALAR_TYPE>::contains(const CBoundingBox3D& other) const {
 // This is actually intersects or contains
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox) const {
-	for (int i = 0; i < 3; i++) {
-		if (otherBox._min[i] > _max[i] + SAME_DIST_TOL)
-			return false;
-		if (otherBox._max[i] < _min[i] - SAME_DIST_TOL)
-			return false;
-	}
+	int i = 0;
+	if (otherBox._min[i] > _max[i] + SAME_DIST_TOL)
+		return false;
+	else if (otherBox._max[i] < _min[i] - SAME_DIST_TOL)
+		return false;
+
+	i = 1;
+	if (otherBox._min[i] > _max[i] + SAME_DIST_TOL)
+		return false;
+	else if (otherBox._max[i] < _min[i] - SAME_DIST_TOL)
+		return false;
+
+	i = 2;
+	if (otherBox._min[i] > _max[i] + SAME_DIST_TOL)
+		return false;
+	else if (otherBox._max[i] < _min[i] - SAME_DIST_TOL)
+		return false;
+
 	return true;
 }
 

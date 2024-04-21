@@ -36,5 +36,5 @@ This file is part of the TriMesh library.
 
 int main(int numArgs, char **args)
 {
-	return runTests();
+	return runTests() ? 0 : 1;
 }

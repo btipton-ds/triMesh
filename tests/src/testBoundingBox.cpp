@@ -40,7 +40,7 @@ namespace {
 	using BB = CBoundingBox3Dd;
 }
 
-int testContains() {
+bool testContains() {
 	BB bb(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
 
 	TEST_TRUE(bb.contains(bb.getMin()), "Contains it's own min corner?");
@@ -50,15 +50,15 @@ int testContains() {
 
 	cout << "testContains passed \n";
 
-	return 0;
+	return true;
 }
 
-int testIntersect() {
+bool testIntersect() {
 	Vector3d tolx(SAME_DIST_TOL, 0, 0);
 	BB 
 		a(Vector3d(0, 0, 0), Vector3d(1, 1, 1)),
 		b(Vector3d(1, 1, 1), Vector3d(2, 2, 2)),
-		c(Vector3d(1, 1, 1), Vector3d(2, 2, 2)),
+		c(Vector3d(1, 0, 0), Vector3d(2, 2, 2)),
 		cTol(a.getMax() + tolx, Vector3d(2, 2, 2)),
 		cNoTol(a.getMax() + 1.01* tolx, Vector3d(2, 2, 2)),
 		d(Vector3d(0.25, 0.25, 0.25), Vector3d(0.75, 0.75, 0.75));
@@ -66,16 +66,16 @@ int testIntersect() {
 	TEST_TRUE(a.intersects(a), "Box intersects itself?");
 	TEST_TRUE(a.intersects(b), "Box intersects at a corner?");
 	TEST_TRUE(a.intersects(c), "Box intersects at a face?");
-	TEST_TRUE(a.intersects(cTol), "Box does not intersect at a face within tolerance?");
-	TEST_FALSE(a.intersects(cNoTol), "Box does not intersect at a face out of tolerance?");
+	TEST_TRUE(a.intersects(cTol), "Box intersects a face within tolerance?");
+	TEST_FALSE(a.intersects(cNoTol), "Box does not intersect a box out of tolerance?");
 	TEST_TRUE(a.intersects(d), "Box intersects a box it contains?");
-	TEST_TRUE(d.intersects(a), "Box intersects a which contains it?");
+	TEST_TRUE(d.intersects(a), "Box intersects a box which contains it?");
 
 	cout << "testIntersect passed \n";
-	return 0;
+	return true;
 }
 
-int testRayIntersect() {
+bool testRayIntersect() {
 	Vector3d tolx(SAME_DIST_TOL, 0, 0);
 	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
 	Vector3d ctr = (a.getMin() + a.getMax()) * 0.5;
@@ -113,10 +113,10 @@ int testRayIntersect() {
 	TEST_FALSE(a.intersects(Ray<double>(pt3, Vector3d(-1, 0, 0))), "Box centroid + (1,0.5 + 1.01 * tol,0) in (-1, 0, 0) does not intersects box?");
 
 	cout << "testRayIntersect passed \n";
-	return 0;
+	return true;
 }
 
-int testRayIntersect1() {
+bool testRayIntersect1() {
 	Vector3d tolx(SAME_DIST_TOL, 0, 0);
 	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
 	Vector3d pt0(-1, 0, 0);
@@ -143,10 +143,10 @@ int testRayIntersect1() {
 	}
 
 	cout << "testRayIntersect1 passed \n";
-	return 0;
+	return true;
 }
 
-int testSheetInterset() {
+bool testSheetInterset() {
 	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
 	BB b(Vector3d(0, 0, 0.5), Vector3d(1, 1, 0.5));
 	BB c(Vector3d(0.25, 0.25, 0.5), Vector3d(0.75, 0.75, 0.5));
@@ -158,17 +158,49 @@ int testSheetInterset() {
 	TEST_TRUE(a.intersects(d), "Oversized sheet intersects?");
 	TEST_TRUE(a.intersects(e), "Overlapping sheet intersects?");
 
-	return 0;
+	return true;
 }
 
-int testBoundingBox() {
-	if (testContains() != 0) return 1;
-	if (testIntersect() != 0) return 1;
-	if (testRayIntersect() != 0) return 1;
-	if (testRayIntersect1() != 0) return 1;
-	if (testSheetInterset() != 0) return 1;
+bool testTriInterset() {
+	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
+
+	TEST_TRUE(a.intersects(
+		Vector3d(0, 0, 0), 
+		Vector3d(1, 0, 0), 
+		Vector3d(1, 1, 0)), "Intersects triangle which lies on face?");
+
+	TEST_TRUE(a.intersects(
+		Vector3d(0.1, 0.1, 0.1), 
+		Vector3d(1 - 0.1, 0.1, 0.1), 
+		Vector3d(1 - 0.1, 1 - 0.1, 0.1)), "Intersects triangle which lies inside box?");
+
+	TEST_TRUE(a.intersects(
+		Vector3d(1, 0.5, 0.5), 
+		Vector3d(2, 0.5, 0.5), 
+		Vector3d(2, 1, 0.5)), "Intersects triangle point lies on face?");
+
+	TEST_TRUE(a.intersects(
+		Vector3d(1 + SAME_DIST_TOL, 0.5, 0.5), 
+		Vector3d(2, 0.5, 0.5), 
+		Vector3d(2, 1, 0.5)), "Intersects triangle point lies on face?");
+
+	TEST_FALSE(a.intersects(
+		Vector3d(1 + 1.1 * SAME_DIST_TOL, 0.5, 0.5), 
+		Vector3d(2, 0.5, 0.5), 
+		Vector3d(2, 1, 0.5)), "Fails to intersects triangle point lies out of tolerance on face?");
+
+	return true;
+}
+
+bool testBoundingBox() {
+	TEST_TRUE(testContains(), "Failed testContains");
+	TEST_TRUE(testIntersect(), "Failed testContains");
+	TEST_TRUE(testRayIntersect(), "Failed testContains");
+	TEST_TRUE(testRayIntersect1(), "Failed testContains");
+	TEST_TRUE(testSheetInterset(), "Failed testContains");
+	TEST_TRUE(testTriInterset(), "Failed testContains");
 
 	cout << "testBoundingBox passed \n";
 
-	return 0;
+	return true;
 }

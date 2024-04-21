@@ -42,19 +42,19 @@ class VectorTests {
 	using v3 = Vector3<NUM_TYPE>;
 public:
 
-	int testAll() {
-		if (testAssign() != 0) return 1;
-		if (testAdd() != 0) return 1;
-		if (testSub() != 0) return 1;
-		if (testMult() != 0) return 1;
-		if (testDiv() != 0) return 1;
-		if (testDot() != 0) return 1;
-		if (testCross() != 0) return 1;
+	bool testAll() {
+		TEST_TRUE (testAssign(), "Failed testAssign");
+		TEST_TRUE(testAdd(), "Failed testAdd");
+		TEST_TRUE(testSub(), "Failed testSub");
+		TEST_TRUE(testMult(), "Failed testMult");
+		TEST_TRUE(testDiv(), "Failed testDiv");
+		TEST_TRUE(testDot(), "Failed testDot");
+		TEST_TRUE(testCross(), "Failed testCross");
 
 		cout << "All vector3 tests passed\n";
-		return 0;
+		return true;
 	}
-	int testAssign() {
+	bool testAssign() {
 		v3 a(1, 2, 3);
 
 		TEST_EQUAL(a[0], 1, "Assign idx 0 ");
@@ -75,10 +75,10 @@ public:
 			TEST_EQUAL(b[1], 2, "Assign b copy constructor idx 1 ");
 			TEST_EQUAL(b[2], 3, "Assign b copy constructor idx 2 ");
 		}
-		return 0;
+		return true;
 	}
 
-	int testAdd() {
+	bool testAdd() {
 		{
 			v3 a(3, 2, 1), b(1, 2, 3);
 			v3 c = a + b;
@@ -91,19 +91,19 @@ public:
 
 			TEST_EQUAL(c, v3(1, 1, 1), "add 1");
 		}
-		return 0;
+		return true;
 	}
 
-	int testSub() {
+	bool testSub() {
 		{
 			v3 a(1, 2, 3), b(1, 2, 3);
 			v3 c = a - b;
 			TEST_EQUAL(c, v3(0, 0, 0), "add 0");
 		}
-		return 0;
+		return true;
 	}
 
-	int testMult() {
+	bool testMult() {
 		{
 			v3 a(1, 2, 3);
 			v3 c = a * 2;
@@ -115,19 +115,19 @@ public:
 			v3 c = k * a;
 			TEST_EQUAL(c, v3(2, 4, 6), "pre mult");
 		}
-		return 0;
+		return true;
 	}
 
-	int testDiv() {
+	bool testDiv() {
 		{
 			v3 a(2, 4, 6);
 			v3 c = a / 2;
 			TEST_EQUAL(c, v3(1, 2, 3), "div");
 		}
-		return 0;
+		return true;
 	}
 
-	int testDot() {
+	bool testDot() {
 		{
 			v3 a(1, 0, 0), b(2, 0, 0);
 			NUM_TYPE c = a.dot(b);
@@ -148,10 +148,10 @@ public:
 			NUM_TYPE c = a.dot(b);
 			TEST_EQUAL(c, 3, "dot 4");
 		}
-		return 0;
+		return true;
 	}
 
-	int testCross() {
+	bool testCross() {
 		{
 			v3 a(1, 0, 0), b(1, 0, 0);
 			v3 c = a.cross(b);
@@ -172,20 +172,20 @@ public:
 			v3 c = a.cross(b);
 			TEST_EQUAL(c, v3(0, 0, 1), "cross z");
 		}
-		return 0;
+		return true;
 	}
 
 };
 
 
 template<typename NUM_TYPE>
-int testAll() {
+bool testAll() {
 	VectorTests<NUM_TYPE> tests;
 
 	return tests.testAll();
 }
 
-int testNormsd() {
+bool testNormsd() {
 	using v3 = Vector3<double>;
 
 	v3 a(1, 1, 1);
@@ -198,15 +198,15 @@ int testNormsd() {
 	a.normalize();
 	TEST_EQUAL(a, v3(vInv, vInv, vInv), "test normalize double");
 
-	return 0;
+	return true;
 }
 
-int testVector3() {
-	if (testAll<float>() != 0) return 1;
-	if (testAll<double>() != 0) return 1;
-	if (testAll<size_t>() != 0) return 1;
+bool testVector3() {
+	TEST_TRUE(testAll<float>(), "failed testAll<float>");
+	TEST_TRUE(testAll<double>(), "failed testAll<double>");
+	TEST_TRUE(testAll<size_t>(), "failed testAll<size_t>");
 
-	if (testNormsd() != 0) return 1;
+	TEST_TRUE(testNormsd(), "failed testNormsd");
 
-	return 0;
+	return true;
 }

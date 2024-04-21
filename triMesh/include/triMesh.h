@@ -53,13 +53,39 @@ namespace TriMesh {
 
 	class CMesh;
 	using CMeshPtr = std::shared_ptr<CMesh>;
+	using CMeshConstPtr = std::shared_ptr<const CMesh>;
 
-	class CMesh {
+	class CMesh : public std::enable_shared_from_this<CMesh> {
 	public:
 		using SearchTree = CSpatialSearchST<double>;
+		using SearchTreePtr = std::shared_ptr<SearchTree>;
+		using SearchTreeConstPtr = std::shared_ptr<const SearchTree>;
 		using BoundingBox = SearchTree::BOX_TYPE;
 		using BoxTestType = SearchTree::BoxTestType;
 		using SearchEntry = SearchTree::Entry;
+
+		friend class SubMesh;
+		class SubMesh {
+		public:
+			SubMesh() = default;
+			SubMesh(const SubMesh& src) = default;
+
+			void set(const CMeshConstPtr& pMesh, const BoundingBox& bbox, double growFactor);
+			void set(const SubMesh& subMesh, const BoundingBox& bbox, double growFactor);
+
+			size_t findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
+			size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
+
+			size_t findEdges(const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
+			size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
+
+			size_t findTris(const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
+			size_t findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
+
+		private:
+			CMeshConstPtr _pMesh;
+			SearchTreeConstPtr _pTriTree, _pEdgeTree, _pVertTree;
+		};
 
 		CMesh();
 		CMesh(const BoundingBox& bbox);
@@ -103,7 +129,7 @@ namespace TriMesh {
 		size_t addRectPrism(const std::vector<POINT_TYPE>& pts);
 
 		const BoundingBox& getBBox() const {
-			return _vertTree.getBounds();
+			return _pVertTree->getBounds();
 		}
 
 		BoundingBox getTriBBox(size_t triIdx) const;
@@ -194,6 +220,11 @@ namespace TriMesh {
 		bool deleteEdgeFromStorage(size_t edgeIdx);
 		void mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove);
 
+		size_t processFoundEdges(const std::vector<SearchEntry>& allHits, const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains) const;
+		size_t processFoundEdges(const std::vector<size_t>& allHits, const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains) const;
+		size_t processFoundTris(const std::vector<SearchEntry>& allHits, const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains) const;
+		size_t processFoundTris(const std::vector<size_t>& allHits, const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains) const;
+
 		bool triContainsVertex(size_t triIdx, size_t vertIdx) const;
 		bool triContainsEdge(size_t triIdx, size_t edgeIdx) const;
 		bool edgeContainsVert(size_t edgeIdx, size_t vertIdx) const;
@@ -209,17 +240,17 @@ namespace TriMesh {
 		const size_t _id;
 		size_t _changeNumber = 0;
 		std::vector<CVertex> _vertices;
-		SearchTree _vertTree;
+		SearchTreePtr _pVertTree;
 
 		std::vector<CEdge> _edges;
-		SearchTree _edgeTree;
+		SearchTreePtr _pEdgeTree;
 		std::map<CEdge, size_t> _edgeToIdxMap;
 
 		std::vector<Vector3i> _tris;
 
 		mutable std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatureColors;
 		mutable std::vector<unsigned int> _glTriIndices;
-		SearchTree _triTree;
+		SearchTreePtr _pTriTree;
 
 		// These are cached data and can be reproduced. Marked mutable so they can be accessed from const getters
 		mutable bool _useCentroidCache = true;
@@ -267,7 +298,7 @@ namespace TriMesh {
 		}
 
 		std::vector<size_t> results;
-		_vertTree.find(ptBBox, results);
+		_pVertTree->find(ptBBox, results);
 		for (const auto& index : results) {
 			if ((_vertices[index]._pt - ptUnk).norm() < SAME_DIST_TOL) {
 				return index;
@@ -275,12 +306,12 @@ namespace TriMesh {
 		}
 		size_t result = _vertices.size();
 		_vertices.push_back(CVertex(ptUnk));
-		_vertTree.add(ptBBox, result);
+		_pVertTree->add(ptBBox, result);
 
 #if FULL_TESTS && defined(_DEBUG)
 		// Testing
 		std::vector<size_t> testResults;
-		_vertTree.find(ptBBox, testResults);
+		_pVertTree->find(ptBBox, testResults);
 		int numFound = 0;
 		for (const auto& index : testResults) {
 			if (index == result)
@@ -288,7 +319,7 @@ namespace TriMesh {
 		}
 		if (numFound != 1) {
 			std::cout << "CMesh::addVertex numFound: Error. numFound: " << numFound << "\n";
-			_vertTree.find(ptBBox, testResults);
+			_pVertTree->find(ptBBox, testResults);
 		}
 #endif
 		return result;

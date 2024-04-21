@@ -8,7 +8,8 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("triMesh")
+project ("testMath")
+add_compile_definitions(_USE_MATH_DEFINES)
 
 include_directories(
 include 
@@ -27,7 +28,7 @@ else (UNIX)
 endif(UNIX)
 
 # Add source to this project's executable.
-add_library (triMeshTest 
+add_executable (testMath 
 "src/triMeshTest.cxx" 
 "src/tests.cpp" 
 "src/testMesh.cpp" 
@@ -35,10 +36,9 @@ add_library (triMeshTest
 "src/testBoundingBox.cpp" 
 "src/testVector3.cpp")
 
-target_link_libraries("triMeshTest" 
+target_link_libraries("testMath" 
 PUBLIC triMesh
 PUBLIC stlReader
-PUBLIC enerMesh
 )
 
 # TODO: Add tests and install targets if needed.

@@ -51,11 +51,13 @@ void makeSphere(int numSteps, double r, double phiRange, TriMesh::CMesh& mesh) {
 			pts[1] = r * Vector3d(cos(theta1) * cos(phi0), sin(theta1) * cos(phi0), sin(phi0));
 			pts[2] = r * Vector3d(cos(theta1) * cos(phi1), sin(theta1) * cos(phi1), sin(phi1));
 			pts[3] = r * Vector3d(cos(theta0) * cos(phi1), sin(theta0) * cos(phi1), sin(phi1));
+
+			mesh.addQuad(pts[0], pts[1], pts[2], pts[3]);
 		}
 	}
 }
 
-int test0() {
+bool test0() {
 	TriMesh::CMesh mesh(Vector3d(-2, -2, -2), Vector3d(2, 2, 2));
 	makeSphere(10, 2.0, 1, mesh);
 
@@ -66,10 +68,10 @@ int test0() {
 
 	cout << "Test Mesh 0 passed\n";
 
-	return 0;
+	return true;
 }
 
-int test1() {
+bool test1() {
 	TriMesh::CMesh mesh(Vector3d(-2, -2, -2), Vector3d(2, 2, 2));
 	makeSphere(100, 2.0, 1, mesh);
 
@@ -80,10 +82,10 @@ int test1() {
 
 	cout << "Test Mesh 1 passed\n";
 
-	return 0;
+	return true;
 }
 
-int test2() {
+bool test2() {
 	TriMesh::CMesh mesh(Vector3d(-2, -2, -2), Vector3d(2, 2, 2));
 	makeSphere(10, 2.0, 0.5, mesh);
 
@@ -94,15 +96,15 @@ int test2() {
 
 	cout << "Test Mesh 2 passed\n";
 
-	return 0;
+	return true;
 }
 
-int testMesh() {
-	if (test0() != 0) return 1;
-	if (test1() != 0) return 1;
-	if (test2() != 0) return 1;
+bool testMesh() {
+	TEST_TRUE(test0(), "Failed test0");
+	TEST_TRUE(test1(), "Failed test1");
+	TEST_TRUE(test2(), "Failed test2");
 
 	cout << "Test mesh passed\n";
 
-	return 0;
+	return true;
 }

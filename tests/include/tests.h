@@ -35,10 +35,10 @@ This file is part of the TriMesh library.
 { \
 	bool result = (FUNC); \
 	cout << MESSAGE << (result ? " pass\n" : " fail\n"); \
-	if (!result) return 1; \
+	if (!result) return false; \
 }
 
-#define TEST_FALSE(FUNC, MESSAGE) TEST_TRUE(!FUNC, MESSAGE)
+#define TEST_FALSE(FUNC, MESSAGE) TEST_TRUE(!(FUNC), MESSAGE)
 
 #define TEST_EQUAL(FUNC, VAL, MESSAGE) \
 { \
@@ -47,12 +47,12 @@ This file is part of the TriMesh library.
 		cout << MESSAGE << " pass\n"; \
 	} else {\
 		cout << MESSAGE << " fail. Expected " << VAL << ", got " << result << "\n"; \
-		return 1; \
+		return false; \
 	} \
 }
-int runTests();
+bool runTests();
 
-int testVector3();
-int testMesh();
-int testMath();
-int testBoundingBox();
+bool testVector3();
+bool testMesh();
+bool testMath();
+bool testBoundingBox();

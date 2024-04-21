@@ -36,7 +36,7 @@ This file is part of the TriMesh library.
 #include <tm_ray.h>
 
 using namespace std;
-int testDistToPlane() {
+bool testDistToPlane() {
 	Plane<double> plane(Vector3d(0, 0, 0), Vector3d(0, 0, 1), true);
 	Vector3d pt0(0, 0, 1);
 	Vector3d pt1(0, 0, -1);
@@ -46,10 +46,10 @@ int testDistToPlane() {
 	TEST_TRUE(distanceFromPlane(pt1, plane) - -1 < SAME_DIST_TOL, "Point is -1 unit from plane?");
 	TEST_TRUE(distanceFromPlane(pt2, plane) - 1 < SAME_DIST_TOL, "Point is 1 unit from plane?");
 
-	return 0;
+	return true;
 }
 
-int testRayPlaneIntersect() {
+bool testRayPlaneIntersect() {
 	Plane<double> plane0(Vector3d(0, 0, 0), Vector3d(0, 0, 1), true);
 	Vector3d dir0(-1, -1, -1);
 	Ray<double> ray0(plane0.getOrgin() - dir0, dir0);
@@ -63,16 +63,16 @@ int testRayPlaneIntersect() {
 	TEST_TRUE(plane0.intersectRay(ray0, hit), "Ray + delta intersects plane?");
 	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
 
-//	plane0.getNormal() = Vector3d(1,0,0).cross(dir0).normalized();
-	TEST_FALSE(plane0.intersectRay(ray0, hit), "Ray does not intersect parrallel plane");
+	Plane<double> plane1(Vector3d(0, 0, 0), Vector3d(1, 0, 0).cross(dir0).normalized(), true);
+	TEST_FALSE(plane1.intersectRay(ray0, hit), "Ray does not intersect parrallel plane");
 	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
 
 	cout << "testRayPlaneIntersect passed\n";
 
-	return 0;
+	return true;
 }
 
-int testRayTriIntersectVerts() {
+bool testRayTriIntersectVerts() {
 	Vector3d pt0(0, 0, 0);
 	Vector3d pt1(1, 0, 0);
 	Vector3d pt2(1, 1, 0);
@@ -123,10 +123,10 @@ int testRayTriIntersectVerts() {
 	}
 
 	cout << "testRayTriIntersectVerts passed\n";
-	return 0;
+	return true;
 }
 
-int testRayTriIntersectEdges() {
+bool testRayTriIntersectEdges() {
 	Vector3d pt0(0, 0, 0);
 	Vector3d pt1(1, 0, 0);
 	Vector3d pt2(1, 1, 0);
@@ -144,10 +144,10 @@ int testRayTriIntersectEdges() {
 	}
 
 	cout << "testRayTriIntersectEdges passed\n";
-	return 0;
+	return true;
 }
 
-int testRayTriIntersect() {
+bool testRayTriIntersect() {
 	Vector3d pt0(0, 0, 0);
 	Vector3d pt1(1, 0, 0);
 	Vector3d pt2(1, 1, 0);
@@ -187,16 +187,17 @@ int testRayTriIntersect() {
 	}
 
 	cout << "testRayTriIntersect passed\n";
-	return 0;
+	return true;
 }
-int testMath() {
-	if (testDistToPlane() != 0) return 1;
-	if (testRayPlaneIntersect() != 0) return 1;
-	if (testRayTriIntersectVerts() != 0) return 1;
-	if (testRayTriIntersectEdges() != 0) return 1;
-	if (testRayTriIntersect() != 0) return 1;
+
+bool testMath() {
+	TEST_TRUE(testDistToPlane(), "Failed testDistToPlane");
+	TEST_TRUE(testRayPlaneIntersect(), "Failed testDistToPlane");
+	TEST_TRUE(testRayTriIntersectVerts(), "Failed testDistToPlane");
+	TEST_TRUE(testRayTriIntersectEdges(), "Failed testDistToPlane");
+	TEST_TRUE(testRayTriIntersect(), "Failed testDistToPlane");
 
 	cout << "testMath passed\n";
-	return 0;
+	return true;
 
 }

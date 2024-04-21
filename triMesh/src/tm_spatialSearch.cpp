@@ -32,6 +32,8 @@ This file is part of the TriMesh library.
 
 #define CSSB_TMPL template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
 #define CSSB_DCL CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>
+#define CSSB_PTR_DCL CSpatialSearchBasePtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>
+
 
 CSSB_TMPL
 inline CSSB_DCL::Entry::Entry(const BOX_TYPE& box, const INDEX_TYPE& idx)
@@ -60,7 +62,8 @@ inline bool CSSB_DCL::Entry::operator < (const Entry& rhs) const
 
 CSSB_TMPL
 CSSB_DCL::CSpatialSearchBase(const BOX_TYPE& bbox, int axis)
-	: _bbox(bbox)
+	: enable_shared_from_this<CSpatialSearchBase>()
+	, _bbox(bbox)
 	, _axis(axis)
 {
 }
@@ -120,6 +123,28 @@ size_t CSSB_DCL::biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYP
 	biDirRayCastRecursive(ray, hits);
 
 	return hits.size();
+}
+
+CSSB_TMPL
+typename CSSB_DCL::CSpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox) const
+{
+	bool useLeft = _left && (bbox.intersects(_left->_bbox) || bbox.contains(_left->_bbox) || _left->_bbox.contains(bbox));
+	bool useRight = _right && (bbox.intersects(_right->_bbox) || bbox.contains(_right->_bbox) || _right->_bbox.contains(bbox));
+	if (useLeft && useRight)
+		return shared_from_this();
+
+	for (const auto& entry : _contents) {
+		if (bbox.intersects(entry.getBBox()) || bbox.contains(entry.getBBox()) || entry.getBBox().contains(bbox)) {
+			return shared_from_this();
+		}
+	}
+
+	if (useLeft)
+		return _left->getSubTree(bbox);
+	else if (useRight)
+		return _right->getSubTree(bbox);
+
+	return nullptr;
 }
 
 CSSB_TMPL
