@@ -644,7 +644,10 @@ size_t CMesh::addTriangle(const Vector3i& tri) {
 		auto& vert = _vertices[tri[i]];
 		vert.addFaceIndex(triIdx);
 
-		_edges[edgeIdx].addFaceIndex(triIdx);
+		auto& edge = _edges[edgeIdx];
+		edge.addFaceIndex(triIdx);
+		if (_enforceManifold && edge._numFaces > 2)
+			assert(!"Non manifold mesh");
 	}
 	triBox.grow(SAME_DIST_TOL);
 	_pTriTree->add(triBox, triIdx);
@@ -1179,15 +1182,14 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 	Vector3d midPt1 = origin + 0.5 * (vChord1);
 
 	Plane<double> midPlane(midPt0, vChord0.normalized(), false);
-	Vector3d ctr;
-	double dist; // dist is from the center to the mid point of the chord NOT a point on the circle
-	if (!midPlane.intersectLine(midPt1, midPt1 + norm1, ctr, dist))
+	RayHit<double> hit; // dist is from the center to the mid point of the chord NOT a point on the circle
+	if (!midPlane.intersectLine(midPt1, midPt1 + norm1, hit))
 		return 0;
 
-	double radius = (ctr - origin).norm();
+	double radius = (hit.hitPt - origin).norm();
 
 #if FULL_TESTS
-	assert(fabs((ctr - origin).dot(vEdge)) < 1.0e-6);
+	assert(fabs((hit.hitPt - origin).dot(vEdge)) < 1.0e-6);
 #endif
 	radius = fabs(radius);
 

@@ -179,14 +179,13 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg
 		if (skipAxis == i)
 			continue;
 
-		SCALAR_TYPE t;
-		POINT_TYPE pt;
+		RayHit<SCALAR_TYPE> hitPt;
 		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
-		if (minPlane.intersectLineSegment(seg, pt, t) && contains(pt))
+		if (minPlane.intersectLineSegment(seg, hitPt) && contains(hitPt.hitPt))
 			return true;
 
 		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
-		if (maxPlane.intersectLineSegment(seg, pt, t) && contains(pt))
+		if (maxPlane.intersectLineSegment(seg, hitPt) && contains(hitPt.hitPt))
 			return true;
 	}
 	return false;

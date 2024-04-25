@@ -94,10 +94,6 @@ void CEdge::addFaceIndex(size_t faceIdx) {
 	}
 	if (_numFaces < 2) {
 		_faceIndices[_numFaces++] = faceIdx;
-#if FULL_TESTS
-	} else {
-		assert(!"An edge cannot have more than two triangles attached to it");
-#endif
 	}
 }
 

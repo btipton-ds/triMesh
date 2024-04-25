@@ -91,6 +91,8 @@ namespace TriMesh {
 		CMesh(const BoundingBox& bbox);
 		CMesh(const Vector3d& min, const Vector3d& max);
 		void reset(const BoundingBox& bbox);
+		void setEnforceManifold(bool val);
+		bool enforceManifold() const;
 
 		size_t getId() const;
 		size_t getChangeNumber() const;
@@ -236,6 +238,7 @@ namespace TriMesh {
 		bool verifyVerts(size_t vertIdx) const;
 		bool verifyEdges(size_t edgeIdx, bool allowEmpty) const;
 
+		bool _enforceManifold = true;
 		static std::atomic<size_t> _statId;
 		const size_t _id;
 		size_t _changeNumber = 0;
@@ -268,6 +271,16 @@ namespace TriMesh {
 	inline CMesh::CMesh(const BoundingBox& bbox)
 		: CMesh(bbox.getMin(), bbox.getMax())
 	{
+	}
+
+	inline void CMesh::setEnforceManifold(bool val)
+	{
+		_enforceManifold = val;
+	}
+
+	inline bool CMesh::enforceManifold() const
+	{
+		return _enforceManifold;
 	}
 
 	template<class POINT_TYPE>
@@ -310,8 +323,8 @@ namespace TriMesh {
 
 #if FULL_TESTS && defined(_DEBUG)
 		// Testing
-		std::vector<size_t> testResults;
-		_pVertTree->find(ptBBox, testResults);
+		std::vector<size_t> testResults, stack;
+		_pVertTree->find(ptBBox, testResults, stack);
 		int numFound = 0;
 		for (const auto& index : testResults) {
 			if (index == result)
@@ -319,7 +332,7 @@ namespace TriMesh {
 		}
 		if (numFound != 1) {
 			std::cout << "CMesh::addVertex numFound: Error. numFound: " << numFound << "\n";
-			_pVertTree->find(ptBBox, testResults);
+			_pVertTree->find(ptBBox, testResults, stack);
 		}
 #endif
 		return result;

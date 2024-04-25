@@ -31,6 +31,7 @@ This file is part of the TriMesh library.
 #include <iostream>
 #include <string>
 
+#include <tm_lineSegment.h>
 #include <tm_boundingBox.h>
 #include <tm_ray.h>
 
@@ -146,7 +147,7 @@ bool testRayIntersect1() {
 	return true;
 }
 
-bool testSheetInterset() {
+bool testSheetIntersect() {
 	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
 	BB b(Vector3d(0, 0, 0.5), Vector3d(1, 1, 0.5));
 	BB c(Vector3d(0.25, 0.25, 0.5), Vector3d(0.75, 0.75, 0.5));
@@ -161,7 +162,7 @@ bool testSheetInterset() {
 	return true;
 }
 
-bool testTriInterset() {
+bool testTriIntersect() {
 	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
 
 	TEST_TRUE(a.intersects(
@@ -207,13 +208,40 @@ bool testTriInterset() {
 	return true;
 }
 
+bool testSegIntersect() {
+	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
+
+
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(0, 0, 0), Vector3d(1, 0, 0)), -1), "Intersects segment which lies on face?");
+
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(0.1, 0.1, 0.1), Vector3d(1 - 0.1, 0.1, 0.1)), -1), "Intersects segment which lies inside box?");
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(1 - 0.1, 0.1, 0.1), Vector3d(1 - 0.1, 1 - 0.1, 0.1)), -1), "Intersects segment which lies inside box?");
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(1 - 0.1, 1 - 0.1, 0.1), Vector3d(0.1, 0.1, 0.1)), -1), "Intersects segment which lies inside box?");
+
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(1, 0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "Intersects segment point lies on face?");
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(1 + SAME_DIST_TOL, 0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "Intersects segment point lies on face plus tol?");
+	TEST_FALSE(a.intersects(LineSegment<double>(Vector3d(1 + 2 * SAME_DIST_TOL, 0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "Intersects segment point lies on face plus 2 tol?");
+
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(-1, 0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "over runs box on both sides?");
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(0, 0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "over runs box on positive side?");
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(-1, 0.5, 0.5), Vector3d(1, 0.5, 0.5)), -1), "over runs box on negative side?");
+
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(1, 0, 0.5), Vector3d(2, 1, 0.5)), -1), "seg hits edge of box?");
+	TEST_FALSE(a.intersects(LineSegment<double>(Vector3d(1, -0.01, 0.5), Vector3d(2, 1, 0.5)), -1), "seg hits edge of box?");
+
+	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(0, -0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "seg hits edge of box?");
+	TEST_FALSE(a.intersects(LineSegment<double>(Vector3d(0, -0.51, 0.5), Vector3d(2, 0.5, 0.5)), -1), "seg hits edge of box?");
+	return true;
+}
+
 bool testBoundingBox() {
-	TEST_TRUE(testContains(), "Failed testContains");
-	TEST_TRUE(testIntersect(), "Failed testContains");
-	TEST_TRUE(testRayIntersect(), "Failed testContains");
-	TEST_TRUE(testRayIntersect1(), "Failed testContains");
-	TEST_TRUE(testSheetInterset(), "Failed testContains");
-	TEST_TRUE(testTriInterset(), "Failed testContains");
+	TEST_TRUE(testContains(), "testContains");
+	TEST_TRUE(testIntersect(), "testIntersect");
+	TEST_TRUE(testRayIntersect(), "testRayIntersect");
+	TEST_TRUE(testRayIntersect1(), "testRayIntersect1");
+	TEST_TRUE(testSheetIntersect(), "testSheetIntersect");
+	TEST_TRUE(testTriIntersect(), "testTriIntersect");
+	TEST_TRUE(testSegIntersect(), "testSegIntersect");
 
 	cout << "testBoundingBox passed \n";
 
