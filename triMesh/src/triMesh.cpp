@@ -1565,7 +1565,7 @@ const vector<unsigned int>& CMesh::getGlTriIndices() const
 	return _glTriIndices;
 }
 
-void CMesh::getGlEdges(vector<float>& points, vector<unsigned int>& indices, bool multiCore) // size = GlPoints.size() / 3
+void CMesh::getGlEdges(vector<float>& points, vector<unsigned int>& indices) // size = GlPoints.size() / 3
 {
 	points.clear();
 	indices.clear();

@@ -201,10 +201,10 @@ namespace TriMesh {
 
 		// If all is true, get every edge. If false, only get sharp and curved edges.
 
-		void getGlEdges(std::vector<float>& points, std::vector<unsigned int>& indices, bool multiCore = true);
+		void getGlEdges(std::vector<float>& points, std::vector<unsigned int>& indices);
 
 		template<typename LAMBDA>
-		void getGlEdges(LAMBDA cuvatureToColorFunc, std::vector<float>& points, std::vector<float>& color, std::vector<unsigned int>& indices, bool multiCore = true);
+		void getGlEdges(LAMBDA cuvatureToColorFunc, bool includeSmooth, std::vector<float>& points, std::vector<float>& color, std::vector<unsigned int>& indices);
 
 		bool testSqueezeEdge(size_t idx);
 		bool testRemoveTri(size_t idx);
@@ -425,7 +425,7 @@ namespace TriMesh {
 	}
 
 	template<typename LAMBDA>
-	void CMesh::getGlEdges(LAMBDA curvatureToColorFunc, std::vector<float>& points, std::vector<float>& colors, std::vector<unsigned int>& indices, bool multiCore) // size = GlPoints.size() / 3
+	void CMesh::getGlEdges(LAMBDA curvatureToColorFunc, bool includeSmooth, std::vector<float>& points, std::vector<float>& colors, std::vector<unsigned int>& indices) // size = GlPoints.size() / 3
 	{
 		points.clear();
 		colors.clear();
@@ -437,7 +437,7 @@ namespace TriMesh {
 		unsigned int indexCount = 0;
 		for (size_t edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
 			float curv = (float)_edgeCurvature[edgeIdx];
-			if (fabs(curv) < 0.1)
+			if (!includeSmooth && fabs(curv) < 0.1)
 				continue;
 
 			float rgb[3];
