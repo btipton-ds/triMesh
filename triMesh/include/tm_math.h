@@ -107,10 +107,10 @@ template<class T>
 Vector3<T> orthoganalizePoint(const Vector3<T>& origin, const Vector3<T>& unitVector, const Vector3<T>& pt);
 
 template<class T>
-Vector3<T> triangleNormal(const Vector3<T>* pts[3]);
+Vector3<T> triangleUnitNormal(const Vector3<T>* pts[3]);
 
 template<class T>
-Vector3<T> triangleNormal(const Vector3<T> pts[3]);
+Vector3<T> triangleUnitNormal(const Vector3<T> pts[3]);
 
 Vector3d ngonCentroid(int numPoints, Vector3d const* const pts[]);
 Vector3d ngonCentroid(int numPoints, const Vector3d pts[]);

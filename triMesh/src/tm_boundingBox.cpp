@@ -32,6 +32,14 @@ This file is part of the TriMesh library.
 #include <tm_boundingBox.h>
 
 template <class SCALAR_TYPE>
+const typename CBoundingBox3D<SCALAR_TYPE>::POINT_TYPE CBoundingBox3D<SCALAR_TYPE>::_axes[3] = {
+	POINT_TYPE(1, 0, 0),
+	POINT_TYPE(0, 1, 0),
+	POINT_TYPE(0, 0, 1)
+};
+
+
+template <class SCALAR_TYPE>
 CBoundingBox3D<SCALAR_TYPE>::CBoundingBox3D()
 {
 	clear();
@@ -98,14 +106,34 @@ inline typename CBoundingBox3D<SCALAR_TYPE>::POINT_TYPE CBoundingBox3D<SCALAR_TY
 
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::contains(const POINT_TYPE& pt) const {
-	for (int i = 0; i < 3; i++) {
-		auto delta = pt[i] - _min[i];
-		if (delta < -SAME_DIST_TOL)
-			return false;
-		delta = pt[i] - _max[i];
-		if (delta > SAME_DIST_TOL)
-			return false;
-	}
+	const SCALAR_TYPE lpt[] = { pt[0], pt[1], pt[2] };
+
+	SCALAR_TYPE delta;
+	
+	int i = 0;
+	delta = lpt[i] - _min[i];
+	if (delta < -SAME_DIST_TOL)
+		return false;
+	delta = lpt[i] - _max[i];
+	if (delta > SAME_DIST_TOL)
+		return false;
+
+	i = 1;
+	delta = lpt[i] - _min[i];
+	if (delta < -SAME_DIST_TOL)
+		return false;
+	delta = lpt[i] - _max[i];
+	if (delta > SAME_DIST_TOL)
+		return false;
+
+	i = 2;
+	delta = lpt[i] - _min[i];
+	if (delta < -SAME_DIST_TOL)
+		return false;
+	delta = lpt[i] - _max[i];
+	if (delta > SAME_DIST_TOL)
+		return false;
+
 	return true;
 }
 
@@ -141,12 +169,6 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox) con
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis) const
 {
-	static const POINT_TYPE axes[] = {
-		POINT_TYPE(1, 0, 0),
-		POINT_TYPE(0, 1, 0),
-		POINT_TYPE(0, 0, 1)
-	};
-
 	if (contains(seg._pts[0]) || contains(seg._pts[1]))
 		return true;
 
@@ -159,35 +181,29 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg
 
 		SCALAR_TYPE t;
 		POINT_TYPE pt;
-		Plane<SCALAR_TYPE> minPlane(_min, axes[i], false);
-		if (minPlane.intersectLineSegment(seg, pt, t)) {
-			if (contains(pt))
-				return true;
-		}
+		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
+		if (minPlane.intersectLineSegment(seg, pt, t) && contains(pt))
+			return true;
 
-		Plane<SCALAR_TYPE> maxPlane(_max, axes[i], false);
-		if (maxPlane.intersectLineSegment(seg, pt, t)) {
-			if (contains(pt))
-				return true;
-		}
+		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
+		if (maxPlane.intersectLineSegment(seg, pt, t) && contains(pt))
+			return true;
 	}
 	return false;
 }
 
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray) const {
-	const POINT_TYPE x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
-	Plane<SCALAR_TYPE> planes[] = {
-		Plane<SCALAR_TYPE>(_min, x, false), Plane<SCALAR_TYPE>(_max, x, false),
-		Plane<SCALAR_TYPE>(_min, y, false), Plane<SCALAR_TYPE>(_max, y, false),
-		Plane<SCALAR_TYPE>(_min, z, false), Plane<SCALAR_TYPE>(_max, z, false)
-	};
-
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 3; i++) {
 		RayHit<SCALAR_TYPE> hit;
-		if (planes[i].intersectRay(ray, hit) && contains(hit.hitPt))
+
+		Plane<SCALAR_TYPE> minPlane (_min, _axes[i], false);
+		if (minPlane.intersectRay(ray, hit) && contains(hit.hitPt))
 			return true;
 
+		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
+		if (maxPlane.intersectRay(ray, hit) && contains(hit.hitPt))
+			return true;
 	}
 	return false;
 }
@@ -195,23 +211,17 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray) const 
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const
 {
-	static const POINT_TYPE axes[] = {
-		POINT_TYPE(1, 0, 0),
-		POINT_TYPE(0, 1, 0),
-		POINT_TYPE(0, 0, 1)
-	};
-
 	if (contains(pt0) || contains(pt1) || contains(pt2))
 		return true;
 
 	LineSegment<SCALAR_TYPE> seg;
 	for (int i = 0; i < 3; i++) {
-		Plane<SCALAR_TYPE> minPlane(_min, axes[i], false);
-		if (minPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg, i)) {
+		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
+		if (minPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg, i /*Skip testing this axis*/)) {
 			return true;
 		}
 
-		Plane<SCALAR_TYPE> maxPlane(_max, axes[i], false);
+		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
 		if (maxPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg, i)) {
 			return true;
 		}

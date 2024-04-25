@@ -62,7 +62,7 @@ public:
 	void getEdges(LineSegment<SCALAR_TYPE> edgeSegs[12]) const;
 
 private:
-
+	static const POINT_TYPE _axes[3];
 	POINT_TYPE _min, _max;
 };
 

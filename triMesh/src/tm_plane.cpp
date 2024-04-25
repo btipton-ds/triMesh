@@ -36,7 +36,7 @@ This file is part of the TriMesh library.
 
 template<class T>
 Plane<T>::Plane(const POINT_TYPE* pts[3])
-	: Plane(*pts[0], triangleNormal(pts), false)
+	: Plane(*pts[0], triangleUnitNormal(pts), false)
 {}
 
 

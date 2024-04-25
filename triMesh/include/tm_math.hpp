@@ -106,8 +106,7 @@ bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt)
 	Vector3<T> v0 = (*pts[1]) - (*pts[0]);
 	Vector3<T> v1 = (*pts[2]) - (*pts[0]);
 
-	Vector3<T> norm = triangleNormal(pts);
-	norm.normalize();
+	Vector3<T> norm = triangleUnitNormal(pts);
 
 	v0 = pt - (*pts[0]);
 	T dp = v0.dot(norm);
@@ -166,7 +165,7 @@ Vector3<T> orthoganalizePoint(const Vector3<T>& origin, const Vector3<T>& unitVe
 }
 
 template<class T>
-Vector3<T> triangleNormal(const Vector3<T>* pts[3]) {
+Vector3<T> triangleUnitNormal(const Vector3<T>* pts[3]) {
 	Vector3<T> v0 = *pts[1] - *pts[0];
 	Vector3<T> v1 = *pts[2] - *pts[0];
 	Vector3<T> n = safeNormalize(v0.cross(v1));
@@ -174,7 +173,7 @@ Vector3<T> triangleNormal(const Vector3<T>* pts[3]) {
 }
 
 template<class T>
-Vector3<T> triangleNormal(const Vector3<T> pts[3]) {
+Vector3<T> triangleUnitNormal(const Vector3<T> pts[3]) {
 	Vector3<T> v0 = pts[1] - pts[0];
 	Vector3<T> v1 = pts[2] - pts[0];
 	Vector3<T> n = safeNormalize(v0.cross(v1));
