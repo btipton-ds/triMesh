@@ -34,6 +34,7 @@ This file is part of the TriMesh library.
 #include <string>
 #include <tm_math.h>
 #include <tm_ray.h>
+#include <tm_math_transforms.h>
 
 using namespace std;
 bool testDistToPlane() {
@@ -190,7 +191,37 @@ bool testRayTriIntersect() {
 	return true;
 }
 
+template<class T>
+bool testRotation()
+{
+	Vector3<T> v2;
+	Vector3<T> axisX(1, 0, 0);
+	Vector3<T> axisY(0, 1, 0);
+	Vector3<T> axisZ(0, 0, 1);
+	T angle = 90;
+
+	v2 = rotateVectorAboutAxis<T>(axisX, Vector3<T>(0, 1, 0), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 0, 1)), "rotate x");
+	v2 = rotateVectorAboutAxis<T>(axisX, Vector3<T>(0, 1, 0), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 0, -1)), "rotate x");
+
+	v2 = rotateVectorAboutAxis<T>(axisY, Vector3<T>(0, 0, 1), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(1, 0, 0)), "rotate y");
+	v2 = rotateVectorAboutAxis<T>(axisY, Vector3<T>(0, 0, 1), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(-1, 0, 0)), "rotate y");
+
+	v2 = rotateVectorAboutAxis<T>(axisZ, Vector3<T>(1, 0, 0), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 1, 0)), "rotate z");
+	v2 = rotateVectorAboutAxis<T>(axisZ, Vector3<T>(1, 0, 0), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, -1, 0)), "rotate z");
+
+	cout << "testRotation passed\n";
+	return true;
+}
+
 bool testMath() {
+	TEST_TRUE(testRotation<float>(), "testRotation<float>");
+	TEST_TRUE(testRotation<double>(), "testRotation<double>");
 	TEST_TRUE(testDistToPlane(), "testDistToPlane");
 	TEST_TRUE(testRayPlaneIntersect(), "testDistToPlane");
 	TEST_TRUE(testRayTriIntersectVerts(), "testDistToPlane");

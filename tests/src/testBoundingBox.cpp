@@ -31,6 +31,8 @@ This file is part of the TriMesh library.
 #include <iostream>
 #include <string>
 
+#include <Eigen/Geometry>
+#include <Eigen/src/Core/Matrix.h>
 #include <tm_lineSegment.h>
 #include <tm_boundingBox.h>
 #include <tm_ray.h>
@@ -74,6 +76,17 @@ bool testIntersect() {
 
 	cout << "testIntersect passed \n";
 	return true;
+}
+
+template<class T>
+Ray<T> rotateAboutAxis(Ray<T>& axis, Ray<T>& val,int angleDeg)
+{
+	Ray<T> result;
+
+	result._origin = rotatePointAboutAxis(axis, val._origin);
+	result_dir = rotateVectorAboutAxis(axis, val._dir);
+
+	return result;
 }
 
 bool testRayIntersect() {

@@ -57,3 +57,6 @@ using Vector3f = Vector3<float>;
 // using size_t allows indexing into stl containers
 using Vector3i = Vector3<size_t>;
 
+template<class T>
+bool equalTol(const Vector3<T>& val0, const Vector3<T>& val1);
+

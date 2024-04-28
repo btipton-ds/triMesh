@@ -46,3 +46,24 @@ double defaultVal<double>() {
 	return DBL_MAX;
 }
 
+template<>
+bool equalTol(const Vector3<float>& val0, const Vector3<float>& val1)
+{
+	Vector3<float> delta = val1 - val0;
+	for (int i = 0; i < 3; i++) {
+		if (fabs(delta[i]) > 1.0e-7f)
+			return false;
+	}
+	return true;
+}
+
+template<>
+bool equalTol(const Vector3<double>& val0, const Vector3<double>& val1)
+{
+	Vector3<double> delta = val1 - val0;
+	for (int i = 0; i < 3; i++) {
+		if (fabs(delta[i]) > 1.0e-16)
+			return false;
+	}
+	return true;
+}
