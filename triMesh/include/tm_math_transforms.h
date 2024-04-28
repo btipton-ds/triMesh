@@ -34,32 +34,77 @@ This file is part of the TriMesh library.
 #include <tm_math.h>
 
 template<class T>
+using Matrix3 = Eigen::Matrix<T, 3, 3>;
+
+template<class T>
+using Matrix4 = Eigen::Matrix<T, 4, 4>;
+
+template<class T>
+using Vector4 = Eigen::Matrix<T, 4, 1>;
+
+template<class A, class B>
+A changeMatrixSize(const B& src)
+{
+	A result;
+	result.setZero();
+	if (src.cols() == src.rows()) {
+		Eigen::Index l = min(src.rows(), result.rows());
+		for (Eigen::Index i = 0; i < l; i++) {
+			for (Eigen::Index j = 0; j < l; j++) {
+				result(i, j) = src(i, j);
+			}
+		}
+	}
+	else {
+		Eigen::Index l = min(src.rows(), result.rows());
+		for (Eigen::Index i = 0; i < l; i++) {
+			result(i, 0) = src(i, 0);
+		}
+	}
+	return result;
+}
+
+template<class T>
+Matrix4<T> createTranslation(const Vector3<T>& delta)
+{
+	Eigen::Transform<T, 3, Eigen::Affine> t = Eigen::Transform<T, 3, Eigen::Affine>::Identity();
+	Vector3<T> x(delta);
+	t.translate(x);
+	Matrix4<T> result(t.matrix());
+	return result;
+}
+
+template<class T>
 Vector3<T> rotatePointAboutAxis(const Ray<T>& axis, const Vector3<T>& val, T angleDeg)
 {
 	static const T PI = (T)M_PI;
 
-	Eigen::Matrix3<T> rot3 = Eigen::AngleAxis<T>(angleDeg * PI / 180, axis._dir).toRotationMatrix();
-	Eigen::Matrix4<T> trans, rot(changeSize<Eigen::Matrix4<T>>(rot3)), translate(createTranslation(axis._origin)), unTranslate(createTranslation(-axis._origin));
-	rot(3, 3) = 1;
+	Matrix3<T> rot3 = Eigen::AngleAxis<T>(angleDeg * PI / 180, axis._dir).toRotationMatrix();
+	Matrix4<T> trans;
+	Matrix4<T> rot4(changeMatrixSize<Matrix4<T>>(rot3));
+	Matrix4<T> translate(createTranslation<T>(axis._origin));
+	Matrix4<T> unTranslate(createTranslation<T>(-axis._origin));
+	rot4(3, 3) = 1;
 
-	trans.identiy();
+	trans.setIdentity();
 	trans *= translate;
-	trans *= rot;
+	trans *= rot4;
 	trans *= unTranslate;
 
-	Vector3<T> result = val * trans;
+	Eigen::Matrix<T, 4, 1> val4(val[0], val[1], val[2], 1);
+	Eigen::Matrix<T, 4, 1> r4 = trans * val4;
+	Vector3<T> result(r4[0], r4[1], r4[2]);
 
 	return result;
 }
 
 template<class T>
-Vector3<T> rotateVectorAboutAxis(const Vector3<T>& axis, const Vector3<T>& val, T angleDeg)
+Vector3<T> rotateVectorAboutAxis(const Ray<T>& axis, const Vector3<T>& val, T angleDeg)
 {
 	static const T PI = (T)M_PI;
 
-	Eigen::Matrix<T, 3, 3> rot = Eigen::AngleAxis<T>(angleDeg * PI / 180, axis).toRotationMatrix();
-
-	Vector3<T> result = rot * val;
+	Matrix3<T> rot3 = Eigen::AngleAxis<T>(angleDeg * PI / 180, axis._dir).toRotationMatrix();
+	Vector3<T> result = rot3 * val;
 
 	return result;
 }

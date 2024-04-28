@@ -192,36 +192,110 @@ bool testRayTriIntersect() {
 }
 
 template<class T>
-bool testRotation()
+bool testVectorRotation()
 {
 	Vector3<T> v2;
+	Vector3<T> origin[] = { 
+		Vector3<T>(0, 0, 0),
+		Vector3<T>(1, 1, 1),
+	};
 	Vector3<T> axisX(1, 0, 0);
 	Vector3<T> axisY(0, 1, 0);
 	Vector3<T> axisZ(0, 0, 1);
 	T angle = 90;
 
-	v2 = rotateVectorAboutAxis<T>(axisX, Vector3<T>(0, 1, 0), angle);
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[0], axisX), Vector3<T>(0, 1, 0), angle);
 	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 0, 1)), "rotate x");
-	v2 = rotateVectorAboutAxis<T>(axisX, Vector3<T>(0, 1, 0), -angle);
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[0], axisX), Vector3<T>(0, 1, 0), -angle);
 	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 0, -1)), "rotate x");
 
-	v2 = rotateVectorAboutAxis<T>(axisY, Vector3<T>(0, 0, 1), angle);
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[0], axisY), Vector3<T>(0, 0, 1), angle);
 	TEST_TRUE(equalTol<T>(v2, Vector3<T>(1, 0, 0)), "rotate y");
-	v2 = rotateVectorAboutAxis<T>(axisY, Vector3<T>(0, 0, 1), -angle);
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[0], axisY), Vector3<T>(0, 0, 1), -angle);
 	TEST_TRUE(equalTol<T>(v2, Vector3<T>(-1, 0, 0)), "rotate y");
 
-	v2 = rotateVectorAboutAxis<T>(axisZ, Vector3<T>(1, 0, 0), angle);
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[0], axisZ), Vector3<T>(1, 0, 0), angle);
 	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 1, 0)), "rotate z");
-	v2 = rotateVectorAboutAxis<T>(axisZ, Vector3<T>(1, 0, 0), -angle);
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[0], axisZ), Vector3<T>(1, 0, 0), -angle);
 	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, -1, 0)), "rotate z");
 
-	cout << "testRotation passed\n";
+
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[1], axisX), Vector3<T>(0, 1, 0), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 0, 1)), "rotate x");
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[1], axisX), Vector3<T>(0, 1, 0), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 0, -1)), "rotate x");
+
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[1], axisY), Vector3<T>(0, 0, 1), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(1, 0, 0)), "rotate y");
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[1], axisY), Vector3<T>(0, 0, 1), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(-1, 0, 0)), "rotate y");
+
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[1], axisZ), Vector3<T>(1, 0, 0), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 1, 0)), "rotate z");
+	v2 = rotateVectorAboutAxis<T>(Ray<T>(origin[1], axisZ), Vector3<T>(1, 0, 0), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, -1, 0)), "rotate z");
+
+
+	cout << "testVectorRotation passed\n";
+	return true;
+}
+
+template<class T>
+bool testPointRotation()
+{
+	Vector3<T> v2;
+	Vector3<T> origin[] = {
+		Vector3<T>(0, 0, 0),
+		Vector3<T>(1, 1, 1),
+	};
+	Vector3<T> axisX(1, 0, 0);
+	Vector3<T> axisY(0, 1, 0);
+	Vector3<T> axisZ(0, 0, 1);
+	T angle = 90;
+
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[0], axisX), Vector3<T>(0, 1, 0), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 0, 1)), "rotate x");
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[0], axisX), Vector3<T>(0, 1, 0), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 0, -1)), "rotate x");
+
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[0], axisY), Vector3<T>(0, 0, 1), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(1, 0, 0)), "rotate y");
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[0], axisY), Vector3<T>(0, 0, 1), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(-1, 0, 0)), "rotate y");
+
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[0], axisZ), Vector3<T>(1, 0, 0), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 1, 0)), "rotate z");
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[0], axisZ), Vector3<T>(1, 0, 0), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, -1, 0)), "rotate z");
+
+
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[1], axisX), Vector3<T>(0, 1, 0), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 2, 1)), "rotate x");
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[1], axisX), Vector3<T>(0, 1, 0), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 0, 1)), "rotate x");
+
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[1], axisY), Vector3<T>(0, 0, 1), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(1, 0, 2)), "rotate y");
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[1], axisY), Vector3<T>(0, 0, 1), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(1, 0, 0)), "rotate y");
+
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[1], axisZ), Vector3<T>(1, 0, 0), angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(2, 1, 0)), "rotate z");
+	v2 = rotatePointAboutAxis<T>(Ray<T>(origin[1], axisZ), Vector3<T>(1, 0, 0), -angle);
+	TEST_TRUE(equalTol<T>(v2, Vector3<T>(0, 1, 0)), "rotate z");
+
+
+	cout << "testPointRotation passed\n";
 	return true;
 }
 
 bool testMath() {
-	TEST_TRUE(testRotation<float>(), "testRotation<float>");
-	TEST_TRUE(testRotation<double>(), "testRotation<double>");
+	TEST_TRUE(testVectorRotation<double>(), "testVectorRotation<double>");
+	TEST_TRUE(testPointRotation<double>(), "testPointRotation<double>");
+
+	TEST_TRUE(testVectorRotation<float>(), "testVectorRotation<float>");
+	TEST_TRUE(testPointRotation<float>(), "testPointRotation<float>");
+
 	TEST_TRUE(testDistToPlane(), "testDistToPlane");
 	TEST_TRUE(testRayPlaneIntersect(), "testDistToPlane");
 	TEST_TRUE(testRayTriIntersectVerts(), "testDistToPlane");
