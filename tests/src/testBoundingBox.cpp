@@ -160,6 +160,24 @@ bool testRayIntersect1() {
 	return true;
 }
 
+void rotate(Vector3d& v)
+{
+	double temp = v[2];
+	v[2] = v[1];
+	v[1] = v[0];
+	v[0] = temp;
+}
+
+void rotate(BB& b)
+{
+	Vector3d min = b.getMin();
+	Vector3d max = b.getMax();
+
+	rotate(min);
+	rotate(max);
+	b = BB(min, max);
+}
+
 bool testSheetIntersect() {
 	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
 	BB b(Vector3d(0, 0, 0.5), Vector3d(1, 1, 0.5));
@@ -172,78 +190,141 @@ bool testSheetIntersect() {
 	TEST_TRUE(a.intersects(d), "Oversized sheet intersects?");
 	TEST_TRUE(a.intersects(e), "Overlapping sheet intersects?");
 
+	rotate(a);
+	rotate(b);
+	rotate(c);
+	rotate(d);
+	rotate(e);
+
+	TEST_TRUE(a.intersects(b), "Match sheet intersects 1?");
+	TEST_TRUE(a.intersects(c), "Contained sheet intersects 1?");
+	TEST_TRUE(a.intersects(d), "Oversized sheet intersects 1?");
+	TEST_TRUE(a.intersects(e), "Overlapping sheet intersects 1?");
+
+	rotate(a);
+	rotate(b);
+	rotate(c);
+	rotate(d);
+	rotate(e);
+
+	TEST_TRUE(a.intersects(b), "Match sheet intersects 2?");
+	TEST_TRUE(a.intersects(c), "Contained sheet intersects 2?");
+	TEST_TRUE(a.intersects(d), "Oversized sheet intersects 2?");
+	TEST_TRUE(a.intersects(e), "Overlapping sheet intersects 2?");
+
 	return true;
 }
 
 bool testTriIntersect() {
 	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
 
-	TEST_TRUE(a.intersects(
-		Vector3d(0, 0, 0), 
-		Vector3d(1, 0, 0), 
-		Vector3d(1, 1, 0)), "Intersects triangle which lies on face?");
+	Vector3d pts[][3] = {
+		{
+			Vector3d(0, 0, 0),
+			Vector3d(1, 0, 0),
+			Vector3d(1, 1, 0)
+		},
 
-	TEST_TRUE(a.intersects(
-		Vector3d(0.1, 0.1, 0.1), 
-		Vector3d(1 - 0.1, 0.1, 0.1), 
-		Vector3d(1 - 0.1, 1 - 0.1, 0.1)), "Intersects triangle which lies inside box?");
+		{
+			Vector3d(0.1, 0.1, 0.1),
+			Vector3d(1 - 0.1, 0.1, 0.1),
+			Vector3d(1 - 0.1, 1 - 0.1, 0.1)
+		},
 
-	TEST_TRUE(a.intersects(
-		Vector3d(1, 0.5, 0.5), 
-		Vector3d(2, 0.5, 0.5), 
-		Vector3d(2, 1, 0.5)), "Intersects triangle point lies on face?");
+		{
+			Vector3d(1, 0.5, 0.5),
+			Vector3d(2, 0.5, 0.5),
+			Vector3d(2, 1, 0.5)
+		},
+		{
+			Vector3d(1 + SAME_DIST_TOL, 0.5, 0.5),
+			Vector3d(2, 0.5, 0.5),
+			Vector3d(2, 1, 0.5)
+		},
+		{
+			Vector3d(0.5, -0.5, 0.5),
+			Vector3d(1.5, -0.5, 0.5),
+			Vector3d(1.5,  0.5, 0.5)
+		},
+		{
+			Vector3d(0.5, -0.51, 0.5),
+			Vector3d(1.5, -0.51, 0.5),
+			Vector3d(1.5, 0.5, 0.5)
+		},
+		{
+			Vector3d(1 + 1.1 * SAME_DIST_TOL, 0.5, 0.5),
+			Vector3d(2, 0.5, 0.5),
+			Vector3d(2, 1, 0.5)
+		},
+	};
 
-	TEST_TRUE(a.intersects(
-		Vector3d(1 + SAME_DIST_TOL, 0.5, 0.5), 
-		Vector3d(2, 0.5, 0.5), 
-		Vector3d(2, 1, 0.5)), "Intersects triangle point lies on face?");
+	for (int axis = 0; axis < 3; axis++) {
+		int i = 0;
 
-	TEST_TRUE(a.intersects(
-		Vector3d(0.5, -0.5, 0.5), 
-		Vector3d(1.1, -0.5, 0.5), 
-		Vector3d(1.1,  0.5, 0.5)), "Intersects triangle with no point inside the box?");
+		TEST_TRUE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle which lies on face?"); i++;
+		TEST_TRUE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle which lies inside box?"); i++;
+		TEST_TRUE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle which lies inside box?"); i++;
+		TEST_TRUE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle with no point inside the box?"); i++;
+		TEST_TRUE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle with edge intersecting box edge?"); i++;
+		TEST_FALSE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle with no point inside the box?"); i++;
+		TEST_FALSE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Fails to intersects triangle point lies out of tolerance on face?"); i++;
 
-	TEST_TRUE(a.intersects(
-		Vector3d(0.5, -0.5, 0.5),
-		Vector3d(1.5, -0.5, 0.5),
-		Vector3d(1.5,  0.5, 0.5)), "Intersects triangle with edge intersecting box edge?");
-
-	TEST_FALSE(a.intersects(
-		Vector3d(0.5, -0.51, 0.5),
-		Vector3d(1.5, -0.51, 0.5),
-		Vector3d(1.5, 0.5, 0.5)), "Intersects triangle with no point inside the box?");
-
-	TEST_FALSE(a.intersects(
-		Vector3d(1 + 1.1 * SAME_DIST_TOL, 0.5, 0.5),
-		Vector3d(2, 0.5, 0.5),
-		Vector3d(2, 1, 0.5)), "Fails to intersects triangle point lies out of tolerance on face?");
-
+		for (i = 0; i < 7; i++) {
+			rotate(pts[i][0]);
+			rotate(pts[i][1]);
+			rotate(pts[i][2]);
+		}
+	}
+	
 	return true;
 }
 
 bool testSegIntersect() {
 	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
 
+	LineSegment<double> segs[14] = {
+		LineSegment<double>(Vector3d(0, 0, 0), Vector3d(1, 0, 0)),
+		LineSegment<double>(Vector3d(0.1, 0.1, 0.1), Vector3d(1 - 0.1, 0.1, 0.1)),
+		LineSegment<double>(Vector3d(1 - 0.1, 0.1, 0.1), Vector3d(1 - 0.1, 1 - 0.1, 0.1)),
+		LineSegment<double>(Vector3d(1 - 0.1, 1 - 0.1, 0.1), Vector3d(0.1, 0.1, 0.1)),
+		LineSegment<double>(Vector3d(1, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegment<double>(Vector3d(1 + SAME_DIST_TOL, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegment<double>(Vector3d(1 + 2 * SAME_DIST_TOL, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegment<double>(Vector3d(-1, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegment<double>(Vector3d(0, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegment<double>(Vector3d(-1, 0.5, 0.5), Vector3d(1, 0.5, 0.5)),
+		LineSegment<double>(Vector3d(1, 0, 0.5), Vector3d(2, 1, 0.5)),
+		LineSegment<double>(Vector3d(1, -0.01, 0.5), Vector3d(2, 1, 0.5)),
+		LineSegment<double>(Vector3d(0, -0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegment<double>(Vector3d(0, -0.51, 0.5), Vector3d(2, 0.5, 0.5))
+	};
 
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(0, 0, 0), Vector3d(1, 0, 0)), -1), "Intersects segment which lies on face?");
+	for (int axis = 0; axis < 3; axis++) {
+		TEST_TRUE(a.intersects(segs[0], -1), "Intersects segment which lies on face?");
+		TEST_TRUE(a.intersects(segs[1], -1), "Intersects segment which lies inside box?");
+		TEST_TRUE(a.intersects(segs[2], -1), "Intersects segment which lies inside box?");
+		TEST_TRUE(a.intersects(segs[3], -1), "Intersects segment which lies inside box?");
 
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(0.1, 0.1, 0.1), Vector3d(1 - 0.1, 0.1, 0.1)), -1), "Intersects segment which lies inside box?");
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(1 - 0.1, 0.1, 0.1), Vector3d(1 - 0.1, 1 - 0.1, 0.1)), -1), "Intersects segment which lies inside box?");
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(1 - 0.1, 1 - 0.1, 0.1), Vector3d(0.1, 0.1, 0.1)), -1), "Intersects segment which lies inside box?");
+		TEST_TRUE(a.intersects(segs[4], -1), "Intersects segment point lies on face?");
+		TEST_TRUE(a.intersects(segs[5], -1), "Intersects segment point lies on face plus tol?");
+		TEST_FALSE(a.intersects(segs[6], -1), "Intersects segment point lies on face plus 2 tol?");
 
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(1, 0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "Intersects segment point lies on face?");
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(1 + SAME_DIST_TOL, 0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "Intersects segment point lies on face plus tol?");
-	TEST_FALSE(a.intersects(LineSegment<double>(Vector3d(1 + 2 * SAME_DIST_TOL, 0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "Intersects segment point lies on face plus 2 tol?");
+		TEST_TRUE(a.intersects(segs[7], -1), "over runs box on both sides?");
+		TEST_TRUE(a.intersects(segs[8], -1), "over runs box on positive side?");
+		TEST_TRUE(a.intersects(segs[9], -1), "over runs box on negative side?");
 
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(-1, 0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "over runs box on both sides?");
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(0, 0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "over runs box on positive side?");
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(-1, 0.5, 0.5), Vector3d(1, 0.5, 0.5)), -1), "over runs box on negative side?");
+		TEST_TRUE(a.intersects(segs[10], -1), "seg hits edge of box?");
+		TEST_FALSE(a.intersects(segs[11], -1), "seg hits edge of box?");
 
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(1, 0, 0.5), Vector3d(2, 1, 0.5)), -1), "seg hits edge of box?");
-	TEST_FALSE(a.intersects(LineSegment<double>(Vector3d(1, -0.01, 0.5), Vector3d(2, 1, 0.5)), -1), "seg hits edge of box?");
+		TEST_TRUE(a.intersects(segs[12], -1), "seg hits edge of box?");
+		TEST_FALSE(a.intersects(segs[13], -1), "seg hits edge of box?");
 
-	TEST_TRUE(a.intersects(LineSegment<double>(Vector3d(0, -0.5, 0.5), Vector3d(2, 0.5, 0.5)), -1), "seg hits edge of box?");
-	TEST_FALSE(a.intersects(LineSegment<double>(Vector3d(0, -0.51, 0.5), Vector3d(2, 0.5, 0.5)), -1), "seg hits edge of box?");
+		for (int i = 0; i < 14; i++) {
+			rotate(segs[i]._pts[0]);
+			rotate(segs[i]._pts[1]);
+		}
+	}
+
 	return true;
 }
 

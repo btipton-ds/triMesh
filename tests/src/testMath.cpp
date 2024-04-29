@@ -297,10 +297,10 @@ bool testMath() {
 	TEST_TRUE(testPointRotation<float>(), "testPointRotation<float>");
 
 	TEST_TRUE(testDistToPlane(), "testDistToPlane");
-	TEST_TRUE(testRayPlaneIntersect(), "testDistToPlane");
-	TEST_TRUE(testRayTriIntersectVerts(), "testDistToPlane");
-	TEST_TRUE(testRayTriIntersectEdges(), "testDistToPlane");
-	TEST_TRUE(testRayTriIntersect(), "testDistToPlane");
+	TEST_TRUE(testRayPlaneIntersect(), "testRayPlaneIntersect");
+	TEST_TRUE(testRayTriIntersectVerts(), "testRayTriIntersectVerts");
+	TEST_TRUE(testRayTriIntersectEdges(), "testRayTriIntersectEdges");
+	TEST_TRUE(testRayTriIntersect(), "testRayTriIntersect");
 
 	cout << "testMath passed\n";
 	return true;
