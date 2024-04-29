@@ -88,8 +88,7 @@ void CSSB_DCL::clear() {
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, vector<size_t>& branchStack, BoxTestType testType) const {
-	branchStack.push_back(_id);
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
 		for (const auto& entry : _contents) {
 			const auto& bb = entry.getBBox();
@@ -98,16 +97,15 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, vector<size_t
 			}
 		}
 		if (_left)
-			_left->find(bbox, result, branchStack, testType);
+			_left->find(bbox, result, testType);
 		if (_right)
-			_right->find(bbox, result, branchStack, testType);
+			_right->find(bbox, result, testType);
 	}
 	return result.size();
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, vector<size_t>& branchStack, BoxTestType testType) const {
-	branchStack.push_back(_id);
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
 		for (const auto& entry : _contents) {
 			const auto& bb = entry.getBBox();
@@ -116,9 +114,9 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, vector<s
 			}
 		}
 		if (_left)
-			_left->find(bbox, result, branchStack, testType);
+			_left->find(bbox, result, testType);
 		if (_right)
-			_right->find(bbox, result, branchStack, testType);
+			_right->find(bbox, result, testType);
 	}
 	return result.size();
 }

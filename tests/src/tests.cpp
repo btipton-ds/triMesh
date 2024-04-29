@@ -368,17 +368,16 @@ bool Test_double_f<T>::testFindTri(const TriMesh::CMeshPtr& pMesh)
 {
 	for (size_t i = 0; i < pMesh->numTris(); i += 20) {
 		auto bbox = pMesh->getTriBBox(i);
-		vector<size_t> indices, branchStack;
-		TEST_TRUE(pMesh->findTris(bbox, indices, branchStack) > 0, "Failed to find triangle");
+		vector<size_t> indices;
+		TEST_TRUE(pMesh->findTris(bbox, indices) > 0, "Failed to find triangle");
 		auto iter = find(indices.begin(), indices.end(), i);
 		TEST_TRUE(iter != indices.end(), "Triangle not in list");
 	}
 
 	for (size_t i = 0; i < pMesh->numTris(); i += 20) {
 		auto bbox = pMesh->getTriBBox(i);
-		vector<size_t> branchStack;
 		vector<TriMesh::CMesh::SearchEntry> indices;
-		TEST_TRUE(pMesh->findTris(bbox, indices, branchStack) > 0, "Failed to find triangle");
+		TEST_TRUE(pMesh->findTris(bbox, indices) > 0, "Failed to find triangle");
 		bool found = false;
 		for (const auto entry : indices) {
 			if (entry.getIndex() == i) {
@@ -398,17 +397,16 @@ bool Test_double_f<T>::testFindEdge(const TriMesh::CMeshPtr& pMesh)
 {
 	for (size_t i = 0; i < pMesh->numEdges(); i += 20) {
 		auto bbox = pMesh->getEdgeBBox(i);
-		vector<size_t> indices, branchStack;
-		TEST_TRUE(pMesh->findEdges(bbox, indices, branchStack) > 0, "Failed to find edge");
+		vector<size_t> indices;
+		TEST_TRUE(pMesh->findEdges(bbox, indices) > 0, "Failed to find edge");
 		auto iter = find(indices.begin(), indices.end(), i);
 		TEST_TRUE(iter != indices.end(), "Edge not in list");
 	}
 
 	for (size_t i = 0; i < pMesh->numEdges(); i += 20) {
 		auto bbox = pMesh->getEdgeBBox(i);
-		vector<size_t> branchStack;
 		vector<TriMesh::CMesh::SearchEntry> indices;
-		TEST_TRUE(pMesh->findEdges(bbox, indices, branchStack) > 0, "Failed to find edge");
+		TEST_TRUE(pMesh->findEdges(bbox, indices) > 0, "Failed to find edge");
 		bool found = false;
 		for (const auto entry : indices) {
 			if (entry.getIndex() == i) {
