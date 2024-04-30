@@ -120,7 +120,6 @@ bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt)
 		v1 = (*pts[j]) - (*pts[i]);
 		v1.normalize();
 		v0 = v0 - v1.dot(v0) * v1;
-		assert(fabs(v0.dot(v1)) < 1.0e-8);
 		Vector3<T> v2 = v1.cross(v0);
 		T cp = v2.dot(norm);
 		if (cp < -SAME_DIST_TOL)

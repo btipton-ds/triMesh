@@ -64,29 +64,6 @@ namespace TriMesh {
 		using BoxTestType = SearchTree::BoxTestType;
 		using SearchEntry = SearchTree::Entry;
 
-		friend class SubMesh;
-		class SubMesh {
-		public:
-			SubMesh() = default;
-			SubMesh(const SubMesh& src) = default;
-
-			void set(const CMeshConstPtr& pMesh, const BoundingBox& bbox, double growFactor);
-			void set(const SubMesh& subMesh, const BoundingBox& bbox, double growFactor);
-
-			size_t findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
-			size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
-
-			size_t findEdges(const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
-			size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
-
-			size_t findTris(const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
-			size_t findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
-
-		private:
-			CMeshConstPtr _pMesh;
-			SearchTreeConstPtr _pTriTree, _pEdgeTree, _pVertTree;
-		};
-
 		CMesh();
 		CMesh(const BoundingBox& bbox);
 		CMesh(const Vector3d& min, const Vector3d& max);
