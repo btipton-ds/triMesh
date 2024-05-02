@@ -55,7 +55,7 @@ add_library (
     "src/tm_lineSegment.cpp"
     "src/tm_boundingBox.cpp" 
     "src/tm_spatialSearch.cpp"
- "include/tm_math_transforms.h")
+ "include/tm_math_transforms.h" "include/tm_ioUtil.h")
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

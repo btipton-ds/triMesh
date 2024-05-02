@@ -31,19 +31,32 @@ This file is part of the TriMesh library.
 
 #include <iomanip>
 
+#include <tm_ioUtil.h>
 #include <tm_vertex.h>
 
 using namespace std;
 using namespace TriMesh;
 
-void CVertex::save(ostream& out) const {
-	out << fixed << setprecision(filePrecision) << "v " << _pt[0] << " " << _pt[1] << " " << _pt[2] << "\n";
+void CVertex::write(ostream& out) const {
+	uint8_t version = 0;
+	out.write((char*) &version, sizeof(version));
+
+	writeVector3(out, _pt);
+
+	IoUtil::write(out, _faceIndices);
+	IoUtil::write(out, _edgeIndices);
 }
 
 bool CVertex::read(istream& in) {
-	string str;
-	in >> str >> _pt[0] >> _pt[1] >> _pt[2];
-	return (str == "v");
+	uint8_t version = -1;
+	in.read((char*)&version, sizeof(version));
+
+	readVector3(in, _pt);
+
+	IoUtil::read(in, _faceIndices);
+	IoUtil::read(in, _edgeIndices);
+
+	return true;
 }
 
 bool CVertex::containsEdgeIndex(size_t index) const

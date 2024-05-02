@@ -37,6 +37,7 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 #include <cmath>
 
 #include <../../stlReader/include/readStl.h>
+#include <tm_ioUtil.h>
 #include <tm_lineSegment.h>
 #include <tm_ray.h>
 #include <triMesh.h>
@@ -1617,69 +1618,52 @@ void CMesh::dumpModelSharpEdgesObj(ostream& out, double sinAngle) const {
 	}
 }
 
-void CMesh::save(ostream& out) const {
-	out << "Mesh version 1\n";
+void CMesh::write(ostream& out) const {
+	uint8_t version = 0;
+	out.write((char*)&version, sizeof(version));
 
-	out << "#Verts: " << _vertices.size() << "\n";
-	for (const auto& vert : _vertices)
-		vert.save(out);
+	out.write((char*)&_enforceManifold, sizeof(_enforceManifold));
+	out.write((char*)&_id, sizeof(_id));
 
-
-	out << "#Tris: " << _tris.size() << "\n";
-	for (const auto& tri : _tris)
-		out << "t " << tri[0] << " " << tri[1] << " " << tri[2] << "\n";
-
+	IoUtil::writeObj(out, _vertices);
+	IoUtil::writeObj(out, _edges);
+	IoUtil::writeVector3(out, _tris);
 }
 
 bool CMesh::read(istream& in) {
-	string str0, str1;
-	int version;
-	in >> str0 >> str1 >> version;
-	if (str0 != "Mesh" || str1 != "version")
-		return false;
+	uint8_t version = -1;
+	in.read((char*)&version, sizeof(version));
 
-	size_t numVerts;
-	in >> str0 >> numVerts;
-	if (str0 != "#Verts:")
-		return false;
+	in.read((char*)&_enforceManifold, sizeof(_enforceManifold));
+	in.read((char*)&_id, sizeof(_id));
+
+	IoUtil::readObj(in, _vertices);
+	IoUtil::readObj(in, _edges);
+	IoUtil::readVector3(in, _tris);
 
 	BoundingBox bbox;
-	_vertices.resize(numVerts);
-	for (size_t i = 0; i < numVerts; i++) {
-		if (!_vertices[i].read(in))
-			return false;
-		bbox.merge(BoundingBox(_vertices[i]._pt));
+	for (size_t i = 0; i < _vertices.size(); i++) {
+		BoundingBox vertBbox = getVertBBox(i);
+		bbox.merge(vertBbox);
 	}
 
-	bbox.grow(SAME_DIST_TOL);
-
-	_pVertTree->reset(bbox);
-	_pEdgeTree->reset(bbox);
-	_pTriTree->reset(bbox);
-
-	for (size_t i = 0; i < numVerts; i++) {
-		_pVertTree->add(BoundingBox(_vertices[i]._pt), i);
+	_pVertTree = make_shared<SearchTree>(bbox);
+	for (size_t i = 0; i < _vertices.size(); i++) {
+		BoundingBox vertBbox = getVertBBox(i);
+		_pVertTree->add(vertBbox, i);
 	}
 
-	size_t numTris;
-	in >> str0 >> numTris;
-	if (str0 != "#Tris:")
-		return false;
+	_pEdgeTree = make_shared<SearchTree>(bbox);
+	for (size_t i = 0; i < _edges.size(); i++) {
+		_edgeToIdxMap.insert(make_pair(_edges[i], i));
+		BoundingBox edgeBbox = getEdgeBBox(i);
+		_pEdgeTree->add(edgeBbox, i);
+	}
 
-	_tris.resize(numTris);
-	for (size_t i = 0; i < numTris; i++) {
-		auto& tri = _tris[i];
-		in >> str1 >> tri[0] >> tri[1] >> tri[2];
-		if (str1 != "t")
-			return false;
-		for (int j = 0; j < 3; j++) {
-			addEdge(tri[j], tri[(j + 1) % 3]);
-		}
-		BoundingBox triBox;
-		triBox.merge(_vertices[tri[0]]._pt);
-		triBox.merge(_vertices[tri[1]]._pt);
-		triBox.merge(_vertices[tri[2]]._pt);
-		_pTriTree->add(triBox, i);
+	_pTriTree = make_shared<SearchTree>(bbox);
+	for (size_t i = 0; i < _tris.size(); i++) {
+		BoundingBox triBbox = getTriBBox(i);
+		_pTriTree->add(triBbox, i);
 	}
 
 	return true;
@@ -1731,3 +1715,4 @@ bool CMesh::testSqueezeEdge(size_t idx)
 
 	return true;
 }
+

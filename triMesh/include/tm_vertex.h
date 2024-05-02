@@ -42,7 +42,7 @@ struct CVertex {
 	CVertex();
 	CVertex(const CVertex& src) = default;
 	CVertex(const Vector3d& pt);
-	void save(std::ostream& out) const;
+	void write(std::ostream& out) const;
 	bool read(std::istream& in);
 
 	bool containsEdgeIndex(size_t index) const;

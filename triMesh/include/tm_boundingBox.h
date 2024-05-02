@@ -32,6 +32,7 @@ This file is part of the TriMesh library.
 #include <tm_defines.h>
 #include <tm_math.h>
 #include <tm_rectangle.h>
+#include <tm_vector3.h>
 
 template <class SCALAR_TYPE>
 class CBoundingBox3D {
@@ -61,6 +62,8 @@ public:
 	void growPercent(SCALAR_TYPE amount);
 	void getEdges(LineSegment<SCALAR_TYPE> edgeSegs[12]) const;
 
+	void write(std::ostream& out) const;
+	void read(std::istream& in);
 private:
 	static const POINT_TYPE _axes[3];
 	POINT_TYPE _min, _max;
@@ -69,3 +72,16 @@ private:
 using CBoundingBox3Dd = CBoundingBox3D<double>;
 using CBoundingBox3Df = CBoundingBox3D<float>;
 
+template <typename SCALAR_TYPE>
+inline void CBoundingBox3D<SCALAR_TYPE>::write(std::ostream& out) const
+{
+	writeVector3(out, _min);
+	writeVector3(out, _max);
+}
+
+template <typename SCALAR_TYPE>
+inline void CBoundingBox3D<SCALAR_TYPE>::read(std::istream& in)
+{
+	readVector3(in, _min);
+	readVector3(in, _max);
+}

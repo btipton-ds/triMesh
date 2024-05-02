@@ -75,7 +75,7 @@ namespace TriMesh {
 		size_t getChangeNumber() const;
 		void changed();
 
-		void save(std::ostream& out) const;
+		void write(std::ostream& out) const;
 		bool read(std::istream& in);
 
 		void dumpTris(const std::wstring& filename) const;

@@ -52,6 +52,9 @@ public:
 	bool operator == (const CEdge& rhs) const;
 	bool isAttachedToFace(size_t faceIdx) const;
 
+	void write(std::ostream& out) const;
+	bool read(std::istream& in);
+
 	void addFaceIndex(size_t faceIdx);
 	void removeFaceIndex(size_t faceIdx);
 	void changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx);

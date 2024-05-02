@@ -87,6 +87,34 @@ bool CEdge::isAttachedToFace(size_t faceIdx) const
 	return false;
 }
 
+void CEdge::write(std::ostream& out) const
+{
+	uint8_t version = 0;
+	out.write((char*) &version, sizeof(version));
+
+	out.write((char*)&_vertIndex[0], sizeof(size_t));
+	out.write((char*)&_vertIndex[1], sizeof(size_t));
+
+	out.write((char*)&_numFaces, sizeof(int));
+	for (int i = 0; i < _numFaces; i++)
+		out.write((char*)&_faceIndices[i], sizeof(size_t));
+}
+
+bool CEdge::read(std::istream& in)
+{
+	uint8_t version = -1;
+	in.read((char*)&version, sizeof(version));
+
+	in.read((char*)&_vertIndex[0], sizeof(size_t));
+	in.read((char*)&_vertIndex[1], sizeof(size_t));
+
+	in.read((char*)&_numFaces, sizeof(int));
+	for (int i = 0; i < _numFaces; i++)
+		in.read((char*)&_faceIndices[i], sizeof(size_t));
+
+	return true;
+}
+
 void CEdge::addFaceIndex(size_t faceIdx) {
 	for (int i = 0; i < _numFaces; i++) {
 		if (_faceIndices[i] == faceIdx)

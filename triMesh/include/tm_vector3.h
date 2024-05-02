@@ -60,3 +60,20 @@ using Vector3i = Vector3<size_t>;
 template<class T>
 bool equalTol(const Vector3<T>& val0, const Vector3<T>& val1);
 
+template <typename T>
+inline void writeVector3(std::ostream& out, const Vector3<T>& v)
+{
+	T tv[3] = { v[0], v[1], v[2] };
+	out.write((char*)tv, 3 * sizeof(T));
+}
+
+template <typename T>
+inline void readVector3(std::istream& in, Vector3<T>& v)
+{
+	T tv[3];
+	in.read((char*)tv, 3 * sizeof(T));
+
+	v[0] = tv[0];
+	v[1] = tv[1];
+	v[2] = tv[2];
+}
