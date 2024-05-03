@@ -187,6 +187,12 @@ namespace TriMesh {
 		bool testRemoveTri(size_t idx);
 
 		bool verifyTopology(bool allowEmptyEdges) const;
+
+		size_t processFoundEdges(const std::vector<SearchEntry>& allHits, const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t processFoundEdges(const std::vector<size_t>& allHits, const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t processFoundTris(const std::vector<SearchEntry>& allHits, const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t processFoundTris(const std::vector<size_t>& allHits, const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
+
 	private:
 		static bool sameTri(const Vector3i& tri0, const Vector3i& tri1);
 
@@ -198,11 +204,6 @@ namespace TriMesh {
 		bool deleteTriFromStorage(size_t edgeIdx);
 		bool deleteEdgeFromStorage(size_t edgeIdx);
 		void mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove);
-
-		size_t processFoundEdges(const std::vector<SearchEntry>& allHits, const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains) const;
-		size_t processFoundEdges(const std::vector<size_t>& allHits, const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains) const;
-		size_t processFoundTris(const std::vector<SearchEntry>& allHits, const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains) const;
-		size_t processFoundTris(const std::vector<size_t>& allHits, const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains) const;
 
 		bool triContainsVertex(size_t triIdx, size_t vertIdx) const;
 		bool triContainsEdge(size_t triIdx, size_t edgeIdx) const;
