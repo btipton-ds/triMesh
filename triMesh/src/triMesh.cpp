@@ -1432,6 +1432,24 @@ double CMesh::edgeCurvature(size_t edgeIdx) const
 	return 0;
 }
 
+double CMesh::triCurvature(size_t triIdx) const
+{
+	const auto& tri = _tris[triIdx];
+
+	double result = 0;
+	int count = 0;
+	for (int i = 0; i < 3; i++) {
+		double c = _vertCurvature[tri[i]];
+		if (c > 0) {
+			result += c;
+			count++;
+		}
+	}
+	if (count > 0)
+		return result / count;
+	return 0;
+}
+
 double CMesh::edgeLength(size_t edgeIdx) const
 {
 	const auto& edge = _edges[edgeIdx];

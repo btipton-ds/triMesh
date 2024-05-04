@@ -155,6 +155,7 @@ namespace TriMesh {
 		Vector3d vertUnitNormal(size_t vertIdx) const;
 		double edgeCurvature(size_t edgeIdx) const;
 		double edgeLength(size_t edgeIdx) const;
+		double triCurvature(size_t triIdx) const;
 
 		void merge(CMeshPtr& src, bool destructive);
 		void merge(std::vector<CMeshPtr>& src, bool destructive, bool multiCore = true);
