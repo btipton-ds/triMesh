@@ -68,7 +68,7 @@ template<class T>
 Matrix4<T> createTranslation(const Vector3<T>& delta)
 {
 	Eigen::Transform<T, 3, Eigen::Affine> t = Eigen::Transform<T, 3, Eigen::Affine>::Identity();
-	Vector3<T> x(delta);
+	Eigen::Matrix<T, 3, 1> x((Eigen::Matrix<T, 3, 1>)delta);
 	t.translate(x);
 	Matrix4<T> result(t.matrix());
 	return result;
@@ -79,7 +79,7 @@ Vector3<T> rotatePointAboutAxis(const Ray<T>& axis, const Vector3<T>& val, T ang
 {
 	static const T PI = (T)M_PI;
 
-	Matrix3<T> rot3 = Eigen::AngleAxis<T>(angleDeg * PI / 180, axis._dir).toRotationMatrix();
+	Matrix3<T> rot3 = Eigen::AngleAxis<T>(angleDeg * PI / 180, (Eigen::Matrix<T, 3, 1>)axis._dir).toRotationMatrix();
 	Matrix4<T> trans;
 	Matrix4<T> rot4(changeMatrixSize<Matrix4<T>>(rot3));
 	Matrix4<T> translate(createTranslation<T>(axis._origin));
@@ -103,9 +103,9 @@ Vector3<T> rotateVectorAboutAxis(const Ray<T>& axis, const Vector3<T>& val, T an
 {
 	static const T PI = (T)M_PI;
 
-	Matrix3<T> rot3 = Eigen::AngleAxis<T>(angleDeg * PI / 180, axis._dir).toRotationMatrix();
-	Vector3<T> result = rot3 * val;
+	Matrix3<T> rot3 = Eigen::AngleAxis<T>(angleDeg * PI / 180, (Eigen::Matrix<T, 3, 1>)axis._dir).toRotationMatrix();
+	Eigen::Matrix<T, 3, 1> t = rot3 * (Eigen::Matrix<T, 3, 1>) val;
 
-	return result;
+	return Vector3<T>(t[0], t[1], t[2]);
 }
 

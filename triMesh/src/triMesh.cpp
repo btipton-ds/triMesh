@@ -1306,9 +1306,10 @@ size_t CMesh::findTris(const BoundingBox& bbox, vector<size_t>& triIndices, BoxT
 size_t CMesh::processFoundTris(const vector<size_t>& allHits, const BoundingBox& bbox, vector<size_t>& triIndices, BoxTestType contains) const
 {
 	bool useContains = contains == BoxTestType::Contains;
+	triIndices.reserve(triIndices.size() + allHits.size());
 	for (const auto& idx : allHits) {
 		bool useEntry = useContains ? bbox.contains(getTriBBox(idx)) : bboxIntersectsTri(bbox, idx);
-		if (useEntry && bboxIntersectsTri(bbox, idx)) {
+		if (useEntry) {
 			triIndices.push_back(idx);
 		}
 	}

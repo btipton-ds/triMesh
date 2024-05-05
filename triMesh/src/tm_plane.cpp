@@ -31,7 +31,6 @@ This file is part of the TriMesh library.
 
 #include <tm_ray.h>
 #include <tm_plane.h>
-#include <tm_math.h>
 #include <tm_lineSegment.h>
 
 template<class T>
@@ -75,18 +74,6 @@ Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool makePri
 }
 
 template<class T>
-bool Plane<T>::intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt) const
-{
-	POINT_TYPE v = pt1 - pt0;
-	T l = v.norm();
-	if (l < SAME_DIST_TOL)
-		return false;
-	
-	Ray<T> ray(pt0, v / l);
-	return intersectRay(ray, hitPt);
-}
-
-template<class T>
 bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt) const
 {
 	if (intersectLine(seg._pts[0], seg._pts[1], hitPt)) {
@@ -99,29 +86,6 @@ bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt)
 		return true;
 	}
 	return false;
-}
-
-template<class T>
-bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit) const
-{
-	auto dp = ray._dir.dot(_normal);
-	if (fabs(dp) < minNormalizeDivisor)
-		return false;
-
-	POINT_TYPE v = ray._origin - _origin;
-	auto h = v.dot(_normal);
-	T dDotN = ray._dir.dot(_normal);
-	hit.dist = -h / dDotN;
-	hit.hitPt = ray._origin + hit.dist * ray._dir;
-
-#if FULL_TESTS // Verification code
-	POINT_TYPE vTest = hit.hitPt - _origin;
-	T testDist = vTest.dot(_normal);
-	if (fabs(testDist) > SAME_DIST_TOL) {
-		assert(!"Point not on plane");
-	}
-#endif
-	return true;
 }
 
 template<class T>
@@ -138,7 +102,7 @@ bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const 
 		const auto& ptB = ptOf3(j, pt0, pt1, pt2);
 		LineSegment<T> seg(ptA, ptB);
 
-		if (seg.intersectPlane(*this, hit)) {
+		if (intersectLineSegment(seg, hit)) {
 			if (numHits == 0)
 				iPt0 = hit.hitPt;
 			else if (numHits == 1) {

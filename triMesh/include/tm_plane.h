@@ -101,3 +101,38 @@ inline const typename Plane<T>::POINT_TYPE& Plane<T>::getNormal() const
 	return _normal;
 }
 
+template<class T>
+inline bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit) const
+{
+	auto dp = ray._dir.dot(_normal);
+	if (fabs(dp) < minNormalizeDivisor)
+		return false;
+
+	POINT_TYPE v = ray._origin - _origin;
+	auto h = v.dot(_normal);
+	T dDotN = ray._dir.dot(_normal);
+	hit.dist = -h / dDotN;
+	hit.hitPt = ray._origin + hit.dist * ray._dir;
+
+#if FULL_TESTS // Verification code
+	POINT_TYPE vTest = hit.hitPt - _origin;
+	T testDist = vTest.dot(_normal);
+	if (fabs(testDist) > SAME_DIST_TOL) {
+		assert(!"Point not on plane");
+	}
+#endif
+	return true;
+}
+
+template<class T>
+inline bool Plane<T>::intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt) const
+{
+	POINT_TYPE v = pt1 - pt0;
+	T lSqr = v.squaredNorm();
+	if (lSqr < SAME_DIST_TOL_SQR)
+		return false;
+
+	Ray<T> ray(pt0, v / sqrt(lSqr));
+	return intersectRay(ray, hitPt);
+}
+

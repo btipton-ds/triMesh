@@ -46,17 +46,6 @@ using lint = long long;
 template<class T>
 struct LineSegment;
 
-constexpr double NUMERIC_DIFF_TOL = 1.0e-5;
-constexpr double SAME_DIST_TOL = 1.0e-8;
-constexpr double OPTIMIZER_TOL = 1.0e-6;
-constexpr double SAME_DIST_TOL_SQR = SAME_DIST_TOL * SAME_DIST_TOL;
-constexpr double minNormalizeDivisor = 1.0e-12;
-
-#ifndef stm1
-#define stm1 0xffffffffffffffff
-#endif
-#define CHECK_NAN 1
-
 template <class SCALAR_TYPE>
 bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1);
 

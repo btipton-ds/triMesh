@@ -45,9 +45,253 @@ This file is part of the TriMesh library.
 template<typename SCALAR_TYPE>
 SCALAR_TYPE defaultVal();
 
-template <typename T>
-using Vector3 = Eigen::Matrix<T, 3, 1>;
+// NOTE CRITICAL - Eigen has an intermittent error SOMEWHERE that was causing nondeterministic errors in intersections!
+// Vector3 had beend defined the same as Vector2, using Vector3 = Eigen::Matrix<T, 3, 1>, switching between our own and Eigen got rid
+// of the nondeterminism. That cost almost 2 months and the error was never found.
+//
+// If we switch back to Eigen, this must be identified and fixed.
 
+template <typename T>
+class Vector3
+{
+public:
+	Vector3() = default;
+	Vector3(const Vector3& src) = default;
+	inline Vector3(const Eigen::Matrix<T, 3, 1>& src)
+	{
+	}
+	inline Vector3(T x, T y, T z)
+	{
+		_data[0] = x;
+		_data[1] = y;
+		_data[2] = z;
+	}
+
+	inline Vector3(const T* data)
+	{
+		_data[0] = data[0];
+		_data[1] = data[1];
+		_data[2] = data[2];
+	}
+
+	template<class I>
+	inline const T& operator[](I i) const
+	{
+		return _data[i];
+	}
+
+	template<class I>
+	inline T& operator[](I i)
+	{
+		return _data[i];
+	}
+
+	
+	inline bool operator == (const Vector3& rhs) {
+		return _data[0] == rhs._data[0] && _data[1] == rhs._data[1] && _data[2] == rhs._data[2];
+	}
+
+	inline bool operator != (const Vector3& rhs) {
+		return _data[0] != rhs._data[0] || _data[1] != rhs._data[1] || _data[2] != rhs._data[2];
+	}
+
+	inline bool operator < (const Vector3 & rhs) {
+		int i = 0;
+		if (_data[i] < rhs._data[i])
+			return true;
+		else if (_data[i] > rhs._data[i])
+			return false;
+
+		i = 1;
+		if (_data[i] < rhs._data[i])
+			return true;
+		else if (_data[i] > rhs._data[i])
+			return false;
+
+		i = 2;
+		if (_data[i] < rhs._data[i])
+			return true;
+		else if (_data[i] > rhs._data[i])
+			return false;
+	}
+
+	inline Vector3& operator -=(const Vector3& rhs)
+	{
+		auto d = data();
+		const auto dRhs = rhs.data();
+
+		d[0] -= dRhs[0];
+		d[1] -= dRhs[1];
+		d[2] -= dRhs[2];
+
+		return *this;
+	}
+
+	inline Vector3& operator +=(const Vector3& rhs)
+	{
+		auto d = data();
+		const auto dRhs = rhs.data();
+
+		d[0] += dRhs[0];
+		d[1] += dRhs[1];
+		d[2] += dRhs[2];
+
+		return *this;
+	}
+
+	inline Vector3 operator -()  const
+	{
+		Vector3 result(*this);
+		auto d = result.data();
+		d[0] = -d[0];
+		d[1] = -d[1];
+		d[2] = -d[2];
+		return result;
+	}
+
+	inline Vector3 operator -(const Vector3& rhs)  const
+	{
+		Vector3 result(*this);
+		result -= rhs;
+		return result;
+	}
+
+	inline Vector3 operator +(const Vector3& rhs)  const
+	{
+		Vector3 result(*this);
+		result += rhs;
+		return result;
+	}
+
+	inline Vector3 cross(const Vector3& rhs) const
+	{
+		Vector3 result;
+		result[0] = _data[1] * rhs._data[2] - _data[2] * rhs._data[1];
+		result[1] = _data[2] * rhs._data[0] - _data[0] * rhs._data[2];
+		result[2] = _data[0] * rhs._data[1] - _data[1] * rhs._data[0];
+
+		return result;
+	}
+
+	inline T dot(const Vector3& rhs) const
+	{
+		const auto d = data();
+		const auto dr = rhs.data();
+		return d[0] * dr[0] + d[1] * dr[1] + d[2] * dr[2];
+	}
+
+	inline T squaredNorm() const
+	{
+		const auto d = data();
+		return d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+	}
+
+	inline T norm() const
+	{
+		return ::sqrt(squaredNorm());
+	}
+
+	template<class U>
+	inline Vector3& operator /=(U rhs)
+	{
+		auto d = data();
+		d[0] /= rhs;
+		d[1] /= rhs;
+		d[2] /= rhs;
+
+		return *this;
+	}
+
+	template<class U>
+	inline Vector3& operator *=(U rhs)
+	{
+		auto d = data();
+		d[0] *= rhs;
+		d[1] *= rhs;
+		d[2] *= rhs;
+
+		return *this;
+	}
+
+	template<class U>
+	inline Vector3 operator /(U rhs) const
+	{
+		Vector3 result(*this);
+		result /= rhs;
+
+		return result;
+	}
+
+	template<class U>
+	inline Vector3 operator *(U rhs) const
+	{
+		Vector3 result(*this);
+		result *= rhs;
+
+		return result;
+	}
+
+	inline Vector3 normalized() const
+	{
+		Vector3 result(*this);
+		T l = result.norm();
+		auto d = result.data();
+		d[0] /= l;
+		d[1] /= l;
+		d[2] /= l;
+
+		return result;
+	}
+
+	void normalize()
+	{
+		auto l = norm();
+		_data[0] /= l;
+		_data[1] /= l;
+		_data[2] /= l;
+	}
+
+	inline operator Eigen::Matrix<T, 3, 1>() const
+	{
+		Eigen::Matrix<T, 3, 1> result(_data[0], _data[1], _data[2]);
+
+		return result;
+	}
+
+	inline const T* data() const
+	{
+		return _data;
+	}
+	inline T* data()
+	{
+		return _data;
+	}
+
+	private:
+		T _data[3] = { 0,0,0 };
+};
+
+template <typename T>
+Vector3<T> operator *(T lhs, const Vector3<T>& rhs)
+{
+	Vector3<T> result(rhs);
+
+	auto d = result.data();
+	d[0] *= lhs;
+	d[1] *= lhs;
+	d[2] *= lhs;
+
+	return result;
+}
+
+template<class T>
+std::ostream& operator << (std::ostream& out, const Vector3<T>& val)
+{
+	out << val[0] << ", " << val[1] << ", " << val[2];
+	return out;
+}
+
+// NOTE Vector3 using Eigen had a nondeterministic error. We may need to change Vector2 as well, but it uses very few features - probably safe.
 template <typename T>
 using Vector2 = Eigen::Matrix<T, 2, 1>;
 
