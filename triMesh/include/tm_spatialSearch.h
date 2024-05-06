@@ -46,7 +46,7 @@ template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
 class CSpatialSearchBase : public std::enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>> {
 public:
 	using BOX_TYPE = CBoundingBox3D<SCALAR_TYPE>;
-	using CSpatialSearchBasePtr = CSpatialSearchBasePtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>;
+	using SpatialSearchBasePtr = CSpatialSearchBasePtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>;
 
 	enum class BoxTestType {
 		Contains, Intersects
@@ -76,7 +76,7 @@ public:
 	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::Intersects) const;
 	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::Intersects) const;
 	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
-	CSpatialSearchBasePtr getSubTree(const BOX_TYPE& bbox) const;
+	SpatialSearchBasePtr getSubTree(const BOX_TYPE& bbox) const;
 
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);
 

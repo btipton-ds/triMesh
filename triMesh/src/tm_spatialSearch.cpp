@@ -131,7 +131,7 @@ size_t CSSB_DCL::biDirRayCast(const Ray<SCALAR_TYPE>& ray, vector<INDEX_TYPE>& h
 }
 
 CSSB_TMPL
-typename CSSB_DCL::CSpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox) const
+typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox) const
 {
 #if 0
 	return shared_from_this();
@@ -139,11 +139,11 @@ typename CSSB_DCL::CSpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bb
 	bool useLeft = _left && (bbox.intersects(_left->_bbox) || bbox.contains(_left->_bbox) || _left->_bbox.contains(bbox));
 	bool useRight = _right && (bbox.intersects(_right->_bbox) || bbox.contains(_right->_bbox) || _right->_bbox.contains(bbox));
 	if (useLeft && useRight)
-		return shared_from_this();
+		return enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>::shared_from_this();
 
 	for (const auto& entry : _contents) {
 		if (bbox.intersects(entry.getBBox()) || bbox.contains(entry.getBBox()) || entry.getBBox().contains(bbox)) {
-			return shared_from_this();
+			return enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>::shared_from_this();
 		}
 	}
 

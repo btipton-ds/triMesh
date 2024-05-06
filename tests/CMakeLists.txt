@@ -34,7 +34,8 @@ add_executable (testMath
 "src/testMesh.cpp" 
 "src/testMath.cpp" 
 "src/testBoundingBox.cpp" 
-"src/testVector3.cpp" "include/testUtil.h")
+"src/testVector3.cpp"
+)
 
 target_link_libraries("testMath" 
 PUBLIC triMesh

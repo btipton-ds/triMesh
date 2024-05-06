@@ -84,7 +84,7 @@ Ray<T> rotateAboutAxis(Ray<T>& axis, Ray<T>& val,int angleDeg)
 	Ray<T> result;
 
 	result._origin = rotatePointAboutAxis(axis, val._origin);
-	result_dir = rotateVectorAboutAxis(axis, val._dir);
+	result._dir = rotateVectorAboutAxis(axis, val._dir);
 
 	return result;
 }

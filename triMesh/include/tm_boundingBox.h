@@ -47,9 +47,9 @@ public:
 	bool empty() const;
 	void merge(const POINT_TYPE& pt);
 	void merge(const CBoundingBox3D& bboxIn);
-	inline const POINT_TYPE& getMin() const;
-	inline const POINT_TYPE& getMax() const;
-	inline POINT_TYPE range() const;
+	const POINT_TYPE& getMin() const;
+	const POINT_TYPE& getMax() const;
+	POINT_TYPE range() const;
 	bool contains(const POINT_TYPE& pt) const;
 	bool contains(const CBoundingBox3D& other) const;
 	// This is actually intersects or contains

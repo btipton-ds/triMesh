@@ -29,6 +29,7 @@ This file is part of the TriMesh library.
 
 */
 
+#include <algorithm>
 #include <tm_defines.h>
 #include <tm_vector3.h>
 #include <tm_math.h>
@@ -48,7 +49,7 @@ A changeMatrixSize(const B& src)
 	A result;
 	result.setZero();
 	if (src.cols() == src.rows()) {
-		Eigen::Index l = min(src.rows(), result.rows());
+		Eigen::Index l = std::min(src.rows(), result.rows());
 		for (Eigen::Index i = 0; i < l; i++) {
 			for (Eigen::Index j = 0; j < l; j++) {
 				result(i, j) = src(i, j);
@@ -56,7 +57,7 @@ A changeMatrixSize(const B& src)
 		}
 	}
 	else {
-		Eigen::Index l = min(src.rows(), result.rows());
+		Eigen::Index l = std::min(src.rows(), result.rows());
 		for (Eigen::Index i = 0; i < l; i++) {
 			result(i, 0) = src(i, 0);
 		}

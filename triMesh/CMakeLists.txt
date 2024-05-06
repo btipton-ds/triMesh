@@ -24,10 +24,10 @@ if (UNIX)
     "../triMesh/include" 
     "../stlReader/include" 
 
+    )
     set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
     set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
     set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
-    )
 else (UNIX)
     include_directories(
     include 
@@ -55,7 +55,9 @@ add_library (
     "src/tm_lineSegment.cpp"
     "src/tm_boundingBox.cpp" 
     "src/tm_spatialSearch.cpp"
- "include/tm_math_transforms.h" "include/tm_ioUtil.h")
+    "include/tm_math_transforms.h" 
+    "include/tm_ioUtil.h"
+)
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

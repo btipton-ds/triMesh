@@ -33,6 +33,7 @@ This file is part of the TriMesh library.
 
 #include <ostream>
 #include <vector>
+#include <memory>
 
 #include <tm_math.h>
 

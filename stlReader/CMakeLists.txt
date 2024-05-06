@@ -13,10 +13,10 @@ if (UNIX)
     "/usr/include/eigen3/"
     "../triMesh/include" 
 
+    )
     set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
     set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
     set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
-    )
 else (UNIX)
     if (POLICY CMP0141)
       cmake_policy(SET CMP0141 NEW)
