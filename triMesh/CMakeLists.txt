@@ -57,7 +57,7 @@ add_library (
     "src/tm_spatialSearch.cpp"
     "include/tm_math_transforms.h" 
     "include/tm_ioUtil.h"
-)
+ "include/tm_bestFit.h" )
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

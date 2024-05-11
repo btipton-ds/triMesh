@@ -59,6 +59,35 @@ T LineSegment<T>::parameterize(const POINT_TYPE& pt) const {
 }
 
 template<class T>
+bool LineSegment<T>::contains(const POINT_TYPE& pt, T& t) const
+{
+	if (tolerantEquals(_pts[0], pt)) {
+		t = 0;
+		return true;
+	} else if (tolerantEquals(_pts[1], pt)) {
+		t = 1;
+		return true;
+	} else {
+		POINT_TYPE v0 = _pts[1] - _pts[0];
+		T len = v0.norm();
+		if (len < SAME_DIST_TOL) {
+			return false;
+		}
+		v0 /= len;
+		POINT_TYPE v1 = pt - _pts[0];
+
+		T dp = v1.dot(v0);
+		v1 = v1 - dp * v0; // orthogonalize v1
+		T dist = v1.norm();
+		if (dist > SAME_DIST_TOL)
+			return false; // pt does not lie on the segment within tolerance.
+
+		t = dp / len;
+		return dp > -SAME_DIST_TOL && dp < (len + SAME_DIST_TOL); // return if the pt lies in [zero, len] within tolerance
+	}
+}
+
+template<class T>
 Ray<T> LineSegment<T>::getRay() const {
 	return Ray<T>(_pts[0], calcDir());
 }

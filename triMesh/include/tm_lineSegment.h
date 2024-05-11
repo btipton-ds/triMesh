@@ -56,6 +56,7 @@ struct LineSegment {
 	POINT_TYPE calcDir() const;
 	POINT_TYPE interpolate(T t) const;
 	T parameterize(const POINT_TYPE& pt) const;
+	bool contains(const POINT_TYPE& pt, T& t) const;
 	Ray<T> getRay() const;
 
 	T distanceToPoint(const POINT_TYPE& pt, T& t) const;
