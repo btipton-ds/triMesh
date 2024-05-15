@@ -145,6 +145,13 @@ bool LineSegment<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<T>& hit) cons
 }
 
 template<class T>
+bool LineSegment<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<T>& hit) const
+{
+	const POINT_TYPE* pts[] = {&pt0, &pt1, &pt2};
+	return intersectTri(pts, hit);
+}
+
+template<class T>
 bool LineSegment<T>::intersectPlane(const Plane<T>& plane, RayHit<T>& hit) const
 {
 	if (plane.intersectRay(getRay(), hit)) {

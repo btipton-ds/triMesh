@@ -120,6 +120,7 @@ namespace TriMesh {
 		bool isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const;
 
 		const std::vector<size_t>& getSharpEdgeIndices(double edgeAngleRadians = 0) const;
+		size_t createSharpEdgeVertexLines(size_t sharpVertIdx, std::set<size_t>& availEdges, double sharpEdgeAngleRadians, std::vector<std::vector<size_t>>& vertIndices) const;
 
 		size_t numVertices() const;
 		size_t numEdges() const;
@@ -205,6 +206,7 @@ namespace TriMesh {
 		bool deleteTriFromStorage(size_t edgeIdx);
 		bool deleteEdgeFromStorage(size_t edgeIdx);
 		void mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove);
+		bool addVertexToEdgeLine(std::vector<size_t>& vertLine, std::set<size_t>& availEdges, double sinEdgeAngle) const;
 
 		bool triContainsVertex(size_t triIdx, size_t vertIdx) const;
 		bool triContainsEdge(size_t triIdx, size_t edgeIdx) const;

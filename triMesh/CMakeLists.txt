@@ -62,3 +62,11 @@ add_library (
 link_directories(
 ../${CMAKE_BUILD_TYPE}
 )
+
+if(WIN32)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+else(WIN32)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+target_compile_features(DistFieldHexMesh PRIVATE cxx_std_20)
+endif(WIN32)

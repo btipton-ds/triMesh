@@ -748,6 +748,44 @@ const vector<size_t>& CMesh::getSharpEdgeIndices(double edgeAngleRadians) const
 	return _sharpEdgeIndices;
 }
 
+size_t CMesh::createSharpEdgeVertexLines(size_t sharpVertIdx, set<size_t>& availEdges, double sharpEdgeAngleRadians, vector<vector<size_t>>& vertIndices) const
+{
+	const double sinEdgeAngle = sin(sharpEdgeAngleRadians);
+	const auto& vert = getVert(sharpVertIdx);
+	const auto& vEdges = vert._edgeIndices;
+	for (size_t edgeIdx : vEdges) {
+		if (availEdges.contains(edgeIdx) && isEdgeSharp(edgeIdx, sinEdgeAngle)) {
+			vector<size_t> vertLine;
+			vertLine.push_back(sharpVertIdx);
+			while (addVertexToEdgeLine(vertLine, availEdges, sinEdgeAngle));
+			if (vertLine.size() > 1)
+				vertIndices.push_back(vertLine);
+		}
+	}
+
+	return vertIndices.size();
+}
+
+bool CMesh::addVertexToEdgeLine(vector<size_t>& vertLine, set<size_t>& availEdges, double sinEdgeAngle) const
+{
+	size_t lastIdx = vertLine.back();
+	const auto& vert = getVert(lastIdx);
+	const auto& edgeIndices = vert._edgeIndices;
+	for (size_t edgeIdx : edgeIndices) {
+		if (availEdges.contains(edgeIdx) && isEdgeSharp(edgeIdx, sinEdgeAngle)) {
+			const auto& edge = getEdge(edgeIdx);
+			size_t nextIdx = edge.otherVertIdx(lastIdx);
+			if (nextIdx != 0) {
+				vertLine.push_back(nextIdx);
+				availEdges.erase(edgeIdx);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 size_t CMesh::numVertices() const {
 	return _vertices.size();
 }

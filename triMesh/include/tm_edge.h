@@ -52,6 +52,7 @@ public:
 	bool operator < (const CEdge& rhs) const;
 	bool operator == (const CEdge& rhs) const;
 	bool isAttachedToFace(size_t faceIdx) const;
+	size_t otherVertIdx(size_t vertIndex) const;
 
 	void write(std::ostream& out) const;
 	bool read(std::istream& in);
@@ -69,5 +70,14 @@ public:
 	int _numFaces;
 	size_t _faceIndices[2];
 };
+
+inline size_t CEdge::otherVertIdx(size_t vertIndex) const
+{
+	if (vertIndex == _vertIndex[0])
+		return _vertIndex[1];
+	else if (vertIndex == _vertIndex[1])
+		return _vertIndex[0];
+	return -1;
+}
 
 }

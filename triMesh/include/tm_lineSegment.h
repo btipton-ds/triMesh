@@ -63,6 +63,7 @@ struct LineSegment {
 	T distanceToPoint(const POINT_TYPE& pt) const;
 
 	bool intersectTri(const POINT_TYPE* pts[3], RayHit<T>& hit) const;
+	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<T>& hit) const;
 	bool intersectPlane(const Plane<T>& plane, RayHit<T>& hit) const;
 	bool intersectPlane(const POINT_TYPE* pts[3], RayHit<T>& hit) const;
 
