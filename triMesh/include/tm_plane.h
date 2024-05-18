@@ -104,14 +104,14 @@ inline const typename Plane<T>::POINT_TYPE& Plane<T>::getNormal() const
 template<class T>
 inline bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit) const
 {
+	const double MIN_COS_ANGLE = 1.0e-8;
 	auto dp = ray._dir.dot(_normal);
-	if (fabs(dp) < minNormalizeDivisor)
+	if (fabs(dp) < MIN_COS_ANGLE)
 		return false;
 
 	POINT_TYPE v = ray._origin - _origin;
 	auto h = v.dot(_normal);
-	T dDotN = ray._dir.dot(_normal);
-	hit.dist = -h / dDotN;
+	hit.dist = -h / dp;
 	hit.hitPt = ray._origin + hit.dist * ray._dir;
 
 #if FULL_TESTS // Verification code
@@ -120,6 +120,11 @@ inline bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit) const
 	if (fabs(testDist) > SAME_DIST_TOL) {
 		assert(!"Point not on plane");
 	}
+
+	if (ray.distToPt(hit.hitPt) > SAME_DIST_TOL) {
+		assert(!"Point not on ray");
+	}
+	
 #endif
 	return true;
 }

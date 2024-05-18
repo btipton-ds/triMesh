@@ -68,22 +68,22 @@ bool LineSegment<T>::contains(const POINT_TYPE& pt, T& t) const
 		t = 1;
 		return true;
 	} else {
-		POINT_TYPE v0 = _pts[1] - _pts[0];
-		T len = v0.norm();
+		POINT_TYPE vDir = _pts[1] - _pts[0];
+		T len = vDir.norm();
 		if (len < SAME_DIST_TOL) {
 			return false;
 		}
-		v0 /= len;
-		POINT_TYPE v1 = pt - _pts[0];
+		vDir /= len;
+		POINT_TYPE vOrth = pt - _pts[0];
 
-		T dp = v1.dot(v0);
-		v1 = v1 - dp * v0; // orthogonalize v1
-		T dist = v1.norm();
+		T dp = vOrth.dot(vDir);
+		vOrth = vOrth - dp * vDir; // orthogonalize v1
+		T dist = vOrth.norm();
 		if (dist > SAME_DIST_TOL)
 			return false; // pt does not lie on the segment within tolerance.
 
 		t = dp / len;
-		return dp > -SAME_DIST_TOL && dp < (len + SAME_DIST_TOL); // return if the pt lies in [zero, len] within tolerance
+		return -SAME_DIST_TOL < dp && dp < (len + SAME_DIST_TOL); // return if the pt lies in [zero, len] within tolerance
 	}
 }
 

@@ -38,6 +38,7 @@ struct Ray {
 	using POINT_TYPE = Vector3<T>;
 
 	Ray(const POINT_TYPE& origin, const POINT_TYPE& dir);
+	T distToPt(const POINT_TYPE& pt) const;
 
 	POINT_TYPE _origin, _dir;
 };
@@ -60,6 +61,14 @@ inline Ray<T>::Ray(const POINT_TYPE& origin, const POINT_TYPE& dir)
 	, _dir(dir)
 {
 	_dir.normalize();
+}
+
+template<class T>
+T Ray<T>::distToPt(const POINT_TYPE& pt) const
+{
+	POINT_TYPE v = pt - _origin;
+	v = v - _dir.dot(v) * _dir;
+	return v.norm();
 }
 
 template<class T>

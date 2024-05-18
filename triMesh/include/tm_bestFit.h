@@ -73,19 +73,29 @@ bool bestFitPlane(const std::vector<Vector3<T>>& c, Plane<T>& plane, T& err)
 }
 
 template<class T>
-Ray<T> best_line_from_points(const std::vector<Vector3<T>>& c)
+Ray<T> bestFitLine(const std::vector<Vector3<T>>& c, T& err)
 {
 	// copy coordinates to  matrix in Eigen format
 	size_t num_atoms = c.size();
 	Eigen::Matrix< T, Eigen::Dynamic, Eigen::Dynamic > centers(num_atoms, 3);
-	for (size_t i = 0; i < num_atoms; ++i) centers.row(i) = c[i];
+	for (size_t i = 0; i < num_atoms; ++i) {
+		const auto& v = c[i];
+		centers.row(i) = Eigen::Matrix<T, 3, 1>(v[0], v[1], v[2]);
+	}
 
-	Vector3<T> origin = centers.colwise().mean();
+	Eigen::Matrix<T, 3, 1> origin = centers.colwise().mean();
 	Eigen::MatrixXd centered = centers.rowwise() - origin.transpose();
 	Eigen::MatrixXd cov = centered.adjoint() * centered;
 	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eig(cov);
-	Vector3<T> axis = eig.eigenvectors().col(2).normalized();
+	Eigen::Matrix<T, 3, 1> axis = eig.eigenvectors().col(2).normalized();
 
-	return Ray<T>(origin, axis);
+	Ray<T> result(Vector3d(origin[0], origin[1], origin[2]), Vector3d(axis[0], axis[1], axis[2]));
+	err = 0;
+	for (const auto& pt : c) {
+		err += result.distToPt(pt);
+	}
+	err /= c.size();
+
+	return result;
 }
 
