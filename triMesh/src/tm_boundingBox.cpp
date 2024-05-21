@@ -31,6 +31,8 @@ This file is part of the TriMesh library.
 #include <tm_lineSegment.h>
 #include <tm_boundingBox.h>
 
+using namespace std;
+
 template <class SCALAR_TYPE>
 const typename CBoundingBox3D<SCALAR_TYPE>::POINT_TYPE CBoundingBox3D<SCALAR_TYPE>::_axes[3] = {
 	POINT_TYPE(1, 0, 0),
@@ -145,13 +147,20 @@ bool CBoundingBox3D<SCALAR_TYPE>::contains(const CBoundingBox3D& other) const {
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis) const
 {
-	POINT_TYPE pt;
-	return intersects(seg, pt, skipAxis);
+	vector<POINT_TYPE> pts;
+	return intersectsInner(seg, pts, false, skipAxis);
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, POINT_TYPE& pt, int skipAxis) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, int skipAxis) const
 {
+	return intersectsInner(seg, pts, true, skipAxis);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, bool getAll, int skipAxis) const
+{
+	pts.clear();
 	if (seg.calLength() < SAME_DIST_TOL)
 		return false;
 
@@ -162,17 +171,20 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg
 		RayHit<SCALAR_TYPE> hit;
 		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
 		if (minPlane.intersectLineSegment(seg, hit) && contains(hit.hitPt)) {
-			pt = hit.hitPt;
-			return true;
+			pts.push_back(hit.hitPt);
+			if (!getAll)
+				break;
 		}
 
 		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
 		if (maxPlane.intersectLineSegment(seg, hit) && contains(hit.hitPt)) {
-			pt = hit.hitPt;
-			return true;
+			pts.push_back(hit.hitPt);
+			if (!getAll)
+				break;
 		}
 	}
-	return false;
+
+	return !pts.empty();
 }
 
 template <class SCALAR_TYPE>
@@ -225,28 +237,42 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<SCALAR_
 
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray) const {
-	POINT_TYPE pt;
-	return intersects(ray, pt);
-}
-
-template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, POINT_TYPE& pt) const {
 	for (int i = 0; i < 3; i++) {
 		RayHit<SCALAR_TYPE> hit;
 
 		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
 		if (minPlane.intersectRay(ray, hit) && contains(hit.hitPt)) {
-			pt = hit.hitPt;
 			return true;
 		}
 
 		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
 		if (maxPlane.intersectRay(ray, hit) && contains(hit.hitPt)) {
-			pt = hit.hitPt;
 			return true;
 		}
 	}
+
 	return false;
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, vector<POINT_TYPE>& pts) const {
+	pts.clear();
+
+	for (int i = 0; i < 3; i++) {
+		RayHit<SCALAR_TYPE> hit;
+
+		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
+		if (minPlane.intersectRay(ray, hit) && contains(hit.hitPt)) {
+			pts.push_back(hit.hitPt);
+		}
+
+		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
+		if (maxPlane.intersectRay(ray, hit) && contains(hit.hitPt)) {
+			pts.push_back(hit.hitPt);
+		}
+	}
+
+	return !pts.empty();
 }
 
 template <class SCALAR_TYPE>

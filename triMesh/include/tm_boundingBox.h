@@ -54,9 +54,9 @@ public:
 	bool contains(const CBoundingBox3D& other) const;
 
 	bool intersects(const Ray<SCALAR_TYPE>& ray) const;
-	bool intersects(const Ray<SCALAR_TYPE>& ray, POINT_TYPE& pt) const;
+	bool intersects(const Ray<SCALAR_TYPE>& ray, std::vector<POINT_TYPE>& pts) const;
 	bool intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis = -1) const;
-	bool intersects(const LineSegment<SCALAR_TYPE>& seg, POINT_TYPE& pt, int skipAxis = -1) const;
+	bool intersects(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, int skipAxis = -1) const;
 
 	bool intersectsOrContains(const CBoundingBox3D& otherBox) const;
 	bool intersectsOrContains(const LineSegment<SCALAR_TYPE>& seg, int skipAxis = -1) const;
@@ -71,6 +71,9 @@ public:
 	void read(std::istream& in);
 private:
 	static const POINT_TYPE _axes[3];
+
+	bool intersectsInner(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, bool getAll, int skipAxis) const;
+
 	POINT_TYPE _min, _max;
 };
 
