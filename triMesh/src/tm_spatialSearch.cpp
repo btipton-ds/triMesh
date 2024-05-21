@@ -136,13 +136,13 @@ typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbo
 #if 0
 	return shared_from_this();
 #else
-	bool useLeft = _left && (bbox.intersects(_left->_bbox) || bbox.contains(_left->_bbox) || _left->_bbox.contains(bbox));
-	bool useRight = _right && (bbox.intersects(_right->_bbox) || bbox.contains(_right->_bbox) || _right->_bbox.contains(bbox));
+	bool useLeft = _left && (bbox.intersectsOrContains(_left->_bbox));
+	bool useRight = _right && (bbox.intersectsOrContains(_right->_bbox));
 	if (useLeft && useRight)
 		return enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>::shared_from_this();
 
 	for (const auto& entry : _contents) {
-		if (bbox.intersects(entry.getBBox()) || bbox.contains(entry.getBBox()) || entry.getBBox().contains(bbox)) {
+		if (bbox.intersectsOrContains(entry.getBBox())) {
 			return enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>::shared_from_this();
 		}
 	}
@@ -291,7 +291,7 @@ inline bool CSSB_DCL::boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTe
 	if (testType == BoxTestType::Contains)
 		return lhs.contains(rhs);
 	else
-		return lhs.intersects(rhs);
+		return lhs.intersectsOrContains(rhs);
 }
 
 template class CSpatialSearchBase<double, size_t, 25>;

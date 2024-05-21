@@ -52,11 +52,13 @@ public:
 	POINT_TYPE range() const;
 	bool contains(const POINT_TYPE& pt) const;
 	bool contains(const CBoundingBox3D& other) const;
-	// This is actually intersects or contains
-	bool intersects(const CBoundingBox3D& otherBox) const;
+
 	bool intersects(const Ray<SCALAR_TYPE>& ray) const;
-	bool intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis = -1) const;
-	bool intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const;
+
+	bool intersectsOrContains(const CBoundingBox3D& otherBox) const;
+	bool intersectsOrContains(const LineSegment<SCALAR_TYPE>& seg, int skipAxis = -1) const;
+	bool intersectsOrContains(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const;
+
 	void split(int axis, CBoundingBox3D& left, CBoundingBox3D& right, Scalar overlap = 0) const;
 	void grow(Scalar dist);
 	void growPercent(SCALAR_TYPE amount);

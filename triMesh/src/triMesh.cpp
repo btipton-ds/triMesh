@@ -688,13 +688,13 @@ bool CMesh::bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const
 {
 	const auto& tri = _tris[idx];
 
-	return bbox.intersects(_vertices[tri[0]]._pt, _vertices[tri[1]]._pt, _vertices[tri[2]]._pt);
+	return bbox.intersectsOrContains(_vertices[tri[0]]._pt, _vertices[tri[1]]._pt, _vertices[tri[2]]._pt);
 }
 
 bool CMesh::bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const
 {
 	auto seg = getEdgesLineSeg(idx);
-	return bbox.intersects(seg);
+	return bbox.intersectsOrContains(seg);
 }
 
 LineSegment<double> CMesh::getEdgesLineSeg(size_t edgeIdx) const
@@ -1258,7 +1258,7 @@ size_t CMesh::processFoundEdges(const vector<SearchEntry>& allHits, const Boundi
 	for (const auto& hit : allHits) {
 		const auto& edge = _edges[hit.getIndex()];
 		if (contains == BoxTestType::Intersects) {
-			if (bbox.intersects(edge.getSeg(this)))
+			if (bbox.intersectsOrContains(edge.getSeg(this)))
 				edgeIndices.push_back(hit);
 		}
 		else {
@@ -1290,7 +1290,7 @@ size_t CMesh::processFoundEdges(const vector<size_t>& allHits, const BoundingBox
 	for (const auto& hit : allHits) {
 		const auto& edge = _edges[hit];
 		if (contains == BoxTestType::Intersects) {
-			if (bbox.intersects(edge.getSeg(this)))
+			if (bbox.intersectsOrContains(edge.getSeg(this)))
 				edgeIndices.push_back(hit);
 		}
 		else {
@@ -1524,6 +1524,31 @@ void CMesh::squeezeSkinnyTriangles(double minAngleDegrees)
 			squeezeEdge(edgeIdx);
 		}
 	}
+}
+
+bool CMesh::isVertOuter(size_t vIdx) const
+{
+	Vector3d faceCtr(0, 0, 0), faceNorm(0, 0, 0);
+	double faceArea = 0;
+	const auto& vert = getVert(vIdx);
+	for (size_t triIdx : vert._faceIndices) {
+		double tArea = triArea(triIdx);
+		faceArea += tArea;
+
+		Vector3d tCtr = triCentroid(triIdx);
+		faceCtr += tArea * tCtr;
+
+		Vector3d n = triUnitNormal(triIdx);
+		faceNorm += tArea * n;
+	}
+	faceCtr /= faceArea;
+	faceNorm.normalize();
+
+	Vector3d tipPt = getVert(vIdx)._pt;
+	Vector3d tipV = tipPt - faceCtr;
+	tipV.normalize();
+
+	return tipV.dot(faceNorm) >= 0;
 }
 
 bool CMesh::verifyFindAllTris() const {

@@ -144,7 +144,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::contains(const CBoundingBox3D& other) const {
 
 // This is actually intersects or contains
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox) const {
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const CBoundingBox3D& otherBox) const {
 	int i = 0;
 	if (otherBox._min[i] > _max[i] + SAME_DIST_TOL)
 		return false;
@@ -167,7 +167,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox) con
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<SCALAR_TYPE>& seg, int skipAxis) const
 {
 	if (contains(seg._pts[0]) || contains(seg._pts[1]))
 		return true;
@@ -208,7 +208,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray) const 
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const
 {
 	if (contains(pt0) || contains(pt1) || contains(pt2))
 		return true;
@@ -216,12 +216,12 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const POINT_TYPE& pt0, const POINT_
 	LineSegment<SCALAR_TYPE> seg;
 	for (int i = 0; i < 3; i++) {
 		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
-		if (minPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg, i /*Skip testing this axis*/)) {
+		if (minPlane.intersectTri(pt0, pt1, pt2, seg) && intersectsOrContains(seg, i /*Skip testing this axis*/)) {
 			return true;
 		}
 
 		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
-		if (maxPlane.intersectTri(pt0, pt1, pt2, seg) && intersects(seg, i)) {
+		if (maxPlane.intersectTri(pt0, pt1, pt2, seg) && intersectsOrContains(seg, i)) {
 			return true;
 		}
 	}

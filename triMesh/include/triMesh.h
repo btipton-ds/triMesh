@@ -167,6 +167,7 @@ namespace TriMesh {
 		void calGaps(bool multiCore = true) const;
 
 		bool verifyFindAllTris() const;
+		bool isVertOuter(size_t vIdx) const;
 
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;

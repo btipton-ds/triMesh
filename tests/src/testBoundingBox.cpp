@@ -66,13 +66,13 @@ bool testIntersect() {
 		cNoTol(a.getMax() + 1.01* tolx, Vector3d(2, 2, 2)),
 		d(Vector3d(0.25, 0.25, 0.25), Vector3d(0.75, 0.75, 0.75));
 
-	TEST_TRUE(a.intersects(a), "Box intersects itself?");
-	TEST_TRUE(a.intersects(b), "Box intersects at a corner?");
-	TEST_TRUE(a.intersects(c), "Box intersects at a face?");
-	TEST_TRUE(a.intersects(cTol), "Box intersects a face within tolerance?");
-	TEST_FALSE(a.intersects(cNoTol), "Box does not intersect a box out of tolerance?");
-	TEST_TRUE(a.intersects(d), "Box intersects a box it contains?");
-	TEST_TRUE(d.intersects(a), "Box intersects a box which contains it?");
+	TEST_TRUE(a.intersectsOrContains(a), "Box intersects or contains itself?");
+	TEST_TRUE(a.intersectsOrContains(b), "Box intersects or contains at a corner?");
+	TEST_TRUE(a.intersectsOrContains(c), "Box intersects or contains at a face?");
+	TEST_TRUE(a.intersectsOrContains(cTol), "Box intersects or contains a face within tolerance?");
+	TEST_FALSE(a.intersectsOrContains(cNoTol), "Box does not intersect a box out of tolerance?");
+	TEST_TRUE(a.intersectsOrContains(d), "Box intersects or contains a box it contains?");
+	TEST_TRUE(d.intersectsOrContains(a), "Box intersects or contains a box which contains it?");
 
 	cout << "testIntersect passed \n";
 	return true;
@@ -185,10 +185,10 @@ bool testSheetIntersect() {
 	BB d(Vector3d(-0.25, -0.25, 0.5), Vector3d(1.25, 1.25, 0.5));
 	BB e(Vector3d(0.25, 0.25, 0.5), Vector3d(1.25, 1.25, 0.5));
 
-	TEST_TRUE(a.intersects(b), "Match sheet intersects?");
-	TEST_TRUE(a.intersects(c), "Contained sheet intersects?");
-	TEST_TRUE(a.intersects(d), "Oversized sheet intersects?");
-	TEST_TRUE(a.intersects(e), "Overlapping sheet intersects?");
+	TEST_TRUE(a.intersectsOrContains(b), "Match sheet intersects?");
+	TEST_TRUE(a.intersectsOrContains(c), "Contained sheet intersects?");
+	TEST_TRUE(a.intersectsOrContains(d), "Oversized sheet intersects?");
+	TEST_TRUE(a.intersectsOrContains(e), "Overlapping sheet intersects?");
 
 	rotate(a);
 	rotate(b);
@@ -196,10 +196,10 @@ bool testSheetIntersect() {
 	rotate(d);
 	rotate(e);
 
-	TEST_TRUE(a.intersects(b), "Match sheet intersects 1?");
-	TEST_TRUE(a.intersects(c), "Contained sheet intersects 1?");
-	TEST_TRUE(a.intersects(d), "Oversized sheet intersects 1?");
-	TEST_TRUE(a.intersects(e), "Overlapping sheet intersects 1?");
+	TEST_TRUE(a.intersectsOrContains(b), "Match sheet intersects 1?");
+	TEST_TRUE(a.intersectsOrContains(c), "Contained sheet intersects 1?");
+	TEST_TRUE(a.intersectsOrContains(d), "Oversized sheet intersects 1?");
+	TEST_TRUE(a.intersectsOrContains(e), "Overlapping sheet intersects 1?");
 
 	rotate(a);
 	rotate(b);
@@ -207,10 +207,10 @@ bool testSheetIntersect() {
 	rotate(d);
 	rotate(e);
 
-	TEST_TRUE(a.intersects(b), "Match sheet intersects 2?");
-	TEST_TRUE(a.intersects(c), "Contained sheet intersects 2?");
-	TEST_TRUE(a.intersects(d), "Oversized sheet intersects 2?");
-	TEST_TRUE(a.intersects(e), "Overlapping sheet intersects 2?");
+	TEST_TRUE(a.intersectsOrContains(b), "Match sheet intersects 2?");
+	TEST_TRUE(a.intersectsOrContains(c), "Contained sheet intersects 2?");
+	TEST_TRUE(a.intersectsOrContains(d), "Oversized sheet intersects 2?");
+	TEST_TRUE(a.intersectsOrContains(e), "Overlapping sheet intersects 2?");
 
 	return true;
 }
@@ -261,13 +261,13 @@ bool testTriIntersect() {
 	for (int axis = 0; axis < 3; axis++) {
 		int i = 0;
 
-		TEST_TRUE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle which lies on face?"); i++;
-		TEST_TRUE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle which lies inside box?"); i++;
-		TEST_TRUE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle which lies inside box?"); i++;
-		TEST_TRUE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle with no point inside the box?"); i++;
-		TEST_TRUE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle with edge intersecting box edge?"); i++;
-		TEST_FALSE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle with no point inside the box?"); i++;
-		TEST_FALSE(a.intersects(pts[i][0], pts[i][1], pts[i][2]), "Fails to intersects triangle point lies out of tolerance on face?"); i++;
+		TEST_TRUE(a.intersectsOrContains(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle which lies on face?"); i++;
+		TEST_TRUE(a.intersectsOrContains(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle which lies inside box?"); i++;
+		TEST_TRUE(a.intersectsOrContains(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle which lies inside box?"); i++;
+		TEST_TRUE(a.intersectsOrContains(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle with no point inside the box?"); i++;
+		TEST_TRUE(a.intersectsOrContains(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle with edge intersecting box edge?"); i++;
+		TEST_FALSE(a.intersectsOrContains(pts[i][0], pts[i][1], pts[i][2]), "Intersects triangle with no point inside the box?"); i++;
+		TEST_FALSE(a.intersectsOrContains(pts[i][0], pts[i][1], pts[i][2]), "Fails to intersects triangle point lies out of tolerance on face?"); i++;
 
 		for (i = 0; i < 7; i++) {
 			rotate(pts[i][0]);
@@ -300,24 +300,24 @@ bool testSegIntersect() {
 	};
 
 	for (int axis = 0; axis < 3; axis++) {
-		TEST_TRUE(a.intersects(segs[0], -1), "Intersects segment which lies on face?");
-		TEST_TRUE(a.intersects(segs[1], -1), "Intersects segment which lies inside box?");
-		TEST_TRUE(a.intersects(segs[2], -1), "Intersects segment which lies inside box?");
-		TEST_TRUE(a.intersects(segs[3], -1), "Intersects segment which lies inside box?");
+		TEST_TRUE(a.intersectsOrContains(segs[0], -1), "Intersects segment which lies on face?");
+		TEST_TRUE(a.intersectsOrContains(segs[1], -1), "Intersects segment which lies inside box?");
+		TEST_TRUE(a.intersectsOrContains(segs[2], -1), "Intersects segment which lies inside box?");
+		TEST_TRUE(a.intersectsOrContains(segs[3], -1), "Intersects segment which lies inside box?");
 
-		TEST_TRUE(a.intersects(segs[4], -1), "Intersects segment point lies on face?");
-		TEST_TRUE(a.intersects(segs[5], -1), "Intersects segment point lies on face plus tol?");
-		TEST_FALSE(a.intersects(segs[6], -1), "Intersects segment point lies on face plus 2 tol?");
+		TEST_TRUE(a.intersectsOrContains(segs[4], -1), "Intersects segment point lies on face?");
+		TEST_TRUE(a.intersectsOrContains(segs[5], -1), "Intersects segment point lies on face plus tol?");
+		TEST_FALSE(a.intersectsOrContains(segs[6], -1), "Intersects segment point lies on face plus 2 tol?");
 
-		TEST_TRUE(a.intersects(segs[7], -1), "over runs box on both sides?");
-		TEST_TRUE(a.intersects(segs[8], -1), "over runs box on positive side?");
-		TEST_TRUE(a.intersects(segs[9], -1), "over runs box on negative side?");
+		TEST_TRUE(a.intersectsOrContains(segs[7], -1), "over runs box on both sides?");
+		TEST_TRUE(a.intersectsOrContains(segs[8], -1), "over runs box on positive side?");
+		TEST_TRUE(a.intersectsOrContains(segs[9], -1), "over runs box on negative side?");
 
-		TEST_TRUE(a.intersects(segs[10], -1), "seg hits edge of box?");
-		TEST_FALSE(a.intersects(segs[11], -1), "seg hits edge of box?");
+		TEST_TRUE(a.intersectsOrContains(segs[10], -1), "seg hits edge of box?");
+		TEST_FALSE(a.intersectsOrContains(segs[11], -1), "seg hits edge of box?");
 
-		TEST_TRUE(a.intersects(segs[12], -1), "seg hits edge of box?");
-		TEST_FALSE(a.intersects(segs[13], -1), "seg hits edge of box?");
+		TEST_TRUE(a.intersectsOrContains(segs[12], -1), "seg hits edge of box?");
+		TEST_FALSE(a.intersectsOrContains(segs[13], -1), "seg hits edge of box?");
 
 		for (int i = 0; i < 14; i++) {
 			rotate(segs[i]._pts[0]);
