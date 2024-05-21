@@ -106,10 +106,10 @@ namespace TriMesh {
 		return added;
 	}
 
-	LineSegment<double> CPolyLine::getSegment(const CMesh& mesh, size_t idx0) const {
+	LineSegmentd CPolyLine::getSegment(const CMesh& mesh, size_t idx0) const {
 		size_t idx1 = _isClosed ? ((idx0 + 1) % _vertIdx.size()) : idx0 + 1;
 
-		return LineSegment<double>(mesh.getVert(_vertIdx[idx0])._pt, mesh.getVert(_vertIdx[idx1])._pt);
+		return LineSegmentd(mesh.getVert(_vertIdx[idx0])._pt, mesh.getVert(_vertIdx[idx1])._pt);
 	}
 
 	bool CPolyLine::findClosestPointOnPolyline(const CMesh& mesh, const Vector3d& testPt, size_t& plIdx, double& dist, double& param) const {

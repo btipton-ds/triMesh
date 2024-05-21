@@ -70,3 +70,5 @@ struct LineSegment {
 	POINT_TYPE _pts[2];
 };
 
+using LineSegmentd = LineSegment<double>;
+using LineSegmentf = LineSegment<float>;

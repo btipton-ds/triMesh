@@ -141,3 +141,5 @@ inline bool Plane<T>::intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1
 	return intersectRay(ray, hitPt);
 }
 
+using Planed = Plane<double>;
+using Planef = Plane<float>;

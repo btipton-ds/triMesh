@@ -811,7 +811,7 @@ bool CMesh::isClosed() const {
 	return numLaminarEdges() == 0;
 }
 
-size_t CMesh::rayCast(const Ray<double>& ray, vector<RayHit<double>>& hits, bool biDir) const {
+size_t CMesh::rayCast(const Ray<double>& ray, vector<RayHitd>& hits, bool biDir) const {
 	buildNormals();
 	vector<size_t> hitIndices;
 	if (_pTriTree->biDirRayCast(ray, hitIndices) > 0) {
@@ -823,7 +823,7 @@ size_t CMesh::rayCast(const Ray<double>& ray, vector<RayHit<double>>& hits, bool
 				&_vertices[tri[2]]._pt,
 			};
 
-			RayHit<double> hit;
+			RayHitd hit;
 			if (intersectRayTri(ray, pts, hit)) {
 				if (biDir || hit.dist > 0) {
 					hit.triIdx = triIdx2;
@@ -836,7 +836,7 @@ size_t CMesh::rayCast(const Ray<double>& ray, vector<RayHit<double>>& hits, bool
 	return hits.size();
 }
 
-size_t CMesh::rayCast(const LineSegment<double>& seg, vector<RayHit<double>>& hits, double tol) const {
+size_t CMesh::rayCast(const LineSegmentd& seg, vector<RayHitd>& hits, double tol) const {
 	auto segLen = seg.calLength();
 	vector<size_t> hitIndices;
 	if (_pTriTree->biDirRayCast(seg.getRay(), hitIndices) > 0) {
@@ -848,7 +848,7 @@ size_t CMesh::rayCast(const LineSegment<double>& seg, vector<RayHit<double>>& hi
 				&_vertices[tri[2]]._pt,
 			};
 
-			RayHit<double> hit;
+			RayHitd hit;
 			if (seg.intersectTri(pts, hit)) {
 				if ((hit.dist >= -tol) && (hit.dist <= segLen + tol)) {
 					if (hit.dist < 0)
@@ -866,12 +866,12 @@ size_t CMesh::rayCast(const LineSegment<double>& seg, vector<RayHit<double>>& hi
 	return hits.size();
 }
 
-size_t CMesh::rayCast(size_t triIdx, vector<RayHit<double>>& hits, bool biDir) const {
+size_t CMesh::rayCast(size_t triIdx, vector<RayHitd>& hits, bool biDir) const {
 	Vector3d ctr = triCentroid(triIdx);
 	Vector3d norm = triUnitNormal(triIdx);
 	Ray<double> ray(ctr, norm);
 
-	vector<RayHit<double>> temp;
+	vector<RayHitd> temp;
 	rayCast(ray, temp);
 
 	for (const auto& hit : temp) {
@@ -882,7 +882,7 @@ size_t CMesh::rayCast(size_t triIdx, vector<RayHit<double>>& hits, bool biDir) c
 }
 
 double CMesh::findTriMinimumGap(size_t i) const {
-	vector<RayHit<double>> hits;
+	vector<RayHitd> hits;
 	if (rayCast(i, hits) == 0)
 		return FLT_MAX;
 	else
@@ -898,7 +898,7 @@ double CMesh::findMinGap(double tol, bool multiCore) const {
 		auto& minGap = minGapVec[threadNum];
 		size_t num = numTris();
 		for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads) {
-			vector<RayHit<double>> hits;
+			vector<RayHitd> hits;
 			if (rayCast(triIdx, hits) > 0) {
 				double d = fabs(hits[0].dist);
 				if (d > tol && d < minGap)
@@ -934,7 +934,7 @@ void CMesh::getGapHistogram(const vector<double>& binSizes, vector<size_t>& bins
 		auto& bins = binSet[threadNum];
 		size_t num = numTris();
 		for (size_t triIdx = threadNum; triIdx < num; triIdx += numThreads) {
-			vector<RayHit<double>> hits;
+			vector<RayHitd> hits;
 			if (rayCast(triIdx, hits) != 0) {
 				for (const auto& hit : hits) {
 					if (hit.dist < 0)
@@ -1200,7 +1200,7 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 	if (magCp < 1.0e-6)
 		return 0;
 
-	Plane<double> edgePlane(origin, vEdge, false);
+	Planed edgePlane(origin, vEdge, false);
 	size_t vertIdx0 = getOtherVertIdx(edge, edge._faceIndices[0]);
 	size_t vertIdx1 = getOtherVertIdx(edge, edge._faceIndices[1]);
 
@@ -1220,8 +1220,8 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 	Vector3d midPt0 = origin + 0.5 * (vChord0);
 	Vector3d midPt1 = origin + 0.5 * (vChord1);
 
-	Plane<double> midPlane(midPt0, vChord0.normalized(), false);
-	RayHit<double> hit; // dist is from the center to the mid point of the chord NOT a point on the circle
+	Planed midPlane(midPt0, vChord0.normalized(), false);
+	RayHitd hit; // dist is from the center to the mid point of the chord NOT a point on the circle
 	if (!midPlane.intersectLine(midPt1, midPt1 + norm1, hit))
 		return 0;
 
@@ -1526,29 +1526,62 @@ void CMesh::squeezeSkinnyTriangles(double minAngleDegrees)
 	}
 }
 
-bool CMesh::isVertOuter(size_t vIdx) const
+bool CMesh::isVertConvex(size_t vIdx, bool& isConvex, LineSegmentd& axis) const
 {
-	Vector3d faceCtr(0, 0, 0), faceNorm(0, 0, 0);
-	double faceArea = 0;
+	// If the point lies on a plane, the function returns false
+	// Otherwise, if the point is "above" the perimeter isConvex is set true
+	// Otherwise isConvex is set false;
+	Vector3d tipPt = getVert(vIdx)._pt;
+
+	Vector3d perimeterCtr(0, 0, 0);
+	double perimeter = 0;
 	const auto& vert = getVert(vIdx);
 	for (size_t triIdx : vert._faceIndices) {
-		double tArea = triArea(triIdx);
-		faceArea += tArea;
+		const auto& tri = getTri(triIdx);
+		bool first = true;
+		Vector3d pt0, pt1;
+		for (int i = 0; i < 3; i++) {
+			if (tri[i] != vIdx) {
+				if (first) {
+					pt0 = getVert(tri[i])._pt;
+					first = false;
+				} else {
+					pt1 = getVert(tri[i])._pt;
+					break;
+				}
+			}
+		}
 
-		Vector3d tCtr = triCentroid(triIdx);
-		faceCtr += tArea * tCtr;
+		Vector3d vSeg = pt1 - pt0;
+		Vector3d oppCenter = (pt0 + pt1) * 0.5;
+		Vector3d v = tipPt - oppCenter;
+		double l = v.norm();
+		if (l < SAME_DIST_TOL)
+			return false;
+		v / l;
 
-		Vector3d n = triUnitNormal(triIdx);
-		faceNorm += tArea * n;
+		// Make vSeg perpendicular to the line between the center and the tip.
+		vSeg = vSeg - vSeg.dot(v) * v;
+		double segLen = vSeg.norm();;
+		perimeter += segLen;
+
+		perimeterCtr += segLen * oppCenter;
 	}
-	faceCtr /= faceArea;
-	faceNorm.normalize();
+	perimeterCtr /= perimeter;
 
-	Vector3d tipPt = getVert(vIdx)._pt;
-	Vector3d tipV = tipPt - faceCtr;
-	tipV.normalize();
+	Vector3d dir = tipPt - perimeterCtr;
+	dir.normalize();
 
-	return tipV.dot(faceNorm) >= 0;
+	double avgDp = 0;
+	for (size_t triIdx : vert._faceIndices) {
+		Vector3d n = triUnitNormal(triIdx);
+		auto dp = n.dot(dir);
+		avgDp += dp;
+	}
+
+	axis = LineSegment<double>(perimeterCtr, tipPt);
+	isConvex = avgDp >= 0;
+	return true;
 }
 
 bool CMesh::verifyFindAllTris() const {

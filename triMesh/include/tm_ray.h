@@ -37,7 +37,7 @@ template<class T>
 struct Ray {
 	using POINT_TYPE = Vector3<T>;
 
-	Ray(const POINT_TYPE& origin, const POINT_TYPE& dir);
+	Ray(const POINT_TYPE& origin = POINT_TYPE(0, 0, 0), const POINT_TYPE& dir = POINT_TYPE(0,0,0));
 	T distToPt(const POINT_TYPE& pt) const;
 
 	POINT_TYPE _origin, _dir;
@@ -81,3 +81,9 @@ template<class T>
 inline bool RayHit<T>::operator < (const RayHit& rhs) const {
 	return fabs(dist) < fabs(rhs.dist);
 }
+
+using Rayd = Ray<double>;
+using Rayf = Ray<float>;
+
+using RayHitd = RayHit<double>;
+using RayHitf = RayHit<float>;

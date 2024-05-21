@@ -39,6 +39,7 @@ This file is part of the TriMesh library.
 
 template<class T>
 struct LineSegment;
+using LineSegmentd = LineSegment<double>;
 
 namespace TriMesh {
 
@@ -61,8 +62,8 @@ public:
 	void removeFaceIndex(size_t faceIdx);
 	void changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx);
 
-	LineSegment<double> getSeg(const CMesh* pMesh) const;
-	LineSegment<double> getSeg(const CMeshPtr& pMesh) const;
+	LineSegmentd getSeg(const CMesh* pMesh) const;
+	LineSegmentd getSeg(const CMeshPtr& pMesh) const;
 
 	void dump(std::ostream& out) const;
 

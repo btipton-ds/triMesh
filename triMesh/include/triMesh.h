@@ -37,6 +37,7 @@ This file is part of the TriMesh library.
 #include <tm_math.h>
 #include <tm_spatialSearch.h>
 #include <tm_edge.h>
+#include <tm_ray.h>
 #include <tm_vertex.h>
 
 namespace TriMesh {
@@ -116,7 +117,7 @@ namespace TriMesh {
 		BoundingBox getVertBBox(size_t vertIdx) const;
 		bool bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const;
 		bool bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const;
-		LineSegment<double> getEdgesLineSeg(size_t edgeIdx) const;
+		LineSegmentd getEdgesLineSeg(size_t edgeIdx) const;
 		bool isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const;
 
 		const std::vector<size_t>& getSharpEdgeIndices(double edgeAngleRadians = 0) const;
@@ -134,9 +135,9 @@ namespace TriMesh {
 		bool isClosed() const;
 		double findMinGap(double tol = 0.0001, bool multiCore = true) const;
 		void getGapHistogram(const std::vector<double>& binSizes, std::vector<size_t>& bins, bool multiCore = true) const;
-		size_t rayCast(size_t triIdx, std::vector<RayHit<double>>& hits, bool biDir = true) const;
-		size_t rayCast(const Ray<double>& ray, std::vector<RayHit<double>>& hits, bool biDir = true) const;
-		size_t rayCast(const LineSegment<double>& seg, std::vector<RayHit<double>>& hits, double tol = 1.0e-6) const;
+		size_t rayCast(size_t triIdx, std::vector<RayHitd>& hits, bool biDir = true) const;
+		size_t rayCast(const Rayd& ray, std::vector<RayHitd>& hits, bool biDir = true) const;
+		size_t rayCast(const LineSegmentd& seg, std::vector<RayHitd>& hits, double tol = 1.0e-6) const;
 
 		size_t findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
 		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
@@ -167,7 +168,7 @@ namespace TriMesh {
 		void calGaps(bool multiCore = true) const;
 
 		bool verifyFindAllTris() const;
-		bool isVertOuter(size_t vIdx) const;
+		bool isVertConvex(size_t vIdx, bool& isConvex, LineSegmentd& axis) const;
 
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;

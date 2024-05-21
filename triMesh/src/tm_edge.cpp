@@ -35,18 +35,18 @@ This file is part of the TriMesh library.
 using namespace std;
 using namespace TriMesh;
 
-LineSegment<double> CEdge::getSeg(const CMesh* pMesh) const
+LineSegmentd CEdge::getSeg(const CMesh* pMesh) const
 {
 	Vector3d pt0 = pMesh->getVert(_vertIndex[0])._pt;
 	Vector3d pt1 = pMesh->getVert(_vertIndex[1])._pt;
-	return LineSegment<double>(pt0, pt1);
+	return LineSegmentd(pt0, pt1);
 }
 
-LineSegment<double> CEdge::getSeg(const CMeshPtr& pMesh) const
+LineSegmentd CEdge::getSeg(const CMeshPtr& pMesh) const
 {
 	Vector3d pt0 = pMesh->getVert(_vertIndex[0])._pt;
 	Vector3d pt1 = pMesh->getVert(_vertIndex[1])._pt;
-	return LineSegment<double>(pt0, pt1);
+	return LineSegmentd(pt0, pt1);
 }
 
 CEdge::CEdge(size_t vertIdx0, size_t vertIdx1)

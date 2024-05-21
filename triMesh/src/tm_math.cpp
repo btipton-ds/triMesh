@@ -32,7 +32,7 @@ This file is part of the TriMesh library.
 #include <tm_math.h>
 #include <tm_ray.h>
 
-bool intersectRayPlane(const Ray<double>& ray, const Vector3d& origin, const Vector3d& normal, RayHit<double>& hit)
+bool intersectRayPlane(const Ray<double>& ray, const Vector3d& origin, const Vector3d& normal, RayHitd& hit)
 {
 	auto dp = ray._dir.dot(normal);
 	if (fabs(dp) < minNormalizeDivisor)

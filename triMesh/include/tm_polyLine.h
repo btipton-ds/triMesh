@@ -62,7 +62,7 @@ namespace TriMesh {
 		const std::vector<size_t>& getVerts() const;
 
 		BoundingBox calcBoundingBox(const CMesh& mesh) const;
-		LineSegment<double> getSegment(const CMesh& mesh, size_t idx) const;
+		LineSegmentd getSegment(const CMesh& mesh, size_t idx) const;
 		bool findClosestPointOnPolyline(const CMesh& mesh, const Vector3d& testPt, size_t& plIdx, double& dist, double& param) const;
 		
 	private:
