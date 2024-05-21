@@ -142,7 +142,39 @@ bool CBoundingBox3D<SCALAR_TYPE>::contains(const CBoundingBox3D& other) const {
 	return contains(other._min) && contains(other._max);
 }
 
-// This is actually intersects or contains
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis) const
+{
+	POINT_TYPE pt;
+	return intersects(seg, pt, skipAxis);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, POINT_TYPE& pt, int skipAxis) const
+{
+	if (seg.calLength() < SAME_DIST_TOL)
+		return false;
+
+	for (size_t i = 0; i < 3; i++) {
+		if (skipAxis == i)
+			continue;
+
+		RayHit<SCALAR_TYPE> hit;
+		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
+		if (minPlane.intersectLineSegment(seg, hit) && contains(hit.hitPt)) {
+			pt = hit.hitPt;
+			return true;
+		}
+
+		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
+		if (maxPlane.intersectLineSegment(seg, hit) && contains(hit.hitPt)) {
+			pt = hit.hitPt;
+			return true;
+		}
+	}
+	return false;
+}
+
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const CBoundingBox3D& otherBox) const {
 	int i = 0;
@@ -193,16 +225,26 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<SCALAR_
 
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray) const {
+	POINT_TYPE pt;
+	return intersects(ray, pt);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, POINT_TYPE& pt) const {
 	for (int i = 0; i < 3; i++) {
 		RayHit<SCALAR_TYPE> hit;
 
-		Plane<SCALAR_TYPE> minPlane (_min, _axes[i], false);
-		if (minPlane.intersectRay(ray, hit) && contains(hit.hitPt))
+		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
+		if (minPlane.intersectRay(ray, hit) && contains(hit.hitPt)) {
+			pt = hit.hitPt;
 			return true;
+		}
 
 		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
-		if (maxPlane.intersectRay(ray, hit) && contains(hit.hitPt))
+		if (maxPlane.intersectRay(ray, hit) && contains(hit.hitPt)) {
+			pt = hit.hitPt;
 			return true;
+		}
 	}
 	return false;
 }

@@ -54,6 +54,9 @@ public:
 	bool contains(const CBoundingBox3D& other) const;
 
 	bool intersects(const Ray<SCALAR_TYPE>& ray) const;
+	bool intersects(const Ray<SCALAR_TYPE>& ray, POINT_TYPE& pt) const;
+	bool intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis = -1) const;
+	bool intersects(const LineSegment<SCALAR_TYPE>& seg, POINT_TYPE& pt, int skipAxis = -1) const;
 
 	bool intersectsOrContains(const CBoundingBox3D& otherBox) const;
 	bool intersectsOrContains(const LineSegment<SCALAR_TYPE>& seg, int skipAxis = -1) const;

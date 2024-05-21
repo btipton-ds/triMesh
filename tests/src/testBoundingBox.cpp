@@ -300,14 +300,29 @@ bool testSegIntersect() {
 	};
 
 	for (int axis = 0; axis < 3; axis++) {
-		TEST_TRUE(a.intersectsOrContains(segs[0], -1), "Intersects segment which lies on face?");
-		TEST_TRUE(a.intersectsOrContains(segs[1], -1), "Intersects segment which lies inside box?");
-		TEST_TRUE(a.intersectsOrContains(segs[2], -1), "Intersects segment which lies inside box?");
-		TEST_TRUE(a.intersectsOrContains(segs[3], -1), "Intersects segment which lies inside box?");
+		TEST_TRUE(a.intersects(segs[0], -1), "Intersects segment which lies on face?");
+		TEST_TRUE(a.intersects(segs[4], -1), "Intersects segment point lies on face?");
+		TEST_TRUE(a.intersects(segs[5], -1), "Intersects segment point lies on face plus tol?");
+		TEST_FALSE(a.intersects(segs[6], -1), "Intersects segment point lies on face plus 2 tol?");
 
-		TEST_TRUE(a.intersectsOrContains(segs[4], -1), "Intersects segment point lies on face?");
-		TEST_TRUE(a.intersectsOrContains(segs[5], -1), "Intersects segment point lies on face plus tol?");
-		TEST_FALSE(a.intersectsOrContains(segs[6], -1), "Intersects segment point lies on face plus 2 tol?");
+		TEST_TRUE(a.intersects(segs[7], -1), "over runs box on both sides?");
+		TEST_TRUE(a.intersects(segs[8], -1), "over runs box on positive side?");
+		TEST_TRUE(a.intersects(segs[9], -1), "over runs box on negative side?");
+
+		TEST_TRUE(a.intersects(segs[10], -1), "seg hits edge of box?");
+		TEST_FALSE(a.intersects(segs[11], -1), "seg hits edge of box?");
+
+		TEST_TRUE(a.intersects(segs[12], -1), "seg hits edge of box?");
+		TEST_FALSE(a.intersects(segs[13], -1), "seg hits edge of box?");
+
+		TEST_TRUE(a.intersectsOrContains(segs[0], -1), "Intersects or contains segment which lies on face?");
+		TEST_TRUE(a.intersectsOrContains(segs[1], -1), "Intersects or contains segment which lies inside box?");
+		TEST_TRUE(a.intersectsOrContains(segs[2], -1), "Intersects or contains segment which lies inside box?");
+		TEST_TRUE(a.intersectsOrContains(segs[3], -1), "Intersects or contains segment which lies inside box?");
+
+		TEST_TRUE(a.intersectsOrContains(segs[4], -1), "Intersects or contains segment point lies on face?");
+		TEST_TRUE(a.intersectsOrContains(segs[5], -1), "Intersects or contains segment point lies on face plus tol?");
+		TEST_FALSE(a.intersectsOrContains(segs[6], -1), "Intersects sor contains egment point lies on face plus 2 tol?");
 
 		TEST_TRUE(a.intersectsOrContains(segs[7], -1), "over runs box on both sides?");
 		TEST_TRUE(a.intersectsOrContains(segs[8], -1), "over runs box on positive side?");
