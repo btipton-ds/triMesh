@@ -282,21 +282,21 @@ bool testTriIntersect() {
 bool testSegIntersect() {
 	BB a(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
 
-	LineSegment<double> segs[14] = {
-		LineSegment<double>(Vector3d(0, 0, 0), Vector3d(1, 0, 0)),
-		LineSegment<double>(Vector3d(0.1, 0.1, 0.1), Vector3d(1 - 0.1, 0.1, 0.1)),
-		LineSegment<double>(Vector3d(1 - 0.1, 0.1, 0.1), Vector3d(1 - 0.1, 1 - 0.1, 0.1)),
-		LineSegment<double>(Vector3d(1 - 0.1, 1 - 0.1, 0.1), Vector3d(0.1, 0.1, 0.1)),
-		LineSegment<double>(Vector3d(1, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
-		LineSegment<double>(Vector3d(1 + SAME_DIST_TOL, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
-		LineSegment<double>(Vector3d(1 + 2 * SAME_DIST_TOL, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
-		LineSegment<double>(Vector3d(-1, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
-		LineSegment<double>(Vector3d(0, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
-		LineSegment<double>(Vector3d(-1, 0.5, 0.5), Vector3d(1, 0.5, 0.5)),
-		LineSegment<double>(Vector3d(1, 0, 0.5), Vector3d(2, 1, 0.5)),
-		LineSegment<double>(Vector3d(1, -0.01, 0.5), Vector3d(2, 1, 0.5)),
-		LineSegment<double>(Vector3d(0, -0.5, 0.5), Vector3d(2, 0.5, 0.5)),
-		LineSegment<double>(Vector3d(0, -0.51, 0.5), Vector3d(2, 0.5, 0.5))
+	LineSegmentd segs[14] = {
+		LineSegmentd(Vector3d(0, 0, 0), Vector3d(1, 0, 0)),
+		LineSegmentd(Vector3d(0.1, 0.1, 0.1), Vector3d(1 - 0.1, 0.1, 0.1)),
+		LineSegmentd(Vector3d(1 - 0.1, 0.1, 0.1), Vector3d(1 - 0.1, 1 - 0.1, 0.1)),
+		LineSegmentd(Vector3d(1 - 0.1, 1 - 0.1, 0.1), Vector3d(0.1, 0.1, 0.1)),
+		LineSegmentd(Vector3d(1, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegmentd(Vector3d(1 + SAME_DIST_TOL, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegmentd(Vector3d(1 + 2 * SAME_DIST_TOL, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegmentd(Vector3d(-1, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegmentd(Vector3d(0, 0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegmentd(Vector3d(-1, 0.5, 0.5), Vector3d(1, 0.5, 0.5)),
+		LineSegmentd(Vector3d(1, 0, 0.5), Vector3d(2, 1, 0.5)),
+		LineSegmentd(Vector3d(1, -0.01, 0.5), Vector3d(2, 1, 0.5)),
+		LineSegmentd(Vector3d(0, -0.5, 0.5), Vector3d(2, 0.5, 0.5)),
+		LineSegmentd(Vector3d(0, -0.51, 0.5), Vector3d(2, 0.5, 0.5))
 	};
 
 	for (int axis = 0; axis < 3; axis++) {

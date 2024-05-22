@@ -67,11 +67,12 @@ public:
 	Plane(const Plane& src) = default;
 	Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool makePrincipal);
 	Plane(const POINT_TYPE* pts[3]);
+	Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2);
 
 	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt) const;
-	bool intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt) const;
+	bool intersectLineSegment(const LineSegment<POINT_TYPE>& seg, RayHit<T>& hitPt) const;
 	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit) const;
-	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg) const;
+	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<POINT_TYPE>& iSeg) const;
 
 	POINT_TYPE projectPoint(const POINT_TYPE& pt) const;
 	T distanceToPoint(const POINT_TYPE& pt) const;

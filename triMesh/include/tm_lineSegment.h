@@ -47,28 +47,29 @@ struct Ray;
 template<class T>
 struct RayHit;
 
-template<class T>
+template<class VEC_TYPE>
 struct LineSegment {
-	using POINT_TYPE = Vector3<T>;
+	using POINT_TYPE = VEC_TYPE;
+	using SCALAR_TYPE = typename VEC_TYPE::SCALAR_TYPE;
 
 	LineSegment(const POINT_TYPE& p0 = POINT_TYPE(0, 0, 0), const POINT_TYPE& p1 = POINT_TYPE(0, 0, 0));
-	T calLength() const;
+	SCALAR_TYPE calLength() const;
 	POINT_TYPE calcDir() const;
-	POINT_TYPE interpolate(T t) const;
-	T parameterize(const POINT_TYPE& pt) const;
-	bool contains(const POINT_TYPE& pt, T& t) const;
-	Ray<T> getRay() const;
+	POINT_TYPE interpolate(SCALAR_TYPE t) const;
+	SCALAR_TYPE parameterize(const POINT_TYPE& pt) const;
+	bool contains(const POINT_TYPE& pt, SCALAR_TYPE& t) const;
+	Ray<SCALAR_TYPE> getRay() const;
 
-	T distanceToPoint(const POINT_TYPE& pt, T& t) const;
-	T distanceToPoint(const POINT_TYPE& pt) const;
+	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const;
+	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt) const;
 
-	bool intersectTri(const POINT_TYPE* pts[3], RayHit<T>& hit) const;
-	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<T>& hit) const;
-	bool intersectPlane(const Plane<T>& plane, RayHit<T>& hit) const;
-	bool intersectPlane(const POINT_TYPE* pts[3], RayHit<T>& hit) const;
+	bool intersectTri(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit) const;
+	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<SCALAR_TYPE>& hit) const;
+	bool intersectPlane(const Plane<SCALAR_TYPE>& plane, RayHit<SCALAR_TYPE>& hit) const;
+	bool intersectPlane(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit) const;
 
 	POINT_TYPE _pts[2];
 };
 
-using LineSegmentd = LineSegment<double>;
-using LineSegmentf = LineSegment<float>;
+using LineSegmentd = LineSegment<Vector3<double>>;
+using LineSegmentf = LineSegment<Vector3<float>>;

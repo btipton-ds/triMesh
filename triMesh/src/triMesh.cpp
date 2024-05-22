@@ -697,7 +697,7 @@ bool CMesh::bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const
 	return bbox.intersectsOrContains(seg);
 }
 
-LineSegment<double> CMesh::getEdgesLineSeg(size_t edgeIdx) const
+LineSegment<Vector3d> CMesh::getEdgesLineSeg(size_t edgeIdx) const
 {
 	const CEdge& edge = _edges[edgeIdx];
 	return edge.getSeg(this);
@@ -1579,7 +1579,7 @@ bool CMesh::isVertConvex(size_t vIdx, bool& isConvex, LineSegmentd& axis) const
 		avgDp += dp;
 	}
 
-	axis = LineSegment<double>(perimeterCtr, tipPt);
+	axis = LineSegment<Vector3d>(perimeterCtr, tipPt);
 	isConvex = avgDp >= 0;
 	return true;
 }

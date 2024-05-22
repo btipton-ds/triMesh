@@ -55,6 +55,8 @@ template <typename T>
 class Vector3
 {
 public:
+	using SCALAR_TYPE = T;
+
 	Vector3() = default;
 	Vector3(const Vector3& src) = default;
 	inline Vector3(const Eigen::Matrix<T, 3, 1>& src)
@@ -113,6 +115,8 @@ public:
 			return true;
 		else if (_data[i] > rhs._data[i])
 			return false;
+
+		return false;
 	}
 
 	inline Vector3& operator -=(const Vector3& rhs)

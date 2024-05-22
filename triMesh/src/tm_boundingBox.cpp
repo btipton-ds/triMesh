@@ -145,20 +145,20 @@ bool CBoundingBox3D<SCALAR_TYPE>::contains(const CBoundingBox3D& other) const {
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<POINT_TYPE>& seg, int skipAxis) const
 {
 	vector<POINT_TYPE> pts;
 	return intersectsInner(seg, pts, false, skipAxis);
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, int skipAxis) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<POINT_TYPE>& seg, vector<POINT_TYPE>& pts, int skipAxis) const
 {
 	return intersectsInner(seg, pts, true, skipAxis);
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, bool getAll, int skipAxis) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment<POINT_TYPE>& seg, vector<POINT_TYPE>& pts, bool getAll, int skipAxis) const
 {
 	pts.clear();
 	if (seg.calLength() < SAME_DIST_TOL)
@@ -211,7 +211,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const CBoundingBox3D& oth
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<SCALAR_TYPE>& seg, int skipAxis) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<POINT_TYPE>& seg, int skipAxis) const
 {
 	if (contains(seg._pts[0]) || contains(seg._pts[1]))
 		return true;
@@ -281,7 +281,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const POINT_TYPE& pt0, co
 	if (contains(pt0) || contains(pt1) || contains(pt2))
 		return true;
 
-	LineSegment<SCALAR_TYPE> seg;
+	LineSegment<POINT_TYPE> seg;
 	for (int i = 0; i < 3; i++) {
 		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
 		if (minPlane.intersectTri(pt0, pt1, pt2, seg) && intersectsOrContains(seg, i /*Skip testing this axis*/)) {
@@ -298,7 +298,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const POINT_TYPE& pt0, co
 }
 
 template <class SCALAR_TYPE>
-void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment<SCALAR_TYPE> edgeSegs[12]) const
+void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment<POINT_TYPE> edgeSegs[12]) const
 {
 	POINT_TYPE r = range();
 	POINT_TYPE corners[] = {
@@ -314,22 +314,22 @@ void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment<SCALAR_TYPE> edgeSegs[12]
 	};
 
 	// x edgeSegs
-	edgeSegs[0] = LineSegment<SCALAR_TYPE>(corners[0], corners[1]);
-	edgeSegs[1] = LineSegment<SCALAR_TYPE>(corners[3], corners[2]);
-	edgeSegs[2] = LineSegment<SCALAR_TYPE>(corners[4], corners[5]);
-	edgeSegs[3] = LineSegment<SCALAR_TYPE>(corners[7], corners[6]);
+	edgeSegs[0] = LineSegment<POINT_TYPE>(corners[0], corners[1]);
+	edgeSegs[1] = LineSegment<POINT_TYPE>(corners[3], corners[2]);
+	edgeSegs[2] = LineSegment<POINT_TYPE>(corners[4], corners[5]);
+	edgeSegs[3] = LineSegment<POINT_TYPE>(corners[7], corners[6]);
 
 	// y edgeSegs
-	edgeSegs[4] = LineSegment<SCALAR_TYPE>(corners[0], corners[3]);
-	edgeSegs[5] = LineSegment<SCALAR_TYPE>(corners[1], corners[2]);
-	edgeSegs[6] = LineSegment<SCALAR_TYPE>(corners[4], corners[7]);
-	edgeSegs[7] = LineSegment<SCALAR_TYPE>(corners[5], corners[6]);
+	edgeSegs[4] = LineSegment<POINT_TYPE>(corners[0], corners[3]);
+	edgeSegs[5] = LineSegment<POINT_TYPE>(corners[1], corners[2]);
+	edgeSegs[6] = LineSegment<POINT_TYPE>(corners[4], corners[7]);
+	edgeSegs[7] = LineSegment<POINT_TYPE>(corners[5], corners[6]);
 
 	// z edgeSegs
-	edgeSegs[8] = LineSegment<SCALAR_TYPE>(corners[0], corners[4]);
-	edgeSegs[9] = LineSegment<SCALAR_TYPE>(corners[1], corners[5]);
-	edgeSegs[10] = LineSegment<SCALAR_TYPE>(corners[2], corners[6]);
-	edgeSegs[11] = LineSegment<SCALAR_TYPE>(corners[3], corners[7]);
+	edgeSegs[8] = LineSegment<POINT_TYPE>(corners[0], corners[4]);
+	edgeSegs[9] = LineSegment<POINT_TYPE>(corners[1], corners[5]);
+	edgeSegs[10] = LineSegment<POINT_TYPE>(corners[2], corners[6]);
+	edgeSegs[11] = LineSegment<POINT_TYPE>(corners[3], corners[7]);
 
 }
 

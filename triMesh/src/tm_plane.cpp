@@ -38,6 +38,15 @@ Plane<T>::Plane(const POINT_TYPE* pts[3])
 	: Plane(*pts[0], triangleUnitNormal(pts), false)
 {}
 
+template<class T>
+Plane<T>::Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2)
+{
+	_origin = pt0;
+	POINT_TYPE v0 = pt1 - pt0;
+	POINT_TYPE v1 = pt2 - pt0;
+	_normal = v1.cross(v0);
+	_normal.normalize();
+}
 
 template<class T>
 Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool makePrincipal)
@@ -74,7 +83,7 @@ Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool makePri
 }
 
 template<class T>
-bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt) const
+bool Plane<T>::intersectLineSegment(const LineSegment<POINT_TYPE>& seg, RayHit<T>& hitPt) const
 {
 	if (intersectLine(seg._pts[0], seg._pts[1], hitPt)) {
 		if (hitPt.dist < -SAME_DIST_TOL)
@@ -89,7 +98,7 @@ bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt)
 }
 
 template<class T>
-bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg) const
+bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<POINT_TYPE>& iSeg) const
 {
 
 	int numHits = 0;
@@ -100,14 +109,14 @@ bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const 
 		int j = (i + 1) % 3;
 		const auto& ptA = ptOf3(i, pt0, pt1, pt2);
 		const auto& ptB = ptOf3(j, pt0, pt1, pt2);
-		LineSegment<T> seg(ptA, ptB);
+		LineSegment<POINT_TYPE> seg(ptA, ptB);
 
 		if (intersectLineSegment(seg, hit)) {
 			if (numHits == 0)
 				iPt0 = hit.hitPt;
 			else if (numHits == 1) {
 				iPt1 = hit.hitPt;
-				iSeg = LineSegment<T>(iPt0, iPt1);
+				iSeg = LineSegment<POINT_TYPE>(iPt0, iPt1);
 				return true;
 			}
 			numHits++;

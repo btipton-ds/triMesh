@@ -38,7 +38,7 @@ template <class SCALAR_TYPE>
 class CBoundingBox3D {
 public:
 	using Scalar = SCALAR_TYPE;
-	using POINT_TYPE = Vector3< SCALAR_TYPE>;
+	using POINT_TYPE = Vector3<SCALAR_TYPE>;
 
 	CBoundingBox3D();
 	CBoundingBox3D(const POINT_TYPE& pt0);
@@ -55,24 +55,24 @@ public:
 
 	bool intersects(const Ray<SCALAR_TYPE>& ray) const;
 	bool intersects(const Ray<SCALAR_TYPE>& ray, std::vector<POINT_TYPE>& pts) const;
-	bool intersects(const LineSegment<SCALAR_TYPE>& seg, int skipAxis = -1) const;
-	bool intersects(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, int skipAxis = -1) const;
+	bool intersects(const LineSegment<POINT_TYPE>& seg, int skipAxis = -1) const;
+	bool intersects(const LineSegment<POINT_TYPE>& seg, std::vector<POINT_TYPE>& pts, int skipAxis = -1) const;
 
 	bool intersectsOrContains(const CBoundingBox3D& otherBox) const;
-	bool intersectsOrContains(const LineSegment<SCALAR_TYPE>& seg, int skipAxis = -1) const;
+	bool intersectsOrContains(const LineSegment<POINT_TYPE>& seg, int skipAxis = -1) const;
 	bool intersectsOrContains(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const;
 
 	void split(int axis, CBoundingBox3D& left, CBoundingBox3D& right, Scalar overlap = 0) const;
 	void grow(Scalar dist);
 	void growPercent(SCALAR_TYPE amount);
-	void getEdges(LineSegment<SCALAR_TYPE> edgeSegs[12]) const;
+	void getEdges(LineSegment<POINT_TYPE> edgeSegs[12]) const;
 
 	void write(std::ostream& out) const;
 	void read(std::istream& in);
 private:
 	static const POINT_TYPE _axes[3];
 
-	bool intersectsInner(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, bool getAll, int skipAxis) const;
+	bool intersectsInner(const LineSegment<POINT_TYPE>& seg, std::vector<POINT_TYPE>& pts, bool getAll, int skipAxis) const;
 
 	POINT_TYPE _min, _max;
 };
