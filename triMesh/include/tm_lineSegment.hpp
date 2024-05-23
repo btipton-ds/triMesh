@@ -173,3 +173,15 @@ bool LineSegment<VEC_TYPE>::intersectPlane(const POINT_TYPE* pts[3], RayHit<SCAL
 {
 	return intersectPlane(Plane<SCALAR_TYPE>(pts), hit);
 }
+
+template<class VEC_TYPE>
+bool LineSegment<VEC_TYPE>::operator < (const LineSegment& rhs) const
+{
+	for (int i = 0; i < 2; i++) {
+		if (_pts[i] < rhs._pts[i])
+			return true;
+		else if (rhs._pts[i] < _pts[i])
+			return false;
+	}
+	return false;
+}

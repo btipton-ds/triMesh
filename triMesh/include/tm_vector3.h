@@ -97,7 +97,7 @@ public:
 		return _data[0] != rhs._data[0] || _data[1] != rhs._data[1] || _data[2] != rhs._data[2];
 	}
 
-	inline bool operator < (const Vector3 & rhs) {
+	inline bool operator < (const Vector3 & rhs) const {
 		int i = 0;
 		if (_data[i] < rhs._data[i])
 			return true;
