@@ -34,8 +34,10 @@ This file is part of the TriMesh library.
 #define TEST_TRUE(FUNC, MESSAGE) \
 { \
 	bool result = (FUNC); \
-	cout << MESSAGE << (result ? " pass\n" : " fail\n"); \
-	if (!result) return false; \
+	if (!result) { \
+		cout << MESSAGE << " fail\n"; \
+		return false; \
+	} \
 }
 
 #define TEST_FALSE(FUNC, MESSAGE) TEST_TRUE(!(FUNC), MESSAGE)
@@ -43,9 +45,7 @@ This file is part of the TriMesh library.
 #define TEST_EQUAL(FUNC, VAL, MESSAGE) \
 { \
 	auto result = (FUNC); \
-	if (result == VAL) { \
-		cout << MESSAGE << " pass\n"; \
-	} else {\
+	if (result != VAL) { \
 		cout << MESSAGE << " fail. Expected " << VAL << ", got " << result << "\n"; \
 		return false; \
 	} \
