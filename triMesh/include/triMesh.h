@@ -115,6 +115,7 @@ namespace TriMesh {
 		BoundingBox getTriBBox(size_t triIdx) const;
 		BoundingBox getEdgeBBox(size_t edgeIdx) const;
 		BoundingBox getVertBBox(size_t vertIdx) const;
+		bool intersectsTri(const LineSegmentd& seg, size_t idx) const;
 		bool bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const;
 		bool bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const;
 		LineSegmentd getEdgesLineSeg(size_t edgeIdx) const;

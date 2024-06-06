@@ -684,6 +684,18 @@ CMesh::BoundingBox CMesh::getVertBBox(size_t vertIdx) const
 	return result;
 }
 
+bool CMesh::intersectsTri(const LineSegmentd& seg, size_t idx) const
+{
+	const auto& tri = _tris[idx];
+	const Vector3d* pts[] = {
+		&getVert(tri[0])._pt,
+		&getVert(tri[1])._pt,
+		&getVert(tri[2])._pt,
+	};
+	RayHitd hit;
+	return seg.intersectTri(pts, hit);
+}
+
 bool CMesh::bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const
 {
 	const auto& tri = _tris[idx];
