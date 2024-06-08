@@ -684,7 +684,7 @@ CMesh::BoundingBox CMesh::getVertBBox(size_t vertIdx) const
 	return result;
 }
 
-bool CMesh::intersectsTri(const LineSegmentd& seg, size_t idx) const
+bool CMesh::intersectsTri(const LineSegmentd& seg, size_t idx, RayHitd& hit) const
 {
 	const auto& tri = _tris[idx];
 	const Vector3d* pts[] = {
@@ -692,8 +692,13 @@ bool CMesh::intersectsTri(const LineSegmentd& seg, size_t idx) const
 		&getVert(tri[1])._pt,
 		&getVert(tri[2])._pt,
 	};
-	RayHitd hit;
-	return seg.intersectTri(pts, hit);
+
+	if (seg.intersectTri(pts, hit)) {
+		hit.triIdx = idx;
+		return true;
+	}
+
+	return false;
 }
 
 bool CMesh::bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const
@@ -730,6 +735,43 @@ bool CMesh::isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const {
 	double sinTheta = norm0.cross(norm1).norm();
 	bool isSharp = sinTheta > sinEdgeAngle;
 	return isSharp;
+}
+
+bool CMesh::createPatches(const vector<size_t>& triIndices, vector<vector<size_t>>& patches) const
+{
+	set<size_t> triSet;
+	triSet.insert(triIndices.begin(), triIndices.end());
+
+	while (!triSet.empty()) {
+		vector<size_t> patch, stack;
+		size_t triIdx = *triSet.begin();
+		stack.push_back(triIdx);
+		triSet.erase(triIdx);
+		while (!stack.empty()) {
+			size_t triIdx = stack.back();
+			stack.pop_back();
+			patch.push_back(triIdx);
+			const auto& tri = _tris[triIdx];
+			for (int i = 0; i < 3; i++) {
+				const auto& triEdges = _vertices[tri[i]]._edgeIndices;
+				for (size_t triEdgeIdx : triEdges) {
+					const auto& edge = _edges[triEdgeIdx];
+					for (int j = 0; j < edge._numFaces; j++) {
+						size_t nextTriIdx = edge._faceIndices[j];
+						if (triSet.contains(nextTriIdx)) {
+							stack.push_back(nextTriIdx);
+							triSet.erase(nextTriIdx);
+						}
+					}
+				}
+			}
+		}
+
+		if (!patch.empty())
+			patches.push_back(patch);
+	}
+
+	return !patches.empty();
 }
 
 const vector<size_t>& CMesh::getSharpEdgeIndices(double edgeAngleRadians) const

@@ -115,11 +115,12 @@ namespace TriMesh {
 		BoundingBox getTriBBox(size_t triIdx) const;
 		BoundingBox getEdgeBBox(size_t edgeIdx) const;
 		BoundingBox getVertBBox(size_t vertIdx) const;
-		bool intersectsTri(const LineSegmentd& seg, size_t idx) const;
+		bool intersectsTri(const LineSegmentd& seg, size_t idx, RayHitd& hit) const;
 		bool bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const;
 		bool bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const;
 		LineSegmentd getEdgesLineSeg(size_t edgeIdx) const;
 		bool isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const;
+		bool createPatches(const std::vector<size_t>& triIndices, std::vector<std::vector<size_t>>& patches) const;
 
 		const std::vector<size_t>& getSharpEdgeIndices(double edgeAngleRadians = 0) const;
 		size_t createSharpEdgeVertexLines(size_t sharpVertIdx, std::set<size_t>& availEdges, double sharpEdgeAngleRadians, std::vector<std::vector<size_t>>& vertIndices) const;
