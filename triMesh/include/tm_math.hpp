@@ -140,7 +140,12 @@ bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit
 
 	Vector3<T> v0 = *pts[1] - *pts[0];
 	Vector3<T> v1 = *pts[2] - *pts[0];
-	Vector3<T> norm = safeNormalize(v0.cross(v1));
+	
+	Vector3<T> norm = v0.cross(v1);
+	T l = norm.norm();
+	if (l < minNormalizeDivisor)
+		return false;
+	norm /= l;
 
 	Plane<T> pl(*(pts[0]), norm, false);
 	if (!pl.intersectRay(ray, hit))

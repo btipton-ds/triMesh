@@ -127,6 +127,16 @@ bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const 
 }
 
 template<class T>
+bool Plane<T>::isCoincident(const Plane& other, T tol) const
+{
+	if (distanceToPoint(other._origin) >= tol)
+		return false;
+	if (_normal.cross(other._normal).norm() > 1.0e-3)
+		return false;
+	return true;
+}
+
+template<class T>
 typename Plane<T>::POINT_TYPE Plane<T>::projectPoint(const POINT_TYPE& pt) const
 {
 	POINT_TYPE v = pt - _origin;

@@ -73,6 +73,7 @@ public:
 	bool intersectLineSegment(const LineSegment<POINT_TYPE>& seg, RayHit<T>& hitPt) const;
 	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit) const;
 	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<POINT_TYPE>& iSeg) const;
+	bool isCoincident(const Plane& other, T tol) const;
 
 	POINT_TYPE projectPoint(const POINT_TYPE& pt) const;
 	T distanceToPoint(const POINT_TYPE& pt) const;
