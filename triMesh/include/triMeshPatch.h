@@ -1,5 +1,7 @@
 #pragma once
 
+#pragma once
+
 /*
 
 This file is part of the TriMesh library.
@@ -30,61 +32,33 @@ This file is part of the TriMesh library.
 */
 
 #include <tm_defines.h>
+#include <map>
+#include <vector>
+#include <iostream>
+
 #include <tm_math.h>
-#include <tm_vector3.h>
+#include <tm_spatialSearch.h>
+#include <tm_edge.h>
+#include <tm_ray.h>
+#include <tm_vertex.h>
 
-template<class T>
-struct Ray {
-	using POINT_TYPE = Vector3<T>;
+namespace TriMesh {
+class TriMesh;
+using CMeshConstPtr = std::shared_ptr<const CMesh>;
 
-	Ray(const POINT_TYPE& origin = POINT_TYPE(0, 0, 0), const POINT_TYPE& dir = POINT_TYPE(0,0,0));
-	T distToPt(const POINT_TYPE& pt) const;
+class Patch {
+public:
+	bool empty() const;
+	void addFace(const std::vector<size_t>& pFace);
+	const std::vector<std::vector<size_t>>& getSharpEdgeChains() const;
+	const std::vector<std::vector<size_t>>& getFaces() const;
+	void finishCreation(const CMesh* pMesh, double sinSharpEdgeAngle);
 
-	POINT_TYPE _origin, _dir;
+private:
+	std::vector<std::vector<size_t>> _sharpEdgeChains;
+	std::vector<std::vector<size_t>> _faces;
 };
 
-template<class T>
-struct RayHit {
-	using POINT_TYPE = Vector3<T>;
+using PatchPtr = std::shared_ptr<Patch>;
 
-	RayHit();
-	bool operator < (const RayHit& rhs) const;
-
-	size_t triIdx = -1;
-	size_t edgeIdx = -1;
-	T dist = 0;
-	POINT_TYPE hitPt;
-};
-
-template<class T>
-inline Ray<T>::Ray(const POINT_TYPE& origin, const POINT_TYPE& dir)
-	: _origin(origin)
-	, _dir(dir)
-{
-	_dir.normalize();
 }
-
-template<class T>
-T Ray<T>::distToPt(const POINT_TYPE& pt) const
-{
-	POINT_TYPE v = pt - _origin;
-	v = v - _dir.dot(v) * _dir;
-	return v.norm();
-}
-
-template<class T>
-inline RayHit<T>::RayHit()
-	: triIdx(stm1)
-	, dist(0)
-{}
-
-template<class T>
-inline bool RayHit<T>::operator < (const RayHit& rhs) const {
-	return fabs(dist) < fabs(rhs.dist);
-}
-
-using Rayd = Ray<double>;
-using Rayf = Ray<float>;
-
-using RayHitd = RayHit<double>;
-using RayHitf = RayHit<float>;

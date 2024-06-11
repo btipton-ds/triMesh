@@ -41,6 +41,7 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 #include <tm_lineSegment.h>
 #include <tm_ray.h>
 #include <triMesh.h>
+#include <triMeshPatch.h>
 #include <MultiCoreUtil.h>
 
 using namespace std;
@@ -737,20 +738,21 @@ bool CMesh::isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const {
 	return isSharp;
 }
 
-bool CMesh::createPatches(const vector<size_t>& triIndices, vector<vector<size_t>>& patches) const
+bool CMesh::createPatches(const vector<size_t>& triIndices, double sinSharpEdgeAngle, vector<PatchPtr>& patches) const
 {
 	set<size_t> triSet;
 	triSet.insert(triIndices.begin(), triIndices.end());
 
 	while (!triSet.empty()) {
-		vector<size_t> patch, stack;
+		PatchPtr pPatch = make_shared<Patch>();
+		vector<size_t> face, stack;
 		size_t triIdx = *triSet.begin();
 		stack.push_back(triIdx);
 		triSet.erase(triIdx);
 		while (!stack.empty()) {
 			size_t triIdx = stack.back();
 			stack.pop_back();
-			patch.push_back(triIdx);
+			face.push_back(triIdx);
 			const auto& tri = _tris[triIdx];
 			for (int i = 0; i < 3; i++) {
 				const auto& triEdges = _vertices[tri[i]]._edgeIndices;
@@ -766,10 +768,15 @@ bool CMesh::createPatches(const vector<size_t>& triIndices, vector<vector<size_t
 				}
 			}
 		}
+		if (!face.empty())
+			pPatch->addFace(face);
 
-		if (!patch.empty())
-			patches.push_back(patch);
+		if (!pPatch->empty())
+			patches.push_back(pPatch);
 	}
+
+	for (const auto& pPatch : patches)
+		pPatch->finishCreation(this, sinSharpEdgeAngle);
 
 	return !patches.empty();
 }

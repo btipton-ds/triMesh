@@ -56,6 +56,9 @@ namespace TriMesh {
 	using CMeshPtr = std::shared_ptr<CMesh>;
 	using CMeshConstPtr = std::shared_ptr<const CMesh>;
 
+	class Patch;
+	using PatchPtr = std::shared_ptr<Patch>;
+
 	class CMesh : public std::enable_shared_from_this<CMesh> {
 	public:
 		using SearchTree = CSpatialSearchST<double>;
@@ -120,7 +123,7 @@ namespace TriMesh {
 		bool bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const;
 		LineSegmentd getEdgesLineSeg(size_t edgeIdx) const;
 		bool isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const;
-		bool createPatches(const std::vector<size_t>& triIndices, std::vector<std::vector<size_t>>& patches) const;
+		bool createPatches(const std::vector<size_t>& triIndices, double sinSharpEdgeAngle, std::vector<PatchPtr>& patches) const;
 
 		const std::vector<size_t>& getSharpEdgeIndices(double edgeAngleRadians = 0) const;
 		size_t createSharpEdgeVertexLines(size_t sharpVertIdx, std::set<size_t>& availEdges, double sharpEdgeAngleRadians, std::vector<std::vector<size_t>>& vertIndices) const;
