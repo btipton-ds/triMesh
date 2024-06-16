@@ -148,7 +148,7 @@ bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit
 	norm /= l;
 
 	Plane<T> pl(*(pts[0]), norm, false);
-	if (!pl.intersectRay(ray, hit))
+	if (!pl.intersectRay(ray, hit, (T)SAME_DIST_TOL))
 		return false;
 
 	return pointInTriangle(pts, hit.hitPt);

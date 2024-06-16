@@ -694,7 +694,7 @@ bool CMesh::intersectsTri(const LineSegmentd& seg, size_t idx, RayHitd& hit) con
 		&getVert(tri[2])._pt,
 	};
 
-	if (seg.intersectTri(pts, hit)) {
+	if (seg.intersectTri(pts, hit, SAME_DIST_TOL)) {
 		hit.triIdx = idx;
 		return true;
 	}
@@ -706,16 +706,16 @@ bool CMesh::bboxIntersectsTri(const BoundingBox& bbox, size_t idx) const
 {
 	const auto& tri = _tris[idx];
 
-	return bbox.intersectsOrContains(_vertices[tri[0]]._pt, _vertices[tri[1]]._pt, _vertices[tri[2]]._pt);
+	return bbox.intersectsOrContains(_vertices[tri[0]]._pt, _vertices[tri[1]]._pt, _vertices[tri[2]]._pt, SAME_DIST_TOL);
 }
 
 bool CMesh::bboxIntersectsEdge(const BoundingBox& bbox, size_t idx) const
 {
 	auto seg = getEdgesLineSeg(idx);
-	return bbox.intersectsOrContains(seg);
+	return bbox.intersectsOrContains(seg, SAME_DIST_TOL, -1);
 }
 
-LineSegment<Vector3d> CMesh::getEdgesLineSeg(size_t edgeIdx) const
+LineSegmentd CMesh::getEdgesLineSeg(size_t edgeIdx) const
 {
 	const CEdge& edge = _edges[edgeIdx];
 	return edge.getSeg(this);
@@ -910,7 +910,7 @@ size_t CMesh::rayCast(const LineSegmentd& seg, vector<RayHitd>& hits, double tol
 			};
 
 			RayHitd hit;
-			if (seg.intersectTri(pts, hit)) {
+			if (seg.intersectTri(pts, hit, SAME_DIST_TOL)) {
 				if ((hit.dist >= -tol) && (hit.dist <= segLen + tol)) {
 					if (hit.dist < 0)
 						hit.dist = 0;
@@ -1020,7 +1020,7 @@ void CMesh::getGapHistogram(const vector<double>& binSizes, vector<size_t>& bins
 
 void CMesh::merge(CMeshPtr& src, bool destructive)
 {
-	if (getBBox().contains(src->getBBox())) {
+	if (getBBox().contains(src->getBBox(), SAME_DIST_TOL)) {
 		for (const auto& tri : src->_tris) {
 			CVertex pts[3];
 			for (int i = 0; i < 3; i++) {
@@ -1283,7 +1283,7 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 
 	Planed midPlane(midPt0, vChord0.normalized(), false);
 	RayHitd hit; // dist is from the center to the mid point of the chord NOT a point on the circle
-	if (!midPlane.intersectLine(midPt1, midPt1 + norm1, hit))
+	if (!midPlane.intersectLine(midPt1, midPt1 + norm1, hit, SAME_DIST_TOL))
 		return 0;
 
 	double radius = (hit.hitPt - origin).norm();
@@ -1319,14 +1319,14 @@ size_t CMesh::processFoundEdges(const vector<SearchEntry>& allHits, const Boundi
 	for (const auto& hit : allHits) {
 		const auto& edge = _edges[hit.getIndex()];
 		if (contains == BoxTestType::Intersects) {
-			if (bbox.intersectsOrContains(edge.getSeg(this)))
+			if (bbox.intersectsOrContains(edge.getSeg(this), SAME_DIST_TOL, -1))
 				edgeIndices.push_back(hit);
 		}
 		else {
 			int numInBounds = 0;
 			for (int i = 0; i < 2; i++) {
 				const auto& v = _vertices[edge._vertIndex[i]];
-				if (bbox.contains(v._pt))
+				if (bbox.contains(v._pt, SAME_DIST_TOL))
 					numInBounds++;
 			}
 			if (numInBounds == 2)
@@ -1351,14 +1351,14 @@ size_t CMesh::processFoundEdges(const vector<size_t>& allHits, const BoundingBox
 	for (const auto& hit : allHits) {
 		const auto& edge = _edges[hit];
 		if (contains == BoxTestType::Intersects) {
-			if (bbox.intersectsOrContains(edge.getSeg(this)))
+			if (bbox.intersectsOrContains(edge.getSeg(this), SAME_DIST_TOL, -1))
 				edgeIndices.push_back(hit);
 		}
 		else {
 			int numInBounds = 0;
 			for (int i = 0; i < 2; i++) {
 				const auto& v = _vertices[edge._vertIndex[i]];
-				if (bbox.contains(v._pt))
+				if (bbox.contains(v._pt, SAME_DIST_TOL))
 					numInBounds++;
 			}
 			if (numInBounds == 2)
@@ -1384,7 +1384,7 @@ size_t CMesh::processFoundTris(const vector<SearchEntry>& allHits, const Boundin
 	bool useContains = contains == BoxTestType::Contains;
 	for (const auto& triEntry : allHits) {
 		size_t idx = triEntry.getIndex();
-		bool useEntry = useContains ? bbox.contains(triEntry.getBBox()) : bboxIntersectsTri(bbox, idx);
+		bool useEntry = useContains ? bbox.contains(triEntry.getBBox(), SAME_DIST_TOL) : bboxIntersectsTri(bbox, idx);
 		if (useEntry && bboxIntersectsTri(bbox, idx)) {
 			triIndices.push_back(triEntry);
 		}
@@ -1407,7 +1407,7 @@ size_t CMesh::processFoundTris(const vector<size_t>& allHits, const BoundingBox&
 	bool useContains = contains == BoxTestType::Contains;
 	triIndices.reserve(triIndices.size() + allHits.size());
 	for (const auto& idx : allHits) {
-		bool useEntry = useContains ? bbox.contains(getTriBBox(idx)) : bboxIntersectsTri(bbox, idx);
+		bool useEntry = useContains ? bbox.contains(getTriBBox(idx), SAME_DIST_TOL) : bboxIntersectsTri(bbox, idx);
 		if (useEntry) {
 			triIndices.push_back(idx);
 		}
@@ -1442,6 +1442,13 @@ Vector3d CMesh::triUnitNormal(size_t triIdx) const {
 	Vector3d v1 = pt2 - pt0;
 	Vector3d normal = v0.cross(v1).normalized();
 	return normal;
+}
+
+Planed CMesh::triPlane(size_t triIdx) const
+{
+	Vector3d ctr = triCentroid(triIdx);
+	Vector3d n = triUnitNormal(triIdx);
+	return Planed(ctr, n, false);
 }
 
 double CMesh::triArea(size_t triIdx) const
@@ -1640,7 +1647,7 @@ bool CMesh::isVertConvex(size_t vIdx, bool& isConvex, LineSegmentd& axis) const
 		avgDp += dp;
 	}
 
-	axis = LineSegment<Vector3d>(perimeterCtr, tipPt);
+	axis = LineSegmentd(perimeterCtr, tipPt);
 	isConvex = avgDp >= 0;
 	return true;
 }

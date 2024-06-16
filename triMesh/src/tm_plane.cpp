@@ -64,7 +64,7 @@ Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool makePri
 			dir[i] = 1;
 			RayHit<T> hit;
 			Ray<T> ray(POINT_TYPE(0, 0, 0), dir);
-			if (intersectRay(ray, hit) && fabs(hit.dist) < minDist) {
+			if (intersectRay(ray, hit, (T)SAME_DIST_TOL) && fabs(hit.dist) < minDist) {
 				minDist = fabs(hit.dist);
 				testOrigin = hit.hitPt;
 			}
@@ -83,13 +83,13 @@ Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool makePri
 }
 
 template<class T>
-bool Plane<T>::intersectLineSegment(const LineSegment<POINT_TYPE>& seg, RayHit<T>& hitPt) const
+bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const
 {
-	if (intersectLine(seg._pts[0], seg._pts[1], hitPt)) {
-		if (hitPt.dist < -SAME_DIST_TOL)
+	if (intersectLine(seg._pts[0], seg._pts[1], hitPt, tol)) {
+		if (hitPt.dist < -tol)
 			return false;
 		T len = seg.calLength();
-		if (hitPt.dist > len + SAME_DIST_TOL)
+		if (hitPt.dist > len + tol)
 			return false;
 
 		return true;
@@ -98,7 +98,7 @@ bool Plane<T>::intersectLineSegment(const LineSegment<POINT_TYPE>& seg, RayHit<T
 }
 
 template<class T>
-bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<POINT_TYPE>& iSeg) const
+bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg, T tol) const
 {
 
 	int numHits = 0;
@@ -109,14 +109,14 @@ bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const 
 		int j = (i + 1) % 3;
 		const auto& ptA = ptOf3(i, pt0, pt1, pt2);
 		const auto& ptB = ptOf3(j, pt0, pt1, pt2);
-		LineSegment<POINT_TYPE> seg(ptA, ptB);
+		LineSegment<T> seg(ptA, ptB);
 
-		if (intersectLineSegment(seg, hit)) {
+		if (intersectLineSegment(seg, hit, tol)) {
 			if (numHits == 0)
 				iPt0 = hit.hitPt;
 			else if (numHits == 1) {
 				iPt1 = hit.hitPt;
-				iSeg = LineSegment<POINT_TYPE>(iPt0, iPt1);
+				iSeg = LineSegment<T>(iPt0, iPt1);
 				return true;
 			}
 			numHits++;

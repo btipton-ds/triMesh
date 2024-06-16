@@ -33,8 +33,8 @@ This file is part of the TriMesh library.
 #include <tm_ray.h>
 #include <tm_lineSegment.h>
 
-template<class VEC_TYPE>
-LineSegment<VEC_TYPE>::LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1)
+template<class T>
+LineSegment<T>::LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1)
 {
 	_pts[0] = p0;
 	_pts[1] = p1;
@@ -42,28 +42,28 @@ LineSegment<VEC_TYPE>::LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1)
 		std::swap(_pts[0], _pts[1]);
 }
 
-template<class VEC_TYPE>
-LineSegment<VEC_TYPE>::SCALAR_TYPE LineSegment<VEC_TYPE>::calLength() const {
+template<class T>
+LineSegment<T>::SCALAR_TYPE LineSegment<T>::calLength() const {
 	return (_pts[1] - _pts[0]).norm();
 }
 
-template<class VEC_TYPE>
-typename LineSegment<VEC_TYPE>::POINT_TYPE LineSegment<VEC_TYPE>::calcDir() const {
+template<class T>
+typename LineSegment<T>::POINT_TYPE LineSegment<T>::calcDir() const {
 	return safeNormalize<SCALAR_TYPE>(_pts[1] - _pts[0]);
 }
 
-template<class VEC_TYPE>
-typename LineSegment<VEC_TYPE>::POINT_TYPE LineSegment<VEC_TYPE>::interpolate(SCALAR_TYPE t) const {
+template<class T>
+typename LineSegment<T>::POINT_TYPE LineSegment<T>::interpolate(SCALAR_TYPE t) const {
 	return _pts[0] + t * (_pts[1] - _pts[0]);
 }
 
-template<class VEC_TYPE>
-LineSegment<VEC_TYPE>::SCALAR_TYPE LineSegment<VEC_TYPE>::parameterize(const POINT_TYPE& pt) const {
+template<class T>
+LineSegment<T>::SCALAR_TYPE LineSegment<T>::parameterize(const POINT_TYPE& pt) const {
 	return (pt - _pts[0]).dot(calcDir());
 }
 
-template<class VEC_TYPE>
-bool LineSegment<VEC_TYPE>::contains(const POINT_TYPE& pt, LineSegment<VEC_TYPE>::SCALAR_TYPE& t) const
+template<class T>
+bool LineSegment<T>::contains(const POINT_TYPE& pt, LineSegment<T>::SCALAR_TYPE& t, SCALAR_TYPE tol) const
 {
 	if (tolerantEquals(_pts[0], pt)) {
 		t = 0;
@@ -75,7 +75,7 @@ bool LineSegment<VEC_TYPE>::contains(const POINT_TYPE& pt, LineSegment<VEC_TYPE>
 	}
 	else {
 		POINT_TYPE vDir = _pts[1] - _pts[0];
-		LineSegment<VEC_TYPE>::SCALAR_TYPE len = vDir.norm();
+		LineSegment<T>::SCALAR_TYPE len = vDir.norm();
 		if (len < SAME_DIST_TOL) {
 			return false;
 		}
@@ -93,19 +93,19 @@ bool LineSegment<VEC_TYPE>::contains(const POINT_TYPE& pt, LineSegment<VEC_TYPE>
 	}
 }
 
-template<class VEC_TYPE>
-Ray<typename LineSegment<VEC_TYPE>::SCALAR_TYPE> LineSegment<VEC_TYPE>::getRay() const {
+template<class T>
+Ray<typename LineSegment<T>::SCALAR_TYPE> LineSegment<T>::getRay() const {
 	return Ray<SCALAR_TYPE>(_pts[0], calcDir());
 }
 
-template<class VEC_TYPE>
-typename LineSegment<VEC_TYPE>::SCALAR_TYPE LineSegment<VEC_TYPE>::distanceToPoint(const POINT_TYPE& pt) const {
+template<class T>
+typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT_TYPE& pt) const {
 	SCALAR_TYPE t;
 	return distanceToPoint(pt, t);
 }
 
-template<class VEC_TYPE>
-typename LineSegment<VEC_TYPE>::SCALAR_TYPE LineSegment<VEC_TYPE>::distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const {
+template<class T>
+typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const {
 	POINT_TYPE dir(_pts[1] - _pts[0]);
 	SCALAR_TYPE len = dir.norm();
 	if (len < minNormalizeDivisor)
@@ -130,8 +130,8 @@ typename LineSegment<VEC_TYPE>::SCALAR_TYPE LineSegment<VEC_TYPE>::distanceToPoi
 	return dist;
 }
 
-template<class VEC_TYPE>
-bool LineSegment<VEC_TYPE>::intersectTri(const POINT_TYPE* pts[3], RayHit<typename SCALAR_TYPE>& hit) const
+template<class T>
+bool LineSegment<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<typename SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
 {
 	POINT_TYPE unitDir = _pts[1] - _pts[0];
 	SCALAR_TYPE l = unitDir.norm();
@@ -140,7 +140,7 @@ bool LineSegment<VEC_TYPE>::intersectTri(const POINT_TYPE* pts[3], RayHit<typena
 	if (intersectRayTri(getRay(), pts, hit)) {
 		POINT_TYPE v1 = hit.hitPt - _pts[0];
 		SCALAR_TYPE d = unitDir.dot(v1);
-		if (-SAME_DIST_TOL < d && d < l + SAME_DIST_TOL) {
+		if (-tol < d && d < l + tol) {
 			return true;
 		}
 		else {
@@ -150,17 +150,17 @@ bool LineSegment<VEC_TYPE>::intersectTri(const POINT_TYPE* pts[3], RayHit<typena
 	return false;
 }
 
-template<class VEC_TYPE>
-bool LineSegment<VEC_TYPE>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<typename SCALAR_TYPE>& hit) const
+template<class T>
+bool LineSegment<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<typename SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
 {
 	const POINT_TYPE* pts[] = { &pt0, &pt1, &pt2 };
-	return intersectTri(pts, hit);
+	return intersectTri(pts, hit, tol);
 }
 
-template<class VEC_TYPE>
-bool LineSegment<VEC_TYPE>::intersectPlane(const Plane<typename SCALAR_TYPE>& plane, RayHit<typename SCALAR_TYPE>& hit) const
+template<class T>
+bool LineSegment<T>::intersectPlane(const Plane<typename SCALAR_TYPE>& plane, RayHit<typename SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
 {
-	if (plane.intersectRay(getRay(), hit)) {
+	if (plane.intersectRay(getRay(), hit, tol)) {
 		POINT_TYPE v = hit.hitPt - _pts[0];
 		SCALAR_TYPE t = v.dot(calcDir()) / calLength();
 		return 0 <= t && t <= 1;
@@ -168,14 +168,14 @@ bool LineSegment<VEC_TYPE>::intersectPlane(const Plane<typename SCALAR_TYPE>& pl
 	return false;
 }
 
-template<class VEC_TYPE>
-bool LineSegment<VEC_TYPE>::intersectPlane(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit) const
+template<class T>
+bool LineSegment<T>::intersectPlane(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
 {
-	return intersectPlane(Plane<SCALAR_TYPE>(pts), hit);
+	return intersectPlane(Plane<SCALAR_TYPE>(pts), hit, tol);
 }
 
-template<class VEC_TYPE>
-bool LineSegment<VEC_TYPE>::operator < (const LineSegment& rhs) const
+template<class T>
+bool LineSegment<T>::operator < (const LineSegment& rhs) const
 {
 	for (int i = 0; i < 2; i++) {
 		if (_pts[i] < rhs._pts[i])

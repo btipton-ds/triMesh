@@ -137,13 +137,13 @@ typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbo
 #if 0
 	return shared_from_this();
 #else
-	bool useLeft = _left && (bbox.intersectsOrContains(_left->_bbox));
-	bool useRight = _right && (bbox.intersectsOrContains(_right->_bbox));
+	bool useLeft = _left && (bbox.intersectsOrContains(_left->_bbox, (SCALAR_TYPE)SAME_DIST_TOL));
+	bool useRight = _right && (bbox.intersectsOrContains(_right->_bbox, (SCALAR_TYPE)SAME_DIST_TOL));
 	if (useLeft && useRight)
 		return enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>::shared_from_this();
 
 	for (const auto& entry : _contents) {
-		if (bbox.intersectsOrContains(entry.getBBox())) {
+		if (bbox.intersectsOrContains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
 			return enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>::shared_from_this();
 		}
 	}
@@ -159,11 +159,11 @@ typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbo
 
 CSSB_TMPL
 bool CSSB_DCL::add(const Entry& newEntry, int depth) {
-	if (!_bbox.contains(newEntry.getBBox()))
+	if (!_bbox.contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
 		return false;
 
 	for (const auto& curEntry : _contents) {
-		if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox())) {
+		if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
 			assert(!"duplicate");
 			return false;
 		}
@@ -190,10 +190,10 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 
 CSSB_TMPL
 bool CSSB_DCL::remove(const Entry& newEntry) {
-	if (_bbox.contains(newEntry.getBBox())) {
+	if (_bbox.contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
 		for (size_t idx = 0; idx < _contents.size(); idx++) {
 			const auto& curEntry = _contents[idx];
-			if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox())) {
+			if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
 				_contents.erase(_contents.begin() + idx);
 				_numInTree--;
 				return true;
@@ -225,9 +225,9 @@ bool CSSB_DCL::remove(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
 
 CSSB_TMPL
 void CSSB_DCL::biDirRayCastRecursive(const Ray<SCALAR_TYPE>& ray, vector<INDEX_TYPE>& hits) const {
-	if (_bbox.intersects(ray)) {
+	if (_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
 		for (const auto& entry : _contents) {
-			if (entry.getBBox().intersects(ray)) {
+			if (entry.getBBox().intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
 				hits.push_back(entry.getIndex());
 			}
 		}
@@ -276,9 +276,9 @@ void CSSB_DCL::split(int depth) {
 	_contents.clear();
 
 	for (const auto& entry : temp) {
-		if (leftBBox.contains(entry.getBBox()))
+		if (leftBBox.contains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
 			_left->add(entry, depth + 1);
-		else if (rightBBox.contains(entry.getBBox()))
+		else if (rightBBox.contains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
 			_right->add(entry, depth + 1);
 		else
 			_contents.push_back(entry);
@@ -290,7 +290,7 @@ CSSB_TMPL
 inline bool CSSB_DCL::boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType)
 {
 	if (testType == BoxTestType::Contains)
-		return lhs.contains(rhs);
+		return lhs.contains(rhs, (SCALAR_TYPE)SAME_DIST_TOL);
 	else
-		return lhs.intersectsOrContains(rhs);
+		return lhs.intersectsOrContains(rhs, (SCALAR_TYPE)SAME_DIST_TOL);
 }

@@ -42,7 +42,7 @@ This file is part of the TriMesh library.
 
 const int filePrecision = 17;
 constexpr double NUMERIC_DIFF_TOL = 1.0e-5;
-constexpr double SAME_DIST_TOL = 1.0e-8;
+constexpr double SAME_DIST_TOL = 1.0e-8; // TODO Needs to be templated
 constexpr double OPTIMIZER_TOL = 1.0e-6;
 constexpr double SAME_DIST_TOL_SQR = SAME_DIST_TOL * SAME_DIST_TOL;
 constexpr double minNormalizeDivisor = 1.0e-12;

@@ -29,5 +29,5 @@ This file is part of the TriMesh library.
 
 #include <tm_lineSegment.hpp>
 
-template struct LineSegment<Vector3<double>>;
-template struct LineSegment<Vector3<float>>;
+template struct LineSegment<double>;
+template struct LineSegment<float>;

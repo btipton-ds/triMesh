@@ -155,6 +155,7 @@ namespace TriMesh {
 
 		Vector3d triCentroid(size_t triIdx) const;
 		Vector3d triUnitNormal(size_t triIdx) const;
+		Planed triPlane(size_t triIdx) const;
 		double triArea(size_t triIdx) const;
 		double triAspectRatio(size_t triIdx) const;
 		double triGap(size_t triIdx) const;
@@ -294,7 +295,7 @@ namespace TriMesh {
 		Vector3d pt(ptUnk);
 		BoundingBox ptBBox(pt), thisBBox = getBBox();
 		ptBBox.grow(SAME_DIST_TOL);
-		if (!thisBBox.contains(pt)) {
+		if (!thisBBox.contains(pt, SAME_DIST_TOL)) {
 			std::cout << "CMesh::addVertex box intersects: Error\n";
 		}
 

@@ -107,61 +107,61 @@ inline typename CBoundingBox3D<SCALAR_TYPE>::POINT_TYPE CBoundingBox3D<SCALAR_TY
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::contains(const POINT_TYPE& pt) const {
+bool CBoundingBox3D<SCALAR_TYPE>::contains(const POINT_TYPE& pt, SCALAR_TYPE tol) const {
 	const SCALAR_TYPE lpt[] = { pt[0], pt[1], pt[2] };
 
 	SCALAR_TYPE delta;
 	
 	int i = 0;
 	delta = lpt[i] - _min[i];
-	if (delta < -SAME_DIST_TOL)
+	if (delta < -tol)
 		return false;
 	delta = lpt[i] - _max[i];
-	if (delta > SAME_DIST_TOL)
+	if (delta > tol)
 		return false;
 
 	i = 1;
 	delta = lpt[i] - _min[i];
-	if (delta < -SAME_DIST_TOL)
+	if (delta < -tol)
 		return false;
 	delta = lpt[i] - _max[i];
-	if (delta > SAME_DIST_TOL)
+	if (delta > tol)
 		return false;
 
 	i = 2;
 	delta = lpt[i] - _min[i];
-	if (delta < -SAME_DIST_TOL)
+	if (delta < -tol)
 		return false;
 	delta = lpt[i] - _max[i];
-	if (delta > SAME_DIST_TOL)
+	if (delta > tol)
 		return false;
 
 	return true;
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::contains(const CBoundingBox3D& other) const {
-	return contains(other._min) && contains(other._max);
+bool CBoundingBox3D<SCALAR_TYPE>::contains(const CBoundingBox3D& other, SCALAR_TYPE tol) const {
+	return contains(other._min, tol) && contains(other._max, tol);
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<POINT_TYPE>& seg, int skipAxis) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const
 {
 	vector<POINT_TYPE> pts;
-	return intersectsInner(seg, pts, false, skipAxis);
+	return intersectsInner(seg, pts, tol, false, skipAxis);
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<POINT_TYPE>& seg, vector<POINT_TYPE>& pts, int skipAxis) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, int skipAxis) const
 {
-	return intersectsInner(seg, pts, true, skipAxis);
+	return intersectsInner(seg, pts, tol, true, skipAxis);
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment<POINT_TYPE>& seg, vector<POINT_TYPE>& pts, bool getAll, int skipAxis) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const
 {
 	pts.clear();
-	if (seg.calLength() < SAME_DIST_TOL)
+	if (seg.calLength() < tol)
 		return false;
 
 	for (size_t i = 0; i < 3; i++) {
@@ -170,14 +170,14 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment<POINT_TYPE>&
 
 		RayHit<SCALAR_TYPE> hit;
 		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
-		if (minPlane.intersectLineSegment(seg, hit) && contains(hit.hitPt)) {
+		if (minPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
 			pts.push_back(hit.hitPt);
 			if (!getAll)
 				break;
 		}
 
 		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
-		if (maxPlane.intersectLineSegment(seg, hit) && contains(hit.hitPt)) {
+		if (maxPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
 			pts.push_back(hit.hitPt);
 			if (!getAll)
 				break;
@@ -188,35 +188,35 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment<POINT_TYPE>&
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const CBoundingBox3D& otherBox) const {
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const CBoundingBox3D& otherBox, SCALAR_TYPE tol) const {
 	int i = 0;
-	if (otherBox._min[i] > _max[i] + SAME_DIST_TOL)
+	if (otherBox._min[i] > _max[i] + tol)
 		return false;
-	else if (otherBox._max[i] < _min[i] - SAME_DIST_TOL)
+	else if (otherBox._max[i] < _min[i] - tol)
 		return false;
 
 	i = 1;
-	if (otherBox._min[i] > _max[i] + SAME_DIST_TOL)
+	if (otherBox._min[i] > _max[i] + tol)
 		return false;
-	else if (otherBox._max[i] < _min[i] - SAME_DIST_TOL)
+	else if (otherBox._max[i] < _min[i] - tol)
 		return false;
 
 	i = 2;
-	if (otherBox._min[i] > _max[i] + SAME_DIST_TOL)
+	if (otherBox._min[i] > _max[i] + tol)
 		return false;
-	else if (otherBox._max[i] < _min[i] - SAME_DIST_TOL)
+	else if (otherBox._max[i] < _min[i] - tol)
 		return false;
 
 	return true;
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<POINT_TYPE>& seg, int skipAxis) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const
 {
-	if (contains(seg._pts[0]) || contains(seg._pts[1]))
+	if (contains(seg._pts[0], tol) || contains(seg._pts[1], tol))
 		return true;
 
-	if (seg.calLength() < SAME_DIST_TOL)
+	if (seg.calLength() < tol)
 		return false;
 
 	for (size_t i = 0; i < 3; i++) {
@@ -225,28 +225,28 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<POINT_T
 
 		RayHit<SCALAR_TYPE> hitPt;
 		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
-		if (minPlane.intersectLineSegment(seg, hitPt) && contains(hitPt.hitPt))
+		if (minPlane.intersectLineSegment(seg, hitPt, tol) && contains(hitPt.hitPt, tol))
 			return true;
 
 		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
-		if (maxPlane.intersectLineSegment(seg, hitPt) && contains(hitPt.hitPt))
+		if (maxPlane.intersectLineSegment(seg, hitPt, tol) && contains(hitPt.hitPt, tol))
 			return true;
 	}
 	return false;
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray) const {
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const {
 	for (int i = 0; i < 3; i++) {
 		RayHit<SCALAR_TYPE> hit;
 
 		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
-		if (minPlane.intersectRay(ray, hit) && contains(hit.hitPt)) {
+		if (minPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
 			return true;
 		}
 
 		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
-		if (maxPlane.intersectRay(ray, hit) && contains(hit.hitPt)) {
+		if (maxPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
 			return true;
 		}
 	}
@@ -255,19 +255,19 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray) const 
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, vector<POINT_TYPE>& pts) const {
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const {
 	pts.clear();
 
 	for (int i = 0; i < 3; i++) {
 		RayHit<SCALAR_TYPE> hit;
 
 		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
-		if (minPlane.intersectRay(ray, hit) && contains(hit.hitPt)) {
+		if (minPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
 			pts.push_back(hit.hitPt);
 		}
 
 		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
-		if (maxPlane.intersectRay(ray, hit) && contains(hit.hitPt)) {
+		if (maxPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
 			pts.push_back(hit.hitPt);
 		}
 	}
@@ -276,20 +276,20 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, vector
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) const
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, SCALAR_TYPE tol) const
 {
-	if (contains(pt0) || contains(pt1) || contains(pt2))
+	if (contains(pt0, tol) || contains(pt1, tol) || contains(pt2, tol))
 		return true;
 
-	LineSegment<POINT_TYPE> seg;
+	LineSegment<SCALAR_TYPE> seg;
 	for (int i = 0; i < 3; i++) {
 		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], false);
-		if (minPlane.intersectTri(pt0, pt1, pt2, seg) && intersectsOrContains(seg, i /*Skip testing this axis*/)) {
+		if (minPlane.intersectTri(pt0, pt1, pt2, seg, tol) && intersectsOrContains(seg, tol, i /*Skip testing this axis*/)) {
 			return true;
 		}
 
 		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], false);
-		if (maxPlane.intersectTri(pt0, pt1, pt2, seg) && intersectsOrContains(seg, i)) {
+		if (maxPlane.intersectTri(pt0, pt1, pt2, seg, tol) && intersectsOrContains(seg, tol, i)) {
 			return true;
 		}
 	}
@@ -298,7 +298,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const POINT_TYPE& pt0, co
 }
 
 template <class SCALAR_TYPE>
-void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment<POINT_TYPE> edgeSegs[12]) const
+void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment<SCALAR_TYPE> edgeSegs[12]) const
 {
 	POINT_TYPE r = range();
 	POINT_TYPE corners[] = {
@@ -314,22 +314,22 @@ void CBoundingBox3D<SCALAR_TYPE>::getEdges(LineSegment<POINT_TYPE> edgeSegs[12])
 	};
 
 	// x edgeSegs
-	edgeSegs[0] = LineSegment<POINT_TYPE>(corners[0], corners[1]);
-	edgeSegs[1] = LineSegment<POINT_TYPE>(corners[3], corners[2]);
-	edgeSegs[2] = LineSegment<POINT_TYPE>(corners[4], corners[5]);
-	edgeSegs[3] = LineSegment<POINT_TYPE>(corners[7], corners[6]);
+	edgeSegs[0] = LineSegment<SCALAR_TYPE>(corners[0], corners[1]);
+	edgeSegs[1] = LineSegment<SCALAR_TYPE>(corners[3], corners[2]);
+	edgeSegs[2] = LineSegment<SCALAR_TYPE>(corners[4], corners[5]);
+	edgeSegs[3] = LineSegment<SCALAR_TYPE>(corners[7], corners[6]);
 
 	// y edgeSegs
-	edgeSegs[4] = LineSegment<POINT_TYPE>(corners[0], corners[3]);
-	edgeSegs[5] = LineSegment<POINT_TYPE>(corners[1], corners[2]);
-	edgeSegs[6] = LineSegment<POINT_TYPE>(corners[4], corners[7]);
-	edgeSegs[7] = LineSegment<POINT_TYPE>(corners[5], corners[6]);
+	edgeSegs[4] = LineSegment<SCALAR_TYPE>(corners[0], corners[3]);
+	edgeSegs[5] = LineSegment<SCALAR_TYPE>(corners[1], corners[2]);
+	edgeSegs[6] = LineSegment<SCALAR_TYPE>(corners[4], corners[7]);
+	edgeSegs[7] = LineSegment<SCALAR_TYPE>(corners[5], corners[6]);
 
 	// z edgeSegs
-	edgeSegs[8] = LineSegment<POINT_TYPE>(corners[0], corners[4]);
-	edgeSegs[9] = LineSegment<POINT_TYPE>(corners[1], corners[5]);
-	edgeSegs[10] = LineSegment<POINT_TYPE>(corners[2], corners[6]);
-	edgeSegs[11] = LineSegment<POINT_TYPE>(corners[3], corners[7]);
+	edgeSegs[8] = LineSegment<SCALAR_TYPE>(corners[0], corners[4]);
+	edgeSegs[9] = LineSegment<SCALAR_TYPE>(corners[1], corners[5]);
+	edgeSegs[10] = LineSegment<SCALAR_TYPE>(corners[2], corners[6]);
+	edgeSegs[11] = LineSegment<SCALAR_TYPE>(corners[3], corners[7]);
 
 }
 

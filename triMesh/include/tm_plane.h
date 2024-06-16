@@ -69,14 +69,15 @@ public:
 	Plane(const POINT_TYPE* pts[3]);
 	Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2);
 
-	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt) const;
-	bool intersectLineSegment(const LineSegment<POINT_TYPE>& seg, RayHit<T>& hitPt) const;
-	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit) const;
-	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<POINT_TYPE>& iSeg) const;
+	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt, T tol) const;
+	bool intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const;
+	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit, T tol) const;
+	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg, T tol) const;
+	bool isCoincident(const POINT_TYPE& other, T tol) const;
 	bool isCoincident(const Plane& other, T tol) const;
 
 	POINT_TYPE projectPoint(const POINT_TYPE& pt) const;
-	T distanceToPoint(const POINT_TYPE& pt) const;
+	T distanceToPoint(const POINT_TYPE& pt, bool absolute = true) const;
 
 	const POINT_TYPE& getOrgin() const;
 	const POINT_TYPE& getNormal() const;
@@ -87,8 +88,18 @@ private:
 
 
 template<class T>
-inline T Plane<T>::distanceToPoint(const POINT_TYPE& pt) const {
-	return fabs((pt - _origin).dot(_normal));
+inline T Plane<T>::distanceToPoint(const POINT_TYPE& pt, bool absolute) const {
+	T d = (pt - _origin).dot(_normal);
+	if (absolute)
+		return fabs(d);
+	
+	return d;
+}
+
+template<class T>
+inline bool Plane<T>::isCoincident(const POINT_TYPE& pt, T tol) const
+{
+	return distanceToPoint(pt, true) < tol;
 }
 
 template<class T>
@@ -104,7 +115,7 @@ inline const typename Plane<T>::POINT_TYPE& Plane<T>::getNormal() const
 }
 
 template<class T>
-inline bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit) const
+inline bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit, T tol) const
 {
 	const double MIN_COS_ANGLE = 1.0e-8;
 	auto dp = ray._dir.dot(_normal);
@@ -119,11 +130,11 @@ inline bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit) const
 #if FULL_TESTS // Verification code
 	POINT_TYPE vTest = hit.hitPt - _origin;
 	T testDist = vTest.dot(_normal);
-	if (fabs(testDist) > SAME_DIST_TOL) {
+	if (fabs(testDist) > tol) {
 		assert(!"Point not on plane");
 	}
 
-	if (ray.distToPt(hit.hitPt) > SAME_DIST_TOL) {
+	if (ray.distToPt(hit.hitPt) > tol) {
 		assert(!"Point not on ray");
 	}
 	
@@ -132,7 +143,7 @@ inline bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit) const
 }
 
 template<class T>
-inline bool Plane<T>::intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt) const
+inline bool Plane<T>::intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt, T tol) const
 {
 	POINT_TYPE v = pt1 - pt0;
 	T lSqr = v.squaredNorm();
@@ -140,7 +151,7 @@ inline bool Plane<T>::intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1
 		return false;
 
 	Ray<T> ray(pt0, v / sqrt(lSqr));
-	return intersectRay(ray, hitPt);
+	return intersectRay(ray, hitPt, tol);
 }
 
 using Planed = Plane<double>;

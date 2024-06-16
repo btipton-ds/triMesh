@@ -39,7 +39,7 @@ This file is part of the TriMesh library.
 
 template<class T>
 struct LineSegment;
-using LineSegmentd = LineSegment<Vector3<double>>;
+using LineSegmentd = LineSegment<double>;
 
 namespace TriMesh {
 
