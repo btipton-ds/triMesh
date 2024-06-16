@@ -76,7 +76,7 @@ bool LineSegment<T>::contains(const POINT_TYPE& pt, LineSegment<T>::SCALAR_TYPE&
 	else {
 		POINT_TYPE vDir = _pts[1] - _pts[0];
 		LineSegment<T>::SCALAR_TYPE len = vDir.norm();
-		if (len < SAME_DIST_TOL) {
+		if (len < tol) {
 			return false;
 		}
 		vDir /= len;
@@ -85,11 +85,11 @@ bool LineSegment<T>::contains(const POINT_TYPE& pt, LineSegment<T>::SCALAR_TYPE&
 		SCALAR_TYPE dp = vOrth.dot(vDir);
 		vOrth = vOrth - dp * vDir; // orthogonalize v1
 		SCALAR_TYPE dist = vOrth.norm();
-		if (dist > SAME_DIST_TOL)
+		if (dist > tol)
 			return false; // pt does not lie on the segment within tolerance.
 
 		t = dp / len;
-		return -SAME_DIST_TOL < dp && dp < (len + SAME_DIST_TOL); // return if the pt lies in [zero, len] within tolerance
+		return -tol < dp && dp < (len + tol); // return if the pt lies in [zero, len] within tolerance
 	}
 }
 
