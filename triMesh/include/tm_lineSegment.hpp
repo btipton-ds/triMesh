@@ -38,8 +38,6 @@ LineSegment<T>::LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1)
 {
 	_pts[0] = p0;
 	_pts[1] = p1;
-	if (_pts[1] < _pts[0])
-		std::swap(_pts[0], _pts[1]);
 }
 
 template<class T>
@@ -172,16 +170,4 @@ template<class T>
 bool LineSegment<T>::intersectPlane(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
 {
 	return intersectPlane(Plane<SCALAR_TYPE>(pts), hit, tol);
-}
-
-template<class T>
-bool LineSegment<T>::operator < (const LineSegment& rhs) const
-{
-	for (int i = 0; i < 2; i++) {
-		if (_pts[i] < rhs._pts[i])
-			return true;
-		else if (rhs._pts[i] < _pts[i])
-			return false;
-	}
-	return false;
 }
