@@ -63,6 +63,11 @@ const vector<vector<size_t>>& Patch::getSharpEdgeChains() const
 	return _sharpEdgeChains;
 }
 
+void Patch::clearSharpEdgeChains()
+{
+	_sharpEdgeChains.clear();
+}
+
 const vector<vector<size_t>>& Patch::getFaces() const
 {
 	return _faces;

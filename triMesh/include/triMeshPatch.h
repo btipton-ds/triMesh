@@ -51,6 +51,7 @@ public:
 	bool empty() const;
 	void addFace(const std::vector<size_t>& pFace);
 	const std::vector<std::vector<size_t>>& getSharpEdgeChains() const;
+	void clearSharpEdgeChains();
 	const std::vector<std::vector<size_t>>& getFaces() const;
 	void finishCreation(const CMesh* pMesh, double sinSharpEdgeAngle);
 
