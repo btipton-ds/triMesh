@@ -755,15 +755,14 @@ bool CMesh::createPatches(const vector<size_t>& triIndices, double sinSharpEdgeA
 			face.push_back(triIdx);
 			const auto& tri = _tris[triIdx];
 			for (int i = 0; i < 3; i++) {
-				const auto& triEdges = _vertices[tri[i]]._edgeIndices;
-				for (size_t triEdgeIdx : triEdges) {
-					const auto& edge = _edges[triEdgeIdx];
-					for (int j = 0; j < edge._numFaces; j++) {
-						size_t nextTriIdx = edge._faceIndices[j];
-						if (triSet.contains(nextTriIdx)) {
-							stack.push_back(nextTriIdx);
-							triSet.erase(nextTriIdx);
-						}
+				int j = (i + 1) % 3;
+				size_t triEdgeIdx = findEdge(CEdge(tri[i], tri[j]));
+				const auto& edge = _edges[triEdgeIdx];
+				for (int j = 0; j < edge._numFaces; j++) {
+					size_t nextTriIdx = edge._faceIndices[j];
+					if (triSet.contains(nextTriIdx)) {
+						stack.push_back(nextTriIdx);
+						triSet.erase(nextTriIdx);
 					}
 				}
 			}
