@@ -63,11 +63,11 @@ LineSegment<T>::SCALAR_TYPE LineSegment<T>::parameterize(const POINT_TYPE& pt) c
 template<class T>
 bool LineSegment<T>::contains(const POINT_TYPE& pt, LineSegment<T>::SCALAR_TYPE& t, SCALAR_TYPE tol) const
 {
-	if (tolerantEquals(_pts[0], pt)) {
+	if (tolerantEquals(_pts[0], pt, tol)) {
 		t = 0;
 		return true;
 	}
-	else if (tolerantEquals(_pts[1], pt)) {
+	else if (tolerantEquals(_pts[1], pt, tol)) {
 		t = 1;
 		return true;
 	}

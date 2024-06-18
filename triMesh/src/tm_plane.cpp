@@ -35,7 +35,7 @@ This file is part of the TriMesh library.
 
 template<class T>
 Plane<T>::Plane(const POINT_TYPE* pts[3])
-	: Plane(*pts[0], triangleUnitNormal(pts), false)
+	: Plane(*pts[0], triangleUnitNormal(pts))
 {}
 
 template<class T>
@@ -49,37 +49,40 @@ Plane<T>::Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& 
 }
 
 template<class T>
-Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool makePrincipal)
+Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal)
 	: _origin(origin)
 	, _normal(normal)
 {
-	if (makePrincipal) {
-		T tol = (T)1.0e-6;
+}
 
-		// Intersect the plane with principal axes to find a principal origin
-		T minDist = (T)FLT_MAX;
-		POINT_TYPE testOrigin;
-		for (int i = 0; i < 3; i++) {
-			POINT_TYPE dir(0, 0, 0);
-			dir[i] = 1;
-			RayHit<T> hit;
-			Ray<T> ray(POINT_TYPE(0, 0, 0), dir);
-			if (intersectRay(ray, hit, (T)SAME_DIST_TOL) && fabs(hit.dist) < minDist) {
-				minDist = fabs(hit.dist);
-				testOrigin = hit.hitPt;
-			}
+template<class T>
+void Plane<T>::makePrincipal()
+{
+	T tol = (T)1.0e-6;
+
+	// Intersect the plane with principal axes to find a principal origin
+	T minDist = (T)FLT_MAX;
+	POINT_TYPE testOrigin(_origin);
+	for (int i = 0; i < 3; i++) {
+		POINT_TYPE dir(0, 0, 0);
+		dir[i] = 1;
+		RayHit<T> hit;
+		Ray<T> ray(POINT_TYPE(0, 0, 0), dir);
+		if (intersectRay(ray, hit, (T)SAME_DIST_TOL) && fabs(hit.dist) < minDist - SAME_DIST_TOL) {
+			minDist = fabs(hit.dist);
+			testOrigin = hit.hitPt;
 		}
-#if FULL_TESTS
-		T testDist = distanceToPoint(testOrigin);
-		if (fabs(testDist) < tol) {
-			_origin = testOrigin;
-			testDist = distanceToPoint(origin);
-			assert(fabs(testDist) < tol);
-		}
-		else
-			assert(!"Principal origin out of tolerance");
-#endif
 	}
+
+	T testDist = distanceToPoint(testOrigin);
+	if (fabs(testDist) < tol) {
+		_origin = testOrigin;
+		testDist = distanceToPoint(_origin);
+		assert(fabs(testDist) < tol);
+	}
+	else
+		assert(!"Principal origin out of tolerance");
+
 }
 
 template<class T>
@@ -127,11 +130,11 @@ bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const 
 }
 
 template<class T>
-bool Plane<T>::isCoincident(const Plane& other, T tol) const
+bool Plane<T>::isCoincident(const Plane& other, T distTol, T cpTol) const
 {
-	if (distanceToPoint(other._origin) >= tol)
+	if (distanceToPoint(other._origin) > distTol)
 		return false;
-	if (_normal.cross(other._normal).norm() > 1.0e-3)
+	if (_normal.cross(other._normal).norm() > cpTol)
 		return false;
 	return true;
 }

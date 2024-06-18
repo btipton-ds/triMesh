@@ -38,7 +38,8 @@ This file is part of the TriMesh library.
 
 using namespace std;
 bool testDistToPlane() {
-	Plane<double> plane(Vector3d(0, 0, 0), Vector3d(0, 0, 1), true);
+	Plane<double> plane(Vector3d(0, 0, 0), Vector3d(0, 0, 1));
+	plane.makePrincipal();
 	Vector3d pt0(0, 0, 1);
 	Vector3d pt1(0, 0, -1);
 	Vector3d pt2(1, 1, 1);
@@ -51,7 +52,8 @@ bool testDistToPlane() {
 }
 
 bool testRayPlaneIntersect() {
-	Plane<double> plane0(Vector3d(0, 0, 0), Vector3d(0, 0, 1), true);
+	Plane<double> plane0(Vector3d(0, 0, 0), Vector3d(0, 0, 1));
+	plane0.makePrincipal();
 	Vector3d dir0(-1, -1, -1);
 	Ray<double> ray0(plane0.getOrgin() - dir0, dir0);
 	RayHit<double> hit;
@@ -64,7 +66,8 @@ bool testRayPlaneIntersect() {
 	TEST_TRUE(plane0.intersectRay(ray0, hit, SAME_DIST_TOL), "Ray + delta intersects plane?");
 	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
 
-	Plane<double> plane1(Vector3d(0, 0, 0), Vector3d(1, 0, 0).cross(dir0).normalized(), true);
+	Plane<double> plane1(Vector3d(0, 0, 0), Vector3d(1, 0, 0).cross(dir0).normalized());
+	plane1.makePrincipal();
 	TEST_FALSE(plane1.intersectRay(ray0, hit, SAME_DIST_TOL), "Ray does not intersect parrallel plane");
 	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
 

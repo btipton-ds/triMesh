@@ -30,13 +30,13 @@ This file is part of the TriMesh library.
 */
 
 template <class SCALAR_TYPE>
-inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1) {
-	return fabs(v1 - v0) < SAME_DIST_TOL;
+inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol) {
+	return fabs(v1 - v0) < tol;
 }
 
 template <class SCALAR_TYPE>
-inline bool tolerantEquals(const Vector3< SCALAR_TYPE>& pt0, const Vector3< SCALAR_TYPE>& pt1) {
-	return (pt1 - pt0).squaredNorm() < SAME_DIST_TOL * SAME_DIST_TOL;
+inline bool tolerantEquals(const Vector3< SCALAR_TYPE>& pt0, const Vector3< SCALAR_TYPE>& pt1, SCALAR_TYPE tol) {
+	return (pt1 - pt0).squaredNorm() < tol * tol;
 }
 
 #define CHECK_NAN 1
@@ -147,7 +147,7 @@ bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit
 		return false;
 	norm /= l;
 
-	Plane<T> pl(*(pts[0]), norm, false);
+	Plane<T> pl(*(pts[0]), norm);
 	if (!pl.intersectRay(ray, hit, (T)SAME_DIST_TOL))
 		return false;
 

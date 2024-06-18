@@ -306,7 +306,10 @@ using Vector3f = Vector3<float>;
 using Vector3i = Vector3<size_t>;
 
 template<class T>
-bool equalTol(const Vector3<T>& val0, const Vector3<T>& val1);
+T defaultDistTol();
+
+template<class T>
+bool equalTol(const Vector3<T>& val0, const Vector3<T>& val1, T tol = defaultDistTol<T>());
 
 template <typename T>
 inline void writeVector3(std::ostream& out, const Vector3<T>& v)

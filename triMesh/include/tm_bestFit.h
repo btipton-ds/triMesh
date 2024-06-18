@@ -63,7 +63,7 @@ bool bestFitPlane(const std::vector<Vector3<T>>& c, Plane<T>& plane, T& err)
 	auto svd = coord.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
 	Eigen::Matrix<T, 3, 1> plane_normal = svd.matrixU().rightCols<1>();
 	plane_normal.normalize();
-	plane = Plane<T>(Vector3<T>(centroid[0], centroid[1], centroid[2]), Vector3<T>(plane_normal[0], plane_normal[1], plane_normal[2]), false);
+	plane = Plane<T>(Vector3<T>(centroid[0], centroid[1], centroid[2]), Vector3<T>(plane_normal[0], plane_normal[1], plane_normal[2]));
 	err = 0;
 	for (size_t i = 0; i < c.size(); i++) {
 		err += plane.distanceToPoint(c[i]);

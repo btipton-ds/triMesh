@@ -47,22 +47,34 @@ double defaultVal<double>() {
 }
 
 template<>
-bool equalTol(const Vector3<float>& val0, const Vector3<float>& val1)
+float defaultDistTol()
+{
+	return 1.0e-7f;
+}
+
+template<>
+double defaultDistTol()
+{
+	return SAME_DIST_TOL;
+}
+
+template<>
+bool equalTol(const Vector3<float>& val0, const Vector3<float>& val1, float tol)
 {
 	Vector3<float> delta = val1 - val0;
 	for (int i = 0; i < 3; i++) {
-		if (fabs(delta[i]) > 1.0e-7f)
+		if (fabs(delta[i]) > tol)
 			return false;
 	}
 	return true;
 }
 
 template<>
-bool equalTol(const Vector3<double>& val0, const Vector3<double>& val1)
+bool equalTol(const Vector3<double>& val0, const Vector3<double>& val1, double tol)
 {
 	Vector3<double> delta = val1 - val0;
 	for (int i = 0; i < 3; i++) {
-		if (fabs(delta[i]) > 1.0e-16)
+		if (fabs(delta[i]) > tol)
 			return false;
 	}
 	return true;

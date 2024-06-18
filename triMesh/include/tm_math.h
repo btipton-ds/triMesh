@@ -47,10 +47,10 @@ template<class T>
 struct LineSegment;
 
 template <class SCALAR_TYPE>
-bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1);
+bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol);
 
 template <class SCALAR_TYPE>
-bool tolerantEquals(const Vector3< SCALAR_TYPE>& pt0, const Vector3< SCALAR_TYPE>& pt1);
+bool tolerantEquals(const Vector3< SCALAR_TYPE>& pt0, const Vector3< SCALAR_TYPE>& pt1, SCALAR_TYPE tol);
 
 
 template <class SCALAR_TYPE>

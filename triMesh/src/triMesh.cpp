@@ -1260,7 +1260,7 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 	if (magCp < 1.0e-6)
 		return 0;
 
-	Planed edgePlane(origin, vEdge, false);
+	Planed edgePlane(origin, vEdge);
 	size_t vertIdx0 = getOtherVertIdx(edge, edge._faceIndices[0]);
 	size_t vertIdx1 = getOtherVertIdx(edge, edge._faceIndices[1]);
 
@@ -1280,7 +1280,7 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 	Vector3d midPt0 = origin + 0.5 * (vChord0);
 	Vector3d midPt1 = origin + 0.5 * (vChord1);
 
-	Planed midPlane(midPt0, vChord0.normalized(), false);
+	Planed midPlane(midPt0, vChord0.normalized());
 	RayHitd hit; // dist is from the center to the mid point of the chord NOT a point on the circle
 	if (!midPlane.intersectLine(midPt1, midPt1 + norm1, hit, SAME_DIST_TOL))
 		return 0;
@@ -1447,7 +1447,7 @@ Planed CMesh::triPlane(size_t triIdx) const
 {
 	Vector3d ctr = triCentroid(triIdx);
 	Vector3d n = triUnitNormal(triIdx);
-	return Planed(ctr, n, false);
+	return Planed(ctr, n);
 }
 
 double CMesh::triArea(size_t triIdx) const
