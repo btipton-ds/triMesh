@@ -70,6 +70,7 @@ public:
 	Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2);
 
 	void makePrincipal();
+	void setXRef(const POINT_TYPE& xRef);
 	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt, T tol) const;
 	bool intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const;
 	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit, T tol) const;
@@ -82,9 +83,10 @@ public:
 
 	const POINT_TYPE& getOrgin() const;
 	const POINT_TYPE& getNormal() const;
+	const POINT_TYPE& getXRef() const;
 
 private:
-	POINT_TYPE _origin, _normal;
+	POINT_TYPE _origin, _normal, _xRef;
 };
 
 
@@ -113,6 +115,12 @@ template<class T>
 inline const typename Plane<T>::POINT_TYPE& Plane<T>::getNormal() const
 {
 	return _normal;
+}
+
+template<class T>
+inline const typename Plane<T>::POINT_TYPE& Plane<T>::getXRef() const
+{
+	return _xRef;
 }
 
 template<class T>

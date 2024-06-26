@@ -35,7 +35,7 @@ This file is part of the TriMesh library.
 
 template<class T>
 Plane<T>::Plane(const POINT_TYPE* pts[3])
-	: Plane(*pts[0], triangleUnitNormal(pts))
+	: Plane(*pts[0], *pts[1], *pts[2])
 {}
 
 template<class T>
@@ -46,12 +46,14 @@ Plane<T>::Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& 
 	POINT_TYPE v1 = pt2 - pt0;
 	_normal = v1.cross(v0);
 	_normal.normalize();
+	_xRef = (pt1 - pt0).normalized();
 }
 
 template<class T>
 Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal)
 	: _origin(origin)
-	, _normal(normal)
+	, _normal(normal.normalized())
+	, _xRef(0, 0, 0)
 {
 }
 
@@ -83,6 +85,13 @@ void Plane<T>::makePrincipal()
 	else
 		assert(!"Principal origin out of tolerance");
 
+}
+
+template<class T>
+void Plane<T>::setXRef(const POINT_TYPE& xRef)
+{
+	_xRef = xRef - xRef.dot(_normal) * _normal;
+	_xRef.normalize();
 }
 
 template<class T>
