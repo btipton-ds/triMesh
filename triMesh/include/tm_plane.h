@@ -71,6 +71,7 @@ public:
 
 	void makePrincipal();
 	void setXRef(const POINT_TYPE& xRef);
+	void reverse();
 	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt, T tol) const;
 	bool intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const;
 	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit, T tol) const;
@@ -122,6 +123,13 @@ inline const typename Plane<T>::POINT_TYPE& Plane<T>::getXRef() const
 {
 	return _xRef;
 }
+
+template<class T>
+inline void Plane<T>::reverse()
+{
+	_normal *= -1.0;
+}
+
 
 template<class T>
 inline bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit, T tol) const
