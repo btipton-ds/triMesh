@@ -198,10 +198,10 @@ public:
 	template<class U>
 	inline Vector3& operator /=(U rhs)
 	{
-		auto d = data();
-		d[0] /= rhs;
-		d[1] /= rhs;
-		d[2] /= rhs;
+		T* d = data();
+		d[0] /= (T)rhs;
+		d[1] /= (T)rhs;
+		d[2] /= (T)rhs;
 
 		return *this;
 	}
@@ -209,10 +209,10 @@ public:
 	template<class U>
 	inline Vector3& operator *=(U rhs)
 	{
-		auto d = data();
-		d[0] *= rhs;
-		d[1] *= rhs;
-		d[2] *= rhs;
+		T* d = data();
+		d[0] *= (T)rhs;
+		d[1] *= (T)rhs;
+		d[2] *= (T)rhs;
 
 		return *this;
 	}
@@ -221,7 +221,7 @@ public:
 	inline Vector3 operator /(U rhs) const
 	{
 		Vector3 result(*this);
-		result /= rhs;
+		result /= (T)rhs;
 
 		return result;
 	}
@@ -230,7 +230,7 @@ public:
 	inline Vector3 operator *(U rhs) const
 	{
 		Vector3 result(*this);
-		result *= rhs;
+		result *= (T)rhs;
 
 		return result;
 	}
