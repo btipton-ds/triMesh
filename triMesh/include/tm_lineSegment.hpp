@@ -129,7 +129,7 @@ typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT
 }
 
 template<class T>
-bool LineSegment<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<typename SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
+bool LineSegment<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<T>& hit, T tol) const
 {
 	POINT_TYPE unitDir = _pts[1] - _pts[0];
 	SCALAR_TYPE l = unitDir.norm();
@@ -149,14 +149,14 @@ bool LineSegment<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<typename SCAL
 }
 
 template<class T>
-bool LineSegment<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<typename SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
+bool LineSegment<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<T>& hit, T tol) const
 {
 	const POINT_TYPE* pts[] = { &pt0, &pt1, &pt2 };
 	return intersectTri(pts, hit, tol);
 }
 
 template<class T>
-bool LineSegment<T>::intersectPlane(const Plane<typename SCALAR_TYPE>& plane, RayHit<typename SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
+bool LineSegment<T>::intersectPlane(const Plane<T>& plane, RayHit<T>& hit, T tol) const
 {
 	if (plane.intersectRay(getRay(), hit, tol)) {
 		POINT_TYPE v = hit.hitPt - _pts[0];
