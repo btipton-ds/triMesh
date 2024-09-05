@@ -61,7 +61,7 @@ bool bestFitPlane(const std::vector<Vector3<T>>& c, Plane<T>& plane, T& err)
 	// we only need the left-singular matrix here
 	//  http://math.stackexchange.com/questions/99299/best-fitting-plane-given-a-set-of-points
 	auto svd = coord.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
-	Eigen::Matrix<T, 3, 1> plane_normal = svd.matrixU().rightCols<1>();
+	Eigen::Matrix<T, 3, 1> plane_normal = svd.matrixU().rightCols(1);
 	plane_normal.normalize();
 	plane = Plane<T>(Vector3<T>(centroid[0], centroid[1], centroid[2]), Vector3<T>(plane_normal[0], plane_normal[1], plane_normal[2]));
 	err = 0;
