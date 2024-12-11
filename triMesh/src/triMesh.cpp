@@ -36,7 +36,7 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 
 #include <cmath>
 
-#include <../../stlReader/include/readStl.h>
+#include <../../stlReader/include/readWriteStl.h>
 #include <tm_ioUtil.h>
 #include <tm_lineSegment.h>
 #include <tm_ray.h>
@@ -307,6 +307,75 @@ void CMesh::squeezeEdge(size_t idx)
 	removeTri(faceIdx1);
 	removeTri(faceIdx0);
 	mergeVertices(vertIdxToKeep, vertIdxToRemove);
+}
+
+CMeshPtr CMesh::fix(double maxEdgeLength)
+{
+	const double tol = 1.0e-6;
+	const auto& bbox = getBBox();
+	CMeshPtr result = make_shared<CMesh>(bbox);
+	result->enableOption(OPT_SKIP_DEGEN);
+	bool modified = false;
+	for (auto idx : _tris) {
+		Vector3d pts[] = {
+			_vertices[idx[0]]._pt,
+			_vertices[idx[1]]._pt,
+			_vertices[idx[2]]._pt
+		};
+
+		double len[] = {
+			(pts[1] - pts[0]).norm(),
+			(pts[2] - pts[1]).norm(),
+			(pts[0] - pts[2]).norm(),
+		};
+
+		size_t shortestIdx = -1;
+		double minLen = DBL_MAX, maxLen = -1;
+		for (int i = 0; i < 3; i++) {
+			if (len[i] < minLen) {
+				minLen = len[i];
+				shortestIdx = i;
+			}
+			if (len[i] > maxLen) {
+				maxLen = len[i];
+			}
+		}
+
+		if (maxLen > maxEdgeLength) {
+			modified = true;
+			Vector3d pt0, pt1, pt2;
+			switch (shortestIdx) {
+			case 0:
+				pt0 = pts[2];
+				pt1 = pts[0];
+				pt2 = pts[1];
+				break;
+			case 1:
+				pt0 = pts[0];
+				pt1 = pts[1];
+				pt2 = pts[2];
+				break;
+			case 2:
+				pt0 = pts[1];
+				pt1 = pts[2];
+				pt2 = pts[0];
+				break;
+			}
+
+			Vector3d v0 = pt1 - pt0;
+			Vector3d v1 = pt2 - pt0;
+			Vector3d pt3 = pt0 + 0.5 * v0;
+			Vector3d pt4 = pt0 + 0.5 * v1;
+
+			result->addQuad(pt1, pt2, pt4, pt3);
+			result->addTriangle(pt0, pt3, pt4);
+		}
+	}
+
+	if (modified)
+		return result;
+	else
+		return nullptr;
 }
 
 bool CMesh::removeTri(size_t triIdx)
@@ -624,6 +693,9 @@ bool CMesh::sameTri(const Vector3i& tri0, const Vector3i& tri1)
 }
 
 size_t CMesh::addTriangle(const Vector3i& tri) {
+	if (isEnabled(OPT_SKIP_DEGEN) && areTriPointsDegenerate(tri)) {
+		return -1;
+	}
 	BoundingBox triBox;
 	for (int i = 0; i < 3; i++) {
 		const auto& vert = _vertices[tri[i]];
@@ -1688,6 +1760,19 @@ bool CMesh::verifyFindAllTris() const {
 	}
 
 	return result;
+}
+
+size_t CMesh::getSTLPoints(std::vector<Vector3f>& pts) const
+{
+	pts.clear();
+	pts.reserve(_tris.size() * 3);
+	for (const auto& tri : _tris) {
+		for (size_t i = 0; i < 3; i++) {
+			const auto& pt = getVert(tri[i])._pt;
+			pts.push_back(Vector3f((float)pt[0], (float)pt[1], (float)pt[2]));
+		}
+	}
+	return pts.size();
 }
 
 const vector<float>& CMesh::getGlTriPoints() const

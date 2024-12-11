@@ -36,7 +36,7 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 
 #include <cmath>
 
-#include <../../stlReader/include/readStl.h>
+#include <../../stlReader/include/readWriteStl.h>
 #include <tm_ioUtil.h>
 #include <tm_lineSegment.h>
 #include <tm_ray.h>

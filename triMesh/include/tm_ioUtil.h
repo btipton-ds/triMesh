@@ -115,6 +115,16 @@ namespace IoUtil
 	}
 
 	template<class T>
+	void writeObj(std::wostream& out, const std::vector<T>& vals)
+	{
+		size_t num = vals.size();
+		out.write((char*)&num, sizeof(num));
+		for (size_t i = 0; i < vals.size(); i++) {
+			vals[i].write(out);
+		}
+	}
+
+	template<class T>
 	void readObj(std::istream& in, std::vector<T>& vals)
 	{
 		size_t num;

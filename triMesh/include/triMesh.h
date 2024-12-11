@@ -68,12 +68,22 @@ namespace TriMesh {
 		using BoxTestType = SearchTree::BoxTestType;
 		using SearchEntry = SearchTree::Entry;
 
+		enum Options {
+			OPT_NONE = 0,
+			OPT_SKIP_DEGEN = 1, // Bit number, so power of 2
+			// OPT_NEXT = 2,
+			// OPT_NEXT = 4, etc
+		};
+
 		CMesh();
 		CMesh(const BoundingBox& bbox);
 		CMesh(const Vector3d& min, const Vector3d& max);
 		void reset(const BoundingBox& bbox);
 		void setEnforceManifold(bool val);
 		bool enforceManifold() const;
+		void enableOption(Options opt);
+		void disableOption(Options opt);
+		bool isEnabled(Options opt) const;
 
 		size_t getId() const;
 		size_t getChangeNumber() const;
@@ -104,6 +114,7 @@ namespace TriMesh {
 
 		void squeezeSkinnyTriangles(double minAngleDegrees);
 		void squeezeEdge(size_t idx);
+		CMeshPtr fix(double maxEdgeLength);
 
 		// takes a vector of 8 points in {
 		// 0,3,2,1
@@ -179,6 +190,7 @@ namespace TriMesh {
 		void dumpObj(std::ostream& out) const;
 		void dumpModelSharpEdgesObj(std::ostream& out, double sinAngle) const;
 
+		size_t getSTLPoints(std::vector<Vector3f>& pts) const;
 		const std::vector<float>& getGlTriPoints() const;
 		const std::vector<float>& getGlTriNormals(bool smoothed) const;
 		const std::vector<float>& getGlTriParams() const;
@@ -205,6 +217,7 @@ namespace TriMesh {
 
 	private:
 		static bool sameTri(const Vector3i& tri0, const Vector3i& tri1);
+		static bool areTriPointsDegenerate(const Vector3i& tri);
 
 		double findTriMinimumGap(size_t i) const;
 		double calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const;
@@ -228,6 +241,7 @@ namespace TriMesh {
 		bool verifyEdges(size_t edgeIdx, bool allowEmpty) const;
 
 		bool _enforceManifold = true;
+		size_t _options = 0;
 		static std::atomic<size_t> _statId;
 		const size_t _id;
 		size_t _changeNumber = 0;
@@ -270,6 +284,35 @@ namespace TriMesh {
 	inline bool CMesh::enforceManifold() const
 	{
 		return _enforceManifold;
+	}
+
+	inline void CMesh::enableOption(Options opt)
+	{
+		size_t bit = (size_t)opt;
+		_options = _options | bit;
+	}
+
+	inline void CMesh::disableOption(Options opt)
+	{
+		size_t bit = (size_t)opt;
+		_options = _options & ~bit;
+	}
+
+	inline bool CMesh::isEnabled(Options opt) const
+	{
+		size_t bit = (size_t)opt;
+		return (_options & bit) == bit;
+	}
+
+	inline bool CMesh::areTriPointsDegenerate(const Vector3i& tri)
+	{
+		for (int i = 0; i < 3; i++) {
+			for (int j = i + 1; j < 3; j++) {
+				if (tri[i] == tri[j])
+					return true;
+			}
+		}
+		return false;
 	}
 
 	template<class POINT_TYPE>

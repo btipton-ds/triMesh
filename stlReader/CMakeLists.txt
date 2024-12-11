@@ -42,7 +42,7 @@ link_directories (
 
 # Add source to this project's executable.
 add_library (stlReader 
-"src/readStl.cpp"
+"src/readWriteStl.cpp"
 )
 
 # TODO: Add tests and install targets if needed.

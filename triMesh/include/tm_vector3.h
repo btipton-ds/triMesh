@@ -271,6 +271,14 @@ public:
 		return _data;
 	}
 
+	inline bool isNAN() const
+	{
+		for (int i = 0; i < 3; i++) {
+			if (isnan(_data[i]))
+				return true;
+		}
+		return false;
+	}
 	private:
 		T _data[3] = { 0,0,0 };
 };
