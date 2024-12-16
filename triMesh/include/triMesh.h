@@ -40,6 +40,7 @@ This file is part of the TriMesh library.
 #include <tm_ray.h>
 #include <tm_vertex.h>
 #include <tm_repo.h>
+#include <tm_proxyEdges.h>
 #include <tm_proxyVertices.h>
 #include <tm_proxyTriangles.h>
 
@@ -266,12 +267,12 @@ namespace TriMesh {
 		const size_t _id;
 		size_t _changeNumber = 0;
 
-		std::vector<CEdge> _edges;
 		std::map<CEdge, size_t> _edgeToIdxMap;
 
 		mutable std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatureColors;
 		mutable std::vector<unsigned int> _glTriIndices;
 
+		ProxyEdges _edges;
 		ProxyVertices _vertices;
 		ProxyTriangles _tris;
 

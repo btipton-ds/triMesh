@@ -30,65 +30,46 @@ This file is part of the TriMesh library.
 */
 
 #include <tm_defines.h>
+#include <memory>
 #include <map>
 #include <vector>
 #include <iostream>
+#include <tm_iterator.h>
 
-#include <tm_math.h>
-#include <tm_spatialSearch.h>
-#include <tm_edge.h>
-#include <tm_ray.h>
-#include <tm_vertex.h>
+#define IS_ITER_CONST (IterType < FORW)
 
 namespace TriMesh {
+	class CEdge;
 
 	class CMeshRepo;
 	using CMeshRepoPtr = std::shared_ptr<CMeshRepo>;
 
-	class CMeshRepo {
+	class ProxyEdges
+	{
 	public:
-		std::vector<CVertex>& getVertices();
-		const std::vector<CVertex>& getVertices() const;
+		using iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::FORW>;
+		using const_iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::FORW_CONST>;
+		using reverse_iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::REV>;
+		using const_reverse_iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::REV_CONST>;
 
-		std::vector<Vector3i>& getTris();
-		const std::vector<Vector3i>& getTris() const;
+		ProxyEdges(const CMeshRepoPtr& pRep);
 
-		std::vector<CEdge>& getEdges();
-		const std::vector<CEdge>& getEdges() const;
+		CEdge& operator[](size_t idx);
+		const CEdge& operator[](size_t idx) const;
+		size_t size() const;
+		void push_back(const CEdge& vert);
+		void pop_back();
+		void read(std::istream& in);
+		void write(std::ostream& out) const;
+
+		const_iterator begin() const noexcept;
+		iterator begin() noexcept;
+		const_iterator end() const noexcept;
+		iterator end() noexcept;
 
 	private:
-		std::vector<CVertex> _vertices;
-		std::vector<CEdge> _edges;
-		std::vector<Vector3i> _tris;
+		CMeshRepoPtr _pRepo;
+		std::vector<size_t> _edgeIndices;
 	};
 
-	inline std::vector<CVertex>& CMeshRepo::getVertices()
-	{
-		return _vertices;
-	}
-
-	inline const std::vector<CVertex>& CMeshRepo::getVertices() const
-	{
-		return _vertices;
-	}
-
-	inline std::vector<Vector3i>& CMeshRepo::getTris()
-	{
-		return _tris;
-	}
-
-	inline const std::vector<Vector3i>& CMeshRepo::getTris() const
-	{
-		return _tris;
-	}
-
-	inline std::vector<CEdge>& CMeshRepo::getEdges()
-	{
-		return _edges;
-	}
-
-	inline const std::vector<CEdge>& CMeshRepo::getEdges() const
-	{
-		return _edges;
-	}
 }

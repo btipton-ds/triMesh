@@ -52,6 +52,7 @@ atomic<size_t> CMesh::_statId = 0;
 
 CMesh::CMesh(const CMeshRepoPtr& pRepo)
 	: _pRepo(pRepo)
+	, _edges(pRepo)
 	, _vertices(pRepo)
 	, _tris(pRepo)
 	, _id(_statId++)
@@ -64,6 +65,7 @@ CMesh::CMesh(const CMeshRepoPtr& pRepo)
 
 CMesh::CMesh(const Vector3d& min, const Vector3d& max, const CMeshRepoPtr& pRepo)
 	: _pRepo(pRepo)
+	, _edges(pRepo)
 	, _vertices(pRepo)
 	, _tris(pRepo)
 	, _id(_statId++)
@@ -1899,7 +1901,7 @@ void CMesh::write(ostream& out) const {
 	out.write((char*)&_id, sizeof(_id));
 
 	_vertices.write(out);
-	IoUtil::writeObj(out, _edges);
+	_edges.write(out);
 	_tris.write(out);
 }
 
@@ -1911,7 +1913,7 @@ bool CMesh::read(istream& in) {
 	in.read((char*)&_id, sizeof(_id));
 
 	_vertices.read(in);
-	IoUtil::readObj(in, _edges);
+	_edges.read(in);
 	_tris.read(in);
 
 	BoundingBox bbox;

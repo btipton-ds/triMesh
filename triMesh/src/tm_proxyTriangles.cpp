@@ -79,22 +79,40 @@ void ProxyTriangles::write(std::ostream& out) const
 
 ProxyTriangles::const_iterator ProxyTriangles::begin() const noexcept
 {
-	return const_iterator(this, _triIndices.data());
+	const size_t* p = nullptr;
+	if (!_triIndices.empty())
+		p = &_triIndices.front();
+	return const_iterator(this, p);
 }
 
 ProxyTriangles::iterator ProxyTriangles::begin() noexcept
 {
-	return iterator(this, _triIndices.data());
+	size_t* p = nullptr;
+	if (!_triIndices.empty())
+		p = &_triIndices.front();
+	return iterator(this, p);
 }
 
 ProxyTriangles::const_iterator ProxyTriangles::end() const noexcept
 {
-	return const_iterator(this, _triIndices.data() + _triIndices.size() + 1);
+	const size_t* p = nullptr;
+	if (!_triIndices.empty())
+	{
+		p = &_triIndices.back();
+		p++;
+	}
+	return const_iterator(this, p);
 }
 
 ProxyTriangles::iterator ProxyTriangles::end() noexcept
 {
-	return iterator(this, _triIndices.data() + _triIndices.size() + 1);
+	size_t* p = nullptr;
+	if (!_triIndices.empty())
+	{
+		p = &_triIndices.back();
+		p++;
+	}
+	return iterator(this, p);
 }
 
 template class ProxyTriangles::iterator;
