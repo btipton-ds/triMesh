@@ -50,8 +50,11 @@ using namespace TriMesh;
 
 atomic<size_t> CMesh::_statId = 0;
 
-CMesh::CMesh() 
-	: _id(_statId++)
+CMesh::CMesh(const CMeshRepoPtr& pRepo)
+	: _pRepo(pRepo)
+	, _vertices(pRepo)
+	, _tris(pRepo)
+	, _id(_statId++)
 	, _changeNumber(0)
 	, _pVertTree(make_shared<SearchTree>())
 	, _pEdgeTree(make_shared<SearchTree>())
@@ -59,8 +62,11 @@ CMesh::CMesh()
 {
 }
 
-CMesh::CMesh(const Vector3d& min, const Vector3d& max)
-	: _id(_statId++)
+CMesh::CMesh(const Vector3d& min, const Vector3d& max, const CMeshRepoPtr& pRepo)
+	: _pRepo(pRepo)
+	, _vertices(pRepo)
+	, _tris(pRepo)
+	, _id(_statId++)
 	, _pVertTree(make_shared<SearchTree>(BoundingBox(min, max)))
 	, _pEdgeTree(make_shared<SearchTree>(BoundingBox(min, max)))
 	, _pTriTree(make_shared<SearchTree>(BoundingBox(min, max)))
@@ -1892,9 +1898,9 @@ void CMesh::write(ostream& out) const {
 	out.write((char*)&_enforceManifold, sizeof(_enforceManifold));
 	out.write((char*)&_id, sizeof(_id));
 
-	IoUtil::writeObj(out, _vertices);
+	_vertices.write(out);
 	IoUtil::writeObj(out, _edges);
-	IoUtil::writeVector3(out, _tris);
+	_tris.write(out);
 }
 
 bool CMesh::read(istream& in) {
@@ -1904,9 +1910,9 @@ bool CMesh::read(istream& in) {
 	in.read((char*)&_enforceManifold, sizeof(_enforceManifold));
 	in.read((char*)&_id, sizeof(_id));
 
-	IoUtil::readObj(in, _vertices);
+	_vertices.read(in);
 	IoUtil::readObj(in, _edges);
-	IoUtil::readVector3(in, _tris);
+	_tris.read(in);
 
 	BoundingBox bbox;
 	for (size_t i = 0; i < _vertices.size(); i++) {

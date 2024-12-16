@@ -39,6 +39,21 @@ This file is part of the TriMesh library.
 #include <tm_edge.h>
 #include <tm_ray.h>
 #include <tm_vertex.h>
+#include <tm_repo.h>
+#include <tm_proxyVertices.h>
+#include <tm_proxyTriangles.h>
+
+/*
+	All vertices and triangles are stored in a CMeshRepo. If a shared repo is desired, create one and pass it as a parameter. If not
+	a default repo is created automiatically.
+
+	The repo unifies all vertex and triangle indices across all meshes.
+
+	TODO - 
+	move edges to the repo
+	Fix back pointers so tris and edges have separate entries for each mesh
+	Add file io
+*/
 
 namespace TriMesh {
 
@@ -75,9 +90,12 @@ namespace TriMesh {
 			// OPT_NEXT = 4, etc
 		};
 
-		CMesh();
-		CMesh(const BoundingBox& bbox);
-		CMesh(const Vector3d& min, const Vector3d& max);
+		CMesh(const CMeshRepoPtr& pRepo = std::make_shared<CMeshRepo>());
+		CMesh(const BoundingBox& bbox, const CMeshRepoPtr& pRepo = std::make_shared<CMeshRepo>());
+		CMesh(const Vector3d& min, const Vector3d& max, const CMeshRepoPtr& pRepo = std::make_shared<CMeshRepo>());
+
+		const CMeshRepoPtr& getRepo() const;
+
 		void reset(const BoundingBox& bbox);
 		void setEnforceManifold(bool val);
 		bool enforceManifold() const;
@@ -144,6 +162,7 @@ namespace TriMesh {
 		size_t numTris() const;
 		size_t numLaminarEdges() const;
 
+		CVertex& getVert(size_t idx);
 		const CVertex& getVert(size_t idx) const;
 		const Vector3i& getTri(size_t idx) const;
 		const CEdge& getEdge(size_t idx) const;
@@ -240,22 +259,24 @@ namespace TriMesh {
 		bool verifyVerts(size_t vertIdx) const;
 		bool verifyEdges(size_t edgeIdx, bool allowEmpty) const;
 
+		CMeshRepoPtr _pRepo;
 		bool _enforceManifold = true;
 		size_t _options = 0;
 		static std::atomic<size_t> _statId;
 		const size_t _id;
 		size_t _changeNumber = 0;
-		std::vector<CVertex> _vertices;
-		SearchTreePtr _pVertTree;
 
 		std::vector<CEdge> _edges;
-		SearchTreePtr _pEdgeTree;
 		std::map<CEdge, size_t> _edgeToIdxMap;
-
-		std::vector<Vector3i> _tris;
 
 		mutable std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatureColors;
 		mutable std::vector<unsigned int> _glTriIndices;
+
+		ProxyVertices _vertices;
+		ProxyTriangles _tris;
+
+		SearchTreePtr _pVertTree;
+		SearchTreePtr _pEdgeTree;
 		SearchTreePtr _pTriTree;
 
 		// These are cached data and can be reproduced. Marked mutable so they can be accessed from const getters
@@ -271,9 +292,14 @@ namespace TriMesh {
 
 	using CMeshPtr = std::shared_ptr<CMesh>;
 
-	inline CMesh::CMesh(const BoundingBox& bbox)
-		: CMesh(bbox.getMin(), bbox.getMax())
+	inline CMesh::CMesh(const BoundingBox& bbox, const CMeshRepoPtr& pRepo)
+		: CMesh(bbox.getMin(), bbox.getMax(), pRepo)
 	{
+	}
+
+	inline const CMeshRepoPtr& CMesh::getRepo() const
+	{
+		return _pRepo;
 	}
 
 	inline void CMesh::setEnforceManifold(bool val)
@@ -415,6 +441,10 @@ namespace TriMesh {
 		_changeNumber++;
 	}
 
+	inline CVertex& CMesh::getVert(size_t idx) {
+		return _vertices[idx];
+	}
+
 	inline const CVertex& CMesh::getVert(size_t idx) const {
 		return _vertices[idx];
 	}
@@ -479,7 +509,7 @@ namespace TriMesh {
 
 				const auto& edge = _edges[edgeIdx];
 				for (int i = 0; i < 2; i++) {
-					const auto& pt = _vertices[edge._vertIndex[i]]._pt;
+					const auto& pt = getVert(edge._vertIndex[i])._pt;
 					for (int j = 0; j < 3; j++) {
 						points.push_back((float)pt[j]);
 						colors.push_back(rgb[j]);
