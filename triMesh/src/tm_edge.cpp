@@ -35,24 +35,22 @@ This file is part of the TriMesh library.
 using namespace std;
 using namespace TriMesh;
 
-LineSegmentd CEdge::getSeg(const CMesh* pMesh) const
+LineSegmentd CEdgeGeo::getSeg(const CMesh* pMesh) const
 {
 	Vector3d pt0 = pMesh->getVert(_vertIndex[0])._pt;
 	Vector3d pt1 = pMesh->getVert(_vertIndex[1])._pt;
 	return LineSegmentd(pt0, pt1);
 }
 
-LineSegmentd CEdge::getSeg(const CMeshPtr& pMesh) const
+LineSegmentd CEdgeGeo::getSeg(const CMeshPtr& pMesh) const
 {
 	Vector3d pt0 = pMesh->getVert(_vertIndex[0])._pt;
 	Vector3d pt1 = pMesh->getVert(_vertIndex[1])._pt;
 	return LineSegmentd(pt0, pt1);
 }
 
-CEdge::CEdge(size_t vertIdx0, size_t vertIdx1)
-	: _numFaces(0)
+CEdgeGeo::CEdgeGeo(size_t vertIdx0, size_t vertIdx1)
 {
-	_faceIndices[0] = _faceIndices[1] = stm1;
 	if (vertIdx0 <= vertIdx1) {
 		_vertIndex[0] = vertIdx0;
 		_vertIndex[1] = vertIdx1;
@@ -63,7 +61,7 @@ CEdge::CEdge(size_t vertIdx0, size_t vertIdx1)
 	}
 }
 
-bool CEdge::operator < (const CEdge& rhs) const {
+bool CEdgeGeo::operator < (const CEdgeGeo& rhs) const {
 	for (int i = 0; i < 2; i++) {
 		if (_vertIndex[i] < rhs._vertIndex[i])
 			return true;
@@ -73,17 +71,43 @@ bool CEdge::operator < (const CEdge& rhs) const {
 	return false;
 }
 
-bool CEdge::operator == (const CEdge& rhs) const {
+bool CEdgeGeo::operator == (const CEdgeGeo& rhs) const {
 	return _vertIndex[0] == rhs._vertIndex[0] && _vertIndex[1] == rhs._vertIndex[1];
 }
 
-bool CEdge::isAttachedToFace(size_t faceIdx) const
+CEdge::CEdge(size_t vertIdx0, size_t vertIdx1)
+	: CEdgeGeo(vertIdx0, vertIdx1)
 {
-	if (_numFaces > 0 && _vertIndex[0] == faceIdx)
-		return true;
-	else if (_numFaces > 1 && _vertIndex[1] == faceIdx)
-		return true;
+}
 
+CEdge::TopolEntry* CEdge::getTopol(size_t meshId)
+{
+	auto mIter = _meshTopol.find(meshId);
+	if (mIter != _meshTopol.end()) {
+		return mIter->second.get();
+	}
+	return nullptr;
+}
+
+const CEdge::TopolEntry* CEdge::getTopol(size_t meshId) const
+{
+	auto mIter = _meshTopol.find(meshId);
+	if (mIter != _meshTopol.end()) {
+		return mIter->second.get();
+	}
+	return nullptr;
+}
+
+bool CEdge::isAttachedToFace(size_t meshId, size_t faceIdx) const
+{
+	auto mIter = _meshTopol.find(meshId);
+	if (mIter != _meshTopol.end()) {
+		const auto r = *mIter->second;
+		for (int i = 0; i < r._numFaces; i++) {
+			if (r._faceIndices[i] == faceIdx)
+				return true;
+		}
+	}
 	return false;
 }
 
@@ -95,9 +119,16 @@ void CEdge::write(std::ostream& out) const
 	out.write((char*)&_vertIndex[0], sizeof(size_t));
 	out.write((char*)&_vertIndex[1], sizeof(size_t));
 
-	out.write((char*)&_numFaces, sizeof(int));
-	for (int i = 0; i < _numFaces; i++)
-		out.write((char*)&_faceIndices[i], sizeof(size_t));
+	size_t n = _meshTopol.size();
+	out.write((char*)&n, sizeof(n));
+	for (const auto& rec : _meshTopol) {
+		size_t meshId = rec.first;
+		out.write((char*)&meshId, sizeof(size_t));
+
+		out.write((char*)&rec.second->_numFaces, sizeof(int));
+		for (size_t i = 0; i < rec.second->_numFaces; i++)
+			out.write((char*)&rec.second->_faceIndices[i], sizeof(size_t));
+	}
 }
 
 bool CEdge::read(std::istream& in)
@@ -107,54 +138,75 @@ bool CEdge::read(std::istream& in)
 
 	in.read((char*)&_vertIndex[0], sizeof(size_t));
 	in.read((char*)&_vertIndex[1], sizeof(size_t));
+	size_t n;
+	in.read((char*)&n, sizeof(n));
+	for (size_t i = 0; i < n; i++) {
+		size_t meshId;
+		in.read((char*)&meshId, sizeof(size_t));
+		auto p = make_shared<TopolEntry>();
+		_meshTopol.insert(make_pair(meshId, p));
 
-	in.read((char*)&_numFaces, sizeof(int));
-	for (int i = 0; i < _numFaces; i++)
-		in.read((char*)&_faceIndices[i], sizeof(size_t));
-
+		in.read((char*)&p->_numFaces, sizeof(int));
+		for (size_t i = 0; i < p->_numFaces; i++)
+			in.read((char*)&p->_faceIndices[i], sizeof(size_t));
+	}
 	return true;
 }
 
-void CEdge::addFaceIndex(size_t faceIdx) {
-	for (int i = 0; i < _numFaces; i++) {
-		if (_faceIndices[i] == faceIdx)
+void CEdge::addFaceIndex(size_t meshId, size_t faceIdx) {
+	auto mIter = _meshTopol.find(meshId);
+	if (mIter == _meshTopol.end())
+		mIter = _meshTopol.insert(make_pair(meshId, make_shared<TopolEntry>())).first;
+	auto& r = *mIter->second;
+	for (int i = 0; i < r._numFaces; i++) {
+		if (r._faceIndices[i] == faceIdx)
 			return;
 	}
-	if (_numFaces < 2) {
-		_faceIndices[_numFaces++] = faceIdx;
+	if (r._numFaces < 2) {
+		r._faceIndices[r._numFaces++] = faceIdx;
 	}
 }
 
-void CEdge::removeFaceIndex(size_t faceIdx)
+void CEdge::removeFaceIndex(size_t meshId, size_t faceIdx)
 {
-	for (int i = 0; i < _numFaces; i++) {
-		if (_faceIndices[i] == faceIdx) {
-			if (i == 0) {
-				_faceIndices[i] = _faceIndices[i + 1];
+	auto mIter = _meshTopol.find(meshId);
+	if (mIter != _meshTopol.end()) {
+		auto& r = *mIter->second;
+		for (int i = 0; i < r._numFaces; i++) {
+			if (r._faceIndices[i] == faceIdx) {
+				if (i == 0) {
+					r._faceIndices[i] = r._faceIndices[i + 1];
+				}
+				r._numFaces--;
+				r._faceIndices[1] = -1;
+				if (r._numFaces == 0)
+					r._faceIndices[0] = -1;
+				return;
 			}
-			_numFaces--;
-			_faceIndices[1] = -1;
-			if (_numFaces == 0)
-				_faceIndices[0] = -1;
-			return;
 		}
 	}
 }
 
-void CEdge::changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx)
+void CEdge::changeFaceIndex(size_t meshId, size_t oldFaceIdx, size_t newFaceIdx)
 {
-	for (int i = 0; i < _numFaces; i++) {
-		if (_faceIndices[i] == oldFaceIdx) {
-			_faceIndices[i] = newFaceIdx;
-			return;
+	auto mIter = _meshTopol.find(meshId);
+	if (mIter != _meshTopol.end()) {
+		auto& r = *mIter->second;
+		for (int i = 0; i < r._numFaces; i++) {
+			if (r._faceIndices[i] == oldFaceIdx) {
+				r._faceIndices[i] = newFaceIdx;
+				return;
+			}
 		}
 	}
 }
 
 void CEdge::dump(std::ostream& out) const {
 	out << "edge { verts:(" << _vertIndex[0] << ", " << _vertIndex[1] << "), faces(";
+/*
 	for (int i = 0; i < _numFaces; i++) {
 		out << _faceIndices[i] << ",";
 	}
+*/
 	out << ") }\n";
 }

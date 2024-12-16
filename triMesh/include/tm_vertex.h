@@ -30,7 +30,9 @@ This file is part of the TriMesh library.
 */
 
 #include <tm_defines.h>
+#include <memory>
 #include <vector>
+#include <map>
 #include <ostream>
 #include <iomanip>
 
@@ -45,20 +47,25 @@ struct CVertex {
 	void write(std::ostream& out) const;
 	bool read(std::istream& in);
 
-	bool containsEdgeIndex(size_t index) const;
-	void addEdgeIndex(size_t index);
-	void removeEdgeIndex(size_t index);
-	void changeEdgeIndex(size_t oldEdgeIdx, size_t newEdgeIdx);
+	const std::vector<size_t>* getEdgeIndices(size_t meshId) const;
+	bool containsEdgeIndex(size_t meshId, size_t index) const;
+	void addEdgeIndex(size_t meshId, size_t index);
+	void removeEdgeIndex(size_t meshId, size_t index);
+	void changeEdgeIndex(size_t meshId, size_t oldEdgeIdx, size_t newEdgeIdx);
 
-	bool containsFaceIndex(size_t index) const;
-	void addFaceIndex(size_t index);
-	void removeFaceIndex(size_t index);
-	void changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx);
+	const std::vector<size_t>* getFaceIndices(size_t meshId) const;
+	bool containsFaceIndex(size_t meshId, size_t index) const;
+	void addFaceIndex(size_t meshId, size_t index);
+	void removeFaceIndex(size_t meshId, size_t index);
+	void changeFaceIndex(size_t meshId, size_t oldFaceIdx, size_t newFaceIdx);
 
 	void dump(std::ostream& out) const;
 
 	Vector3d _pt;
-	std::vector<size_t> _faceIndices, _edgeIndices;
+	struct TopolEntry {
+		std::vector<size_t> _faceIndices, _edgeIndices;
+	};
+	std::map<size_t, std::shared_ptr<TopolEntry>> _meshTopol;
 };
 
 inline CVertex::CVertex() {

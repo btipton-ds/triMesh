@@ -51,6 +51,11 @@ namespace TriMesh {
 		using reverse_iterator = tm_iterator<ProxyTriangles, Vector3i, REV>;
 		using const_reverse_iterator = tm_iterator<ProxyTriangles, Vector3i, REV_CONST>;
 
+		friend class iterator;
+		friend class const_iterator;
+		friend class reverse_iterator;
+		friend class const_reverse_iterator;
+
 		ProxyTriangles(const CMeshRepoPtr& pRepo);
 
 		Vector3i& operator[](size_t idx);
@@ -70,17 +75,17 @@ namespace TriMesh {
 		const std::vector<size_t>& getIndices() const;
 	private:
 		CMeshRepoPtr _pRepo;
-		std::vector<size_t> _triIndices;
+		std::vector<size_t> _indices;
 	};
 
 	inline std::vector<size_t>& ProxyTriangles::getIndices()
 	{
-		return _triIndices;
+		return _indices;
 	}
 
 	inline const std::vector<size_t>& ProxyTriangles::getIndices() const
 	{
-		return _triIndices;
+		return _indices;
 	}
 
 }

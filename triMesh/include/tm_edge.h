@@ -31,9 +31,10 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
-#include <ostream>
-#include <vector>
 #include <memory>
+#include <vector>
+#include <map>
+#include <ostream>
 
 #include <tm_math.h>
 
@@ -46,33 +47,46 @@ namespace TriMesh {
 class CMesh;
 using CMeshPtr = std::shared_ptr<CMesh>;
 
-class CEdge {
+// need to split this into the raw edge and the connectivity for the search tree.
+class CEdgeGeo {
 public:
-
-	CEdge(size_t vertIdx0 = stm1, size_t vertIdx1 = stm1);
-	bool operator < (const CEdge& rhs) const;
-	bool operator == (const CEdge& rhs) const;
-	bool isAttachedToFace(size_t faceIdx) const;
+	CEdgeGeo(size_t vertIdx0 = stm1, size_t vertIdx1 = stm1);
+	bool operator < (const CEdgeGeo& rhs) const;
+	bool operator == (const CEdgeGeo& rhs) const;
 	size_t otherVertIdx(size_t vertIndex) const;
-
-	void write(std::ostream& out) const;
-	bool read(std::istream& in);
-
-	void addFaceIndex(size_t faceIdx);
-	void removeFaceIndex(size_t faceIdx);
-	void changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx);
 
 	LineSegmentd getSeg(const CMesh* pMesh) const;
 	LineSegmentd getSeg(const CMeshPtr& pMesh) const;
 
-	void dump(std::ostream& out) const;
-
 	size_t _vertIndex[2];
-	int _numFaces;
-	size_t _faceIndices[2];
 };
 
-inline size_t CEdge::otherVertIdx(size_t vertIndex) const
+class CEdge : public CEdgeGeo {
+public:
+	struct TopolEntry {
+		int _numFaces = 0;
+		size_t _faceIndices[2] = { stm1, stm1 };
+	};
+
+	CEdge(size_t vertIdx0 = stm1, size_t vertIdx1 = stm1);
+
+	TopolEntry* getTopol(size_t meshId);
+	const TopolEntry* getTopol(size_t meshId) const;
+
+	bool isAttachedToFace(size_t meshId, size_t faceIdx) const;
+	void addFaceIndex(size_t meshId, size_t faceIdx);
+	void removeFaceIndex(size_t meshId, size_t faceIdx);
+	void changeFaceIndex(size_t meshId, size_t oldFaceIdx, size_t newFaceIdx);
+
+	void write(std::ostream& out) const;
+	bool read(std::istream& in);
+
+	void dump(std::ostream& out) const;
+
+	std::map<size_t, std::shared_ptr<TopolEntry>> _meshTopol;
+};
+
+inline size_t CEdgeGeo::otherVertIdx(size_t vertIndex) const
 {
 	if (vertIndex == _vertIndex[0])
 		return _vertIndex[1];

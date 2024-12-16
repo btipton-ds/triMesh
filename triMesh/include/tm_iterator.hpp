@@ -170,10 +170,10 @@ inline typename ITER_DECL::pointer ITER_DECL::get() const
 {
 	size_t idx = -1;
 	if (_pEntry)
-		idx = *_pEntry;
+		idx = (size_t)(_pEntry - _pSource->_indices.data());
 	else if (_pSource) {
 		// null indicates end of the array
-		idx = 0;
+		idx = -1;
 	}
 	if (0 <= idx && idx < _pSource->size())
 		return &(*_pSource)[idx];

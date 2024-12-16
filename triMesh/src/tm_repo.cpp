@@ -1,5 +1,3 @@
-#pragma once
-
 /*
 
 This file is part of the TriMesh library.
@@ -29,52 +27,28 @@ This file is part of the TriMesh library.
 
 */
 
-#include <tm_defines.h>
-#include <memory>
-#include <map>
-#include <vector>
 #include <iostream>
-#include <tm_iterator.h>
+#include <tm_repo.h>
+#include <tm_ioUtil.h>
 
-#define IS_ITER_CONST (IterType < FORW)
+using namespace std;
+using namespace TriMesh;
 
-namespace TriMesh {
-	class CEdge;
+void CMeshRepo::write(std::ostream& out) const
+{
+	uint8_t version = 0;
+	out.write((char*)&version, sizeof(version));
 
-	class CMeshRepo;
-	using CMeshRepoPtr = std::shared_ptr<CMeshRepo>;
+	IoUtil::writeObj(out, _vertices);
+	IoUtil::writeObj(out, _edges);
+	IoUtil::write(out, _tris);
+}
 
-	class ProxyEdges
-	{
-	public:
-		using iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::FORW>;
-		using const_iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::FORW_CONST>;
-		using reverse_iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::REV>;
-		using const_reverse_iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::REV_CONST>;
-
-		friend class iterator;
-		friend class const_iterator;
-		friend class reverse_iterator;
-		friend class const_reverse_iterator;
-
-		ProxyEdges(const CMeshRepoPtr& pRep);
-
-		CEdge& operator[](size_t idx);
-		const CEdge& operator[](size_t idx) const;
-		size_t size() const;
-		void push_back(const CEdge& vert);
-		void pop_back();
-		void read(std::istream& in);
-		void write(std::ostream& out) const;
-
-		const_iterator begin() const noexcept;
-		iterator begin() noexcept;
-		const_iterator end() const noexcept;
-		iterator end() noexcept;
-
-	private:
-		CMeshRepoPtr _pRepo;
-		std::vector<size_t> _indices;
-	};
-
+void CMeshRepo::read(std::istream& in)
+{
+	uint8_t version;
+	in.read((char*)&version, sizeof(version));
+	IoUtil::readObj(in, _vertices);
+	IoUtil::readObj(in, _edges);
+	IoUtil::read(in, _tris);
 }

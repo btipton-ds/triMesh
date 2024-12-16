@@ -111,8 +111,9 @@ void Patch::finishCreation(const CMesh* pMesh, double sinSharpEdgeAngle)
 				size_t triEdgeIdx = pMesh->findEdge(CEdge(tri[i], tri[j]));
 				if (!sharpEdgeSet.contains(triEdgeIdx)) {
 					const auto& edge = pMesh->getEdge(triEdgeIdx);
-					for (int j = 0; j < edge._numFaces; j++) {
-						size_t nextTriIdx = edge._faceIndices[j];
+					const auto r = edge.getTopol(pMesh->getId());
+					for (int j = 0; j < r->_numFaces; j++) {
+						size_t nextTriIdx = r->_faceIndices[j];
 						if (triSet.contains(nextTriIdx)) {
 							stack.push_back(nextTriIdx);
 							triSet.erase(nextTriIdx);

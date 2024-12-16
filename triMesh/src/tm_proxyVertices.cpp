@@ -30,6 +30,7 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 #include <tm_proxyVertices.h>
 #include <tm_iterator.hpp>
 #include <tm_repo.h>
+#include <tm_ioUtil.h>
 
 using namespace std;
 using namespace TriMesh;
@@ -42,18 +43,18 @@ ProxyVertices::ProxyVertices(const CMeshRepoPtr& pRepo)
 CVertex& ProxyVertices::operator[](size_t idx)
 {
 	auto& verts = _pRepo->getVertices();
-	return verts[_vertIndices[idx]];
+	return verts[_indices[idx]];
 }
 
 const CVertex& ProxyVertices::operator[](size_t idx) const
 {
 	auto& verts = _pRepo->getVertices();
-	return verts[_vertIndices[idx]];
+	return verts[_indices[idx]];
 }
 
 size_t ProxyVertices::size() const
 {
-	return _vertIndices.size();
+	return _indices.size();
 }
 
 void ProxyVertices::push_back(const CVertex& val)
@@ -61,44 +62,52 @@ void ProxyVertices::push_back(const CVertex& val)
 	auto& verts = _pRepo->getVertices();
 	size_t idx = verts.size();
 	verts.push_back(val);
-	_vertIndices.push_back(idx);
+	_indices.push_back(idx);
 }
 
 void ProxyVertices::pop_back()
 {
-	_vertIndices.pop_back();
+	_indices.pop_back();
 }
 
 void ProxyVertices::read(std::istream& in)
 {
+	uint8_t version = 0;
+	in.read((char*)&version, sizeof(version));
+
+	IoUtil::read(in, _indices);
 }
 
 void ProxyVertices::write(std::ostream& out) const
 {
+	uint8_t version = 0;
+	out.write((char*)&version, sizeof(version));
+
+	IoUtil::write(out, _indices);
 }
 
 ProxyVertices::const_iterator ProxyVertices::begin() const noexcept
 {
 	const size_t* p = nullptr;
-	if (!_vertIndices.empty())
-		p = &_vertIndices.front();
+	if (!_indices.empty())
+		p = &_indices.front();
 	return const_iterator(this, p);
 }
 
 ProxyVertices::iterator ProxyVertices::begin() noexcept
 {
 	size_t* p = nullptr;
-	if (!_vertIndices.empty())
-		p = &_vertIndices.front();
+	if (!_indices.empty())
+		p = &_indices.front();
 	return iterator(this, p);
 }
 
 ProxyVertices::const_iterator ProxyVertices::end() const noexcept
 {
 	const size_t* p = nullptr;
-	if (!_vertIndices.empty())
+	if (!_indices.empty())
 	{
-		p = &_vertIndices.back();
+		p = &_indices.back();
 		p++;
 	}
 	return const_iterator(this, p);
@@ -107,9 +116,9 @@ ProxyVertices::const_iterator ProxyVertices::end() const noexcept
 ProxyVertices::iterator ProxyVertices::end() noexcept
 {
 	size_t* p = nullptr;
-	if (!_vertIndices.empty())
+	if (!_indices.empty())
 	{
-		p = &_vertIndices.back();
+		p = &_indices.back();
 		p++;
 	}
 	return iterator(this, p);

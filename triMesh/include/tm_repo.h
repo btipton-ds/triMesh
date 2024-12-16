@@ -39,6 +39,7 @@ This file is part of the TriMesh library.
 #include <tm_edge.h>
 #include <tm_ray.h>
 #include <tm_vertex.h>
+#include <tm_ioUtil.h>
 
 namespace TriMesh {
 
@@ -47,6 +48,8 @@ namespace TriMesh {
 
 	class CMeshRepo {
 	public:
+		CMeshRepo();
+
 		std::vector<CVertex>& getVertices();
 		const std::vector<CVertex>& getVertices() const;
 
@@ -56,11 +59,19 @@ namespace TriMesh {
 		std::vector<CEdge>& getEdges();
 		const std::vector<CEdge>& getEdges() const;
 
+		void write(std::ostream& out) const;
+		void read(std::istream& in);
+
 	private:
 		std::vector<CVertex> _vertices;
 		std::vector<CEdge> _edges;
 		std::vector<Vector3i> _tris;
 	};
+
+	inline CMeshRepo::CMeshRepo()
+	{
+		std::cout << "Created CMeshRepo\n";
+	}
 
 	inline std::vector<CVertex>& CMeshRepo::getVertices()
 	{

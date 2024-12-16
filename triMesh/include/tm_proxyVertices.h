@@ -52,6 +52,11 @@ namespace TriMesh {
 		using reverse_iterator = tm_iterator<ProxyVertices, CVertex, ITER_DIR::REV>;
 		using const_reverse_iterator = tm_iterator<ProxyVertices, CVertex, ITER_DIR::REV_CONST>;
 
+		friend class iterator;
+		friend class const_iterator;
+		friend class reverse_iterator;
+		friend class const_reverse_iterator;
+
 		ProxyVertices(const CMeshRepoPtr& pRep);
 
 		CVertex& operator[](size_t idx);
@@ -69,7 +74,7 @@ namespace TriMesh {
 
 	private:
 		CMeshRepoPtr _pRepo;
-		std::vector<size_t> _vertIndices;
+		std::vector<size_t> _indices;
 	};
 
 }
