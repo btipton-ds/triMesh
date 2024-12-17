@@ -86,8 +86,6 @@ bool CReadWriteSTL::read(const std::string& path, const std::string& filename)
 	for (const auto& pt : points) {
 		modelBBox.merge(toV3d(pt));
 	}
-	cout << "min BBox: " << modelBBox.getMin()[0] << ", " << modelBBox.getMin()[1] << ", " << modelBBox.getMin()[2] << "\n";
-	cout << "max BBox: " << modelBBox.getMax()[0] << ", " << modelBBox.getMax()[1] << ", " << modelBBox.getMax()[2] << "\n";
 
 	modelBBox.grow(1.0e-3);
 	_meshPtr->reset(modelBBox);
@@ -98,11 +96,6 @@ bool CReadWriteSTL::read(const std::string& path, const std::string& filename)
 	points.clear();
 
 //	_meshPtr->verifyFindAllTris();
-
-	cout << "numVertices: " << _meshPtr->numVertices() << "\n";
-	cout << "numEdges: " << _meshPtr->numEdges() << "\n";
-	cout << "numTris: " << _meshPtr->numTris() << "\n";
-	cout << "isClosed: " << (_meshPtr->isClosed() ? "true" : "false") << "\n";
 
 	return true;
 }
@@ -149,8 +142,6 @@ bool CReadWriteSTL::read(const std::wstring& path, const std::wstring& filename)
 	for (const auto& pt : points) {
 		modelBBox.merge(toV3d(pt));
 	}
-	cout << "min BBox: " << modelBBox.getMin()[0] << ", " << modelBBox.getMin()[1] << ", " << modelBBox.getMin()[2] << "\n";
-	cout << "max BBox: " << modelBBox.getMax()[0] << ", " << modelBBox.getMax()[1] << ", " << modelBBox.getMax()[2] << "\n";
 
 	modelBBox.grow(1.0e-3);
 	_meshPtr->reset(modelBBox);
@@ -161,11 +152,6 @@ bool CReadWriteSTL::read(const std::wstring& path, const std::wstring& filename)
 	points.clear();
 
 	//	_meshPtr->verifyFindAllTris();
-
-	cout << "numVertices: " << _meshPtr->numVertices() << "\n";
-	cout << "numEdges: " << _meshPtr->numEdges() << "\n";
-	cout << "numTris: " << _meshPtr->numTris() << "\n";
-	cout << "isClosed: " << (_meshPtr->isClosed() ? "true" : "false") << "\n";
 
 	return true;
 }

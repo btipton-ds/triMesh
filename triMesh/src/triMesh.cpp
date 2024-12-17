@@ -1156,7 +1156,6 @@ void CMesh::merge(vector<CMeshPtr>& src, bool destructive, bool multiCore)
 {
 #if 1
 	while (src.size() > 1) {
-		cout << "Num meshes 0: " << src.size() << "\n";
 		MultiCore::runLambda([this, &src, destructive](size_t threadNum, size_t numThreads)->bool {
 			for (size_t i = threadNum; i < src.size(); i += numThreads) {
 				if (i % 2 == 0) {
@@ -1184,7 +1183,6 @@ void CMesh::merge(vector<CMeshPtr>& src, bool destructive, bool multiCore)
 			src.pop_back();
 		}
 
-		cout << "Num meshes 1: " << src.size() << "\n";
 	}
 
 	merge(src.back(), destructive);

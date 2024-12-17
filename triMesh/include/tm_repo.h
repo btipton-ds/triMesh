@@ -70,7 +70,6 @@ namespace TriMesh {
 
 	inline CMeshRepo::CMeshRepo()
 	{
-		std::cout << "Created CMeshRepo\n";
 	}
 
 	inline std::vector<CVertex>& CMeshRepo::getVertices()
