@@ -50,18 +50,11 @@ namespace TriMesh {
 	public:
 		CMeshRepo();
 
-		std::vector<CVertex>& getVertices();
-		const std::vector<CVertex>& getVertices() const;
+		template<class T>
+		std::vector<T>& get();
 
-		std::vector<Vector3i>& getTris();
-		const std::vector<Vector3i>& getTris() const;
-
-		std::vector<CEdge>& getEdges();
-		const std::vector<CEdge>& getEdges() const;
-
-		void write(std::ostream& out) const;
-		void read(std::istream& in);
-
+		template<class T>
+		const std::vector<T>& get() const;
 	private:
 		std::vector<CVertex> _vertices;
 		std::vector<CEdge> _edges;
@@ -72,33 +65,40 @@ namespace TriMesh {
 	{
 	}
 
-	inline std::vector<CVertex>& CMeshRepo::getVertices()
-	{
-		return _vertices;
-	}
-
-	inline const std::vector<CVertex>& CMeshRepo::getVertices() const
-	{
-		return _vertices;
-	}
-
-	inline std::vector<Vector3i>& CMeshRepo::getTris()
-	{
-		return _tris;
-	}
-
-	inline const std::vector<Vector3i>& CMeshRepo::getTris() const
-	{
-		return _tris;
-	}
-
-	inline std::vector<CEdge>& CMeshRepo::getEdges()
+	template<>
+	inline std::vector<CEdge>& CMeshRepo::get<CEdge>()
 	{
 		return _edges;
 	}
 
-	inline const std::vector<CEdge>& CMeshRepo::getEdges() const
+	template<>
+	inline const std::vector<CEdge>& CMeshRepo::get<CEdge>() const
 	{
 		return _edges;
 	}
+
+	template<>
+	inline std::vector<CVertex>& CMeshRepo::get<CVertex>()
+	{
+		return _vertices;
+	}
+
+	template<>
+	inline const std::vector<CVertex>& CMeshRepo::get<CVertex>() const
+	{
+		return _vertices;
+	}
+
+	template<>
+	inline std::vector<Vector3i>& CMeshRepo::get<Vector3i>()
+	{
+		return _tris;
+	}
+
+	template<>
+	inline const std::vector<Vector3i>& CMeshRepo::get<Vector3i>() const
+	{
+		return _tris;
+	}
+
 }

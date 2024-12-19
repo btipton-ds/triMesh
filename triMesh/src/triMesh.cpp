@@ -37,12 +37,15 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 #include <cmath>
 
 #include <../../stlReader/include/readWriteStl.h>
-#include <tm_ioUtil.h>
 #include <tm_lineSegment.h>
 #include <tm_ray.h>
 #include <triMesh.h>
 #include <triMeshPatch.h>
 #include <MultiCoreUtil.h>
+#include <tm_proxyEdges.h>
+#include <tm_proxyTriangles.h>
+#include <tm_proxyVertices.h>
+#include <tm_ioUtil.h>
 
 using namespace std;
 
@@ -52,9 +55,9 @@ atomic<size_t> CMesh::_statId = 0;
 
 CMesh::CMesh(const CMeshRepoPtr& pRepo)
 	: _pRepo(pRepo)
-	, _edges(pRepo)
-	, _vertices(pRepo)
-	, _tris(pRepo)
+	, _edges(this)
+	, _vertices(this)
+	, _tris(this)
 	, _id(_statId++)
 	, _changeNumber(0)
 	, _pVertTree(make_shared<SearchTree>())
@@ -65,9 +68,9 @@ CMesh::CMesh(const CMeshRepoPtr& pRepo)
 
 CMesh::CMesh(const Vector3d& min, const Vector3d& max, const CMeshRepoPtr& pRepo)
 	: _pRepo(pRepo)
-	, _edges(pRepo)
-	, _vertices(pRepo)
-	, _tris(pRepo)
+	, _edges(this)
+	, _vertices(this)
+	, _tris(this)
 	, _id(_statId++)
 	, _pVertTree(make_shared<SearchTree>(BoundingBox(min, max)))
 	, _pEdgeTree(make_shared<SearchTree>(BoundingBox(min, max)))
@@ -675,6 +678,8 @@ bool CMesh::verifyEdges(size_t edgeIdx, bool allowEmpty) const
 }
 
 size_t CMesh::addEdge(size_t vertIdx0, size_t vertIdx1) {
+	assert(vertIdx0 < _vertices.size() && vertIdx1 < _vertices.size());
+
 	CEdge edge(vertIdx0, vertIdx1);
 	auto iter = _edgeToIdxMap.find(edge);
 	if (iter != _edgeToIdxMap.end())
@@ -1911,36 +1916,26 @@ void CMesh::dumpModelSharpEdgesObj(ostream& out, double sinAngle) const {
 	}
 }
 
-void CMesh::write(ostream& out, bool writeRepo) const {
-	if (writeRepo)
-		_pRepo->write(out);
-
+void CMesh::write(ostream& out) const {
 	uint8_t version = 0;
 	out.write((char*)&version, sizeof(version));
 
 	out.write((char*)&_enforceManifold, sizeof(_enforceManifold));
-	out.write((char*)&_id, sizeof(_id));
 
-	_vertices.write(out);
-	_edges.write(out);
-	_tris.write(out);
+	IoUtil::writeObj(out, _vertices, _id);
+	IoUtil::writeObj(out, _edges, _id);
+	IoUtil::write(out, _tris);
 }
 
-bool CMesh::read(istream& in, bool readRepo) {
-	if (readRepo)
-		_pRepo->read(in);
-
+bool CMesh::read(istream& in) {
 	uint8_t version = -1;
 	in.read((char*)&version, sizeof(version));
 
 	in.read((char*)&_enforceManifold, sizeof(_enforceManifold));
-	in.read((char*)&_id, sizeof(_id));
-	if (_id > _statId)
-		_statId = _id;
 
-	_vertices.read(in);
-	_edges.read(in);
-	_tris.read(in);
+	IoUtil::readObj(in, _vertices, _id);
+	IoUtil::readObj(in, _edges, _id);
+	IoUtil::read(in, _tris);
 
 	BoundingBox bbox;
 	for (size_t i = 0; i < _vertices.size(); i++) {

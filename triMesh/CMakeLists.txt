@@ -60,7 +60,7 @@ add_library (
     "src/tm_proxyTriangles.cpp"
     "src/tm_proxyVertices.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
- "src/tm_repo.cpp")
+  "include/tm_proxyVector.h" )
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

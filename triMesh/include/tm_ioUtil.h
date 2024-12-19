@@ -33,6 +33,12 @@ This file is part of the DistFieldHexMesh application/library.
 #include <map>
 #include <tm_vector3.h>
 
+namespace TriMesh
+{
+	template<class T>
+	class ProxyVector;
+}
+
 namespace IoUtil
 {
 	template<class T>
@@ -115,16 +121,6 @@ namespace IoUtil
 	}
 
 	template<class T>
-	void writeObj(std::wostream& out, const std::vector<T>& vals)
-	{
-		size_t num = vals.size();
-		out.write((char*)&num, sizeof(num));
-		for (size_t i = 0; i < vals.size(); i++) {
-			vals[i].write(out);
-		}
-	}
-
-	template<class T>
 	void readObj(std::istream& in, std::vector<T>& vals)
 	{
 		size_t num;
@@ -133,6 +129,55 @@ namespace IoUtil
 			vals.resize(num);
 			for (size_t i = 0; i < num; i++) {
 				vals[i].read(in);
+			}
+		}
+	}
+
+	template<class T>
+	void write(std::ostream& out, const ::TriMesh::ProxyVector<T>& vals)
+	{
+		std::vector<T> tmp;
+		tmp.insert(tmp.end(), vals.begin(), vals.end());
+		size_t num = tmp.size();
+		out.write((char*)&num, sizeof(num));
+		out.write((char*)tmp.data(), num * sizeof(T));
+	}
+
+	template<class T>
+	void read(std::istream& in, ::TriMesh::ProxyVector<T>& vals)
+	{
+		size_t num;
+		in.read((char*)&num, sizeof(num));
+		if (num > 0) {
+			std::vector<T> tmp;
+			tmp.resize(num);
+			in.read((char*)tmp.data(), num * sizeof(T));
+
+			for (const auto& val : tmp)
+				vals.push_back(val);
+		}
+	}
+
+	template<class T>
+	void writeObj(std::ostream& out, const ::TriMesh::ProxyVector<T>& vals, size_t meshId)
+	{
+		size_t num = vals.size();
+		out.write((char*)&num, sizeof(num));
+		for (size_t i = 0; i < vals.size(); i++) {
+			vals[i].write(out, meshId);
+		}
+	}
+
+	template<class T>
+	void readObj(std::istream& in, ::TriMesh::ProxyVector<T>& vals, size_t meshId)
+	{
+		size_t num;
+		in.read((char*)&num, sizeof(num));
+		if (num > 0) {
+			for (size_t i = 0; i < num; i++) {
+				vals.push_back(T());
+				T& val = vals[vals.size() - 1];
+				val.read(in, meshId);
 			}
 		}
 	}
@@ -185,5 +230,7 @@ namespace IoUtil
 			val.insert(std::make_pair(t, u));
 		}
 	}
+
+
 
 }

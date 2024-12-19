@@ -44,8 +44,8 @@ struct CVertex {
 	CVertex();
 	CVertex(const CVertex& src) = default;
 	CVertex(const Vector3d& pt);
-	void write(std::ostream& out) const;
-	bool read(std::istream& in);
+	void write(std::ostream& out, size_t meshId) const;
+	bool read(std::istream& in, size_t meshId);
 
 	const std::vector<size_t>* getEdgeIndices(size_t meshId) const;
 	bool containsEdgeIndex(size_t meshId, size_t index) const;
@@ -65,7 +65,7 @@ struct CVertex {
 	struct TopolEntry {
 		std::vector<size_t> _faceIndices, _edgeIndices;
 	};
-	std::map<size_t, std::shared_ptr<TopolEntry>> _meshTopol;
+	std::map<size_t, TopolEntry> _meshTopol;
 };
 
 inline CVertex::CVertex() {

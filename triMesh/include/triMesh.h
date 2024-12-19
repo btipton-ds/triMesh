@@ -111,8 +111,8 @@ namespace TriMesh {
 		// Repo should only be written and read once. If writeRepo/readRepo is false
 		// you must write the repos yourself.
 		// If each mesh has its own repo, set writeRepo/readRepo true and it will be written with the mesh.
-		void write(std::ostream& out, bool writeRepo) const;
-		bool read(std::istream& in, bool readRepo);
+		void write(std::ostream& out) const;
+		bool read(std::istream& in);
 
 		void dumpTris(const std::wstring& filename) const;
 		bool compareDumpedTris(const std::wstring& filename) const;

@@ -30,62 +30,10 @@ This file is part of the TriMesh library.
 */
 
 #include <tm_defines.h>
-#include <memory>
-#include <map>
-#include <vector>
-#include <iostream>
+#include <tm_proxyVector.h>
 #include <tm_vector3.h>
-#include <tm_iterator.h>
-
-#define IS_ITER_CONST (IterType < FORW)
 
 namespace TriMesh {
-	class CMeshRepo;
-	using CMeshRepoPtr = std::shared_ptr<CMeshRepo>;
-
-	class ProxyTriangles
-	{
-	public:
-		using iterator = tm_iterator<ProxyTriangles, Vector3i, FORW>;
-		using const_iterator = tm_iterator<ProxyTriangles, Vector3i, FORW_CONST>;
-		using reverse_iterator = tm_iterator<ProxyTriangles, Vector3i, REV>;
-		using const_reverse_iterator = tm_iterator<ProxyTriangles, Vector3i, REV_CONST>;
-
-		friend class iterator;
-		friend class const_iterator;
-		friend class reverse_iterator;
-		friend class const_reverse_iterator;
-
-		ProxyTriangles(const CMeshRepoPtr& pRepo);
-
-		Vector3i& operator[](size_t idx);
-		const Vector3i& operator[](size_t idx) const;
-		size_t size() const;
-		void push_back(const Vector3i& idx);
-		void pop_back();
-		void read(std::istream& in);
-		void write(std::ostream& out) const;
-
-		const_iterator begin() const noexcept;
-		iterator begin() noexcept;
-		const_iterator end() const noexcept;
-		iterator end() noexcept;
-
-		std::vector<size_t>& getIndices();
-		const std::vector<size_t>& getIndices() const;
-	private:
-		CMeshRepoPtr _pRepo;
-		std::vector<size_t> _indices;
-	};
-
-	inline std::vector<size_t>& ProxyTriangles::getIndices()
-	{
-		return _indices;
-	}
-
-	inline const std::vector<size_t>& ProxyTriangles::getIndices() const
-	{
-		return _indices;
-	}
+	using ProxyTriangles = ProxyVector<Vector3i>;
 
 }

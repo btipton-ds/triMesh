@@ -30,51 +30,10 @@ This file is part of the TriMesh library.
 */
 
 #include <tm_defines.h>
-#include <memory>
-#include <map>
-#include <vector>
-#include <iostream>
-#include <tm_iterator.h>
-
-#define IS_ITER_CONST (IterType < FORW)
+#include <tm_proxyVector.h>
+#include <tm_edge.h>
 
 namespace TriMesh {
-	class CEdge;
-
-	class CMeshRepo;
-	using CMeshRepoPtr = std::shared_ptr<CMeshRepo>;
-
-	class ProxyEdges
-	{
-	public:
-		using iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::FORW>;
-		using const_iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::FORW_CONST>;
-		using reverse_iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::REV>;
-		using const_reverse_iterator = tm_iterator<ProxyEdges, CEdge, ITER_DIR::REV_CONST>;
-
-		friend class iterator;
-		friend class const_iterator;
-		friend class reverse_iterator;
-		friend class const_reverse_iterator;
-
-		ProxyEdges(const CMeshRepoPtr& pRep);
-
-		CEdge& operator[](size_t idx);
-		const CEdge& operator[](size_t idx) const;
-		size_t size() const;
-		void push_back(const CEdge& vert);
-		void pop_back();
-		void read(std::istream& in);
-		void write(std::ostream& out) const;
-
-		const_iterator begin() const noexcept;
-		iterator begin() noexcept;
-		const_iterator end() const noexcept;
-		iterator end() noexcept;
-
-	private:
-		CMeshRepoPtr _pRepo;
-		std::vector<size_t> _indices;
-	};
+	using ProxyEdges = ProxyVector<CEdge>;
 
 }

@@ -84,7 +84,7 @@ CEdge::TopolEntry* CEdge::getTopol(size_t meshId)
 {
 	auto mIter = _meshTopol.find(meshId);
 	if (mIter != _meshTopol.end()) {
-		return mIter->second.get();
+		return &mIter->second;
 	}
 	return nullptr;
 }
@@ -93,7 +93,7 @@ const CEdge::TopolEntry* CEdge::getTopol(size_t meshId) const
 {
 	auto mIter = _meshTopol.find(meshId);
 	if (mIter != _meshTopol.end()) {
-		return mIter->second.get();
+		return &mIter->second;
 	}
 	return nullptr;
 }
@@ -102,7 +102,7 @@ bool CEdge::isAttachedToFace(size_t meshId, size_t faceIdx) const
 {
 	auto mIter = _meshTopol.find(meshId);
 	if (mIter != _meshTopol.end()) {
-		const auto r = *mIter->second;
+		const auto& r = mIter->second;
 		for (int i = 0; i < r._numFaces; i++) {
 			if (r._faceIndices[i] == faceIdx)
 				return true;
@@ -111,7 +111,7 @@ bool CEdge::isAttachedToFace(size_t meshId, size_t faceIdx) const
 	return false;
 }
 
-void CEdge::write(std::ostream& out) const
+void CEdge::write(std::ostream& out, size_t meshId) const
 {
 	uint8_t version = 0;
 	out.write((char*) &version, sizeof(version));
@@ -119,45 +119,39 @@ void CEdge::write(std::ostream& out) const
 	out.write((char*)&_vertIndex[0], sizeof(size_t));
 	out.write((char*)&_vertIndex[1], sizeof(size_t));
 
-	size_t n = _meshTopol.size();
-	out.write((char*)&n, sizeof(n));
-	for (const auto& rec : _meshTopol) {
-		size_t meshId = rec.first;
-		out.write((char*)&meshId, sizeof(size_t));
+	auto iter = _meshTopol.find(meshId);
+	if (iter != _meshTopol.end()) {
 
-		out.write((char*)&rec.second->_numFaces, sizeof(int));
-		for (size_t i = 0; i < rec.second->_numFaces; i++)
-			out.write((char*)&rec.second->_faceIndices[i], sizeof(size_t));
+		auto& rec = iter->second;
+		out.write((char*) &rec._numFaces, sizeof(int));
+		out.write((char*) rec._faceIndices, rec._numFaces * sizeof(size_t));
 	}
 }
 
-bool CEdge::read(std::istream& in)
+bool CEdge::read(std::istream& in, size_t meshId)
 {
 	uint8_t version = -1;
 	in.read((char*)&version, sizeof(version));
 
 	in.read((char*)&_vertIndex[0], sizeof(size_t));
 	in.read((char*)&_vertIndex[1], sizeof(size_t));
-	size_t n;
-	in.read((char*)&n, sizeof(n));
-	for (size_t i = 0; i < n; i++) {
-		size_t meshId;
-		in.read((char*)&meshId, sizeof(size_t));
-		auto p = make_shared<TopolEntry>();
-		_meshTopol.insert(make_pair(meshId, p));
 
-		in.read((char*)&p->_numFaces, sizeof(int));
-		for (size_t i = 0; i < p->_numFaces; i++)
-			in.read((char*)&p->_faceIndices[i], sizeof(size_t));
-	}
+	auto iter = _meshTopol.find(meshId);
+	if (iter == _meshTopol.end())
+		iter = _meshTopol.insert(make_pair(meshId, TopolEntry())).first;
+
+	auto& rec = iter->second;
+	in.read((char*)&rec._numFaces, sizeof(int));
+	in.read((char*)rec._faceIndices, rec._numFaces * sizeof(size_t));
+
 	return true;
 }
 
 void CEdge::addFaceIndex(size_t meshId, size_t faceIdx) {
 	auto mIter = _meshTopol.find(meshId);
 	if (mIter == _meshTopol.end())
-		mIter = _meshTopol.insert(make_pair(meshId, make_shared<TopolEntry>())).first;
-	auto& r = *mIter->second;
+		mIter = _meshTopol.insert(make_pair(meshId, TopolEntry())).first;
+	auto& r = mIter->second;
 	for (int i = 0; i < r._numFaces; i++) {
 		if (r._faceIndices[i] == faceIdx)
 			return;
@@ -171,7 +165,7 @@ void CEdge::removeFaceIndex(size_t meshId, size_t faceIdx)
 {
 	auto mIter = _meshTopol.find(meshId);
 	if (mIter != _meshTopol.end()) {
-		auto& r = *mIter->second;
+		auto& r = mIter->second;
 		for (int i = 0; i < r._numFaces; i++) {
 			if (r._faceIndices[i] == faceIdx) {
 				if (i == 0) {
@@ -191,7 +185,7 @@ void CEdge::changeFaceIndex(size_t meshId, size_t oldFaceIdx, size_t newFaceIdx)
 {
 	auto mIter = _meshTopol.find(meshId);
 	if (mIter != _meshTopol.end()) {
-		auto& r = *mIter->second;
+		auto& r = mIter->second;
 		for (int i = 0; i < r._numFaces; i++) {
 			if (r._faceIndices[i] == oldFaceIdx) {
 				r._faceIndices[i] = newFaceIdx;

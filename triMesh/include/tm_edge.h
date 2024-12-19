@@ -78,12 +78,12 @@ public:
 	void removeFaceIndex(size_t meshId, size_t faceIdx);
 	void changeFaceIndex(size_t meshId, size_t oldFaceIdx, size_t newFaceIdx);
 
-	void write(std::ostream& out) const;
-	bool read(std::istream& in);
+	void write(std::ostream& out, size_t meshId) const;
+	bool read(std::istream& in, size_t meshId);
 
 	void dump(std::ostream& out) const;
 
-	std::map<size_t, std::shared_ptr<TopolEntry>> _meshTopol;
+	std::map<size_t, TopolEntry> _meshTopol;
 };
 
 inline size_t CEdgeGeo::otherVertIdx(size_t vertIndex) const

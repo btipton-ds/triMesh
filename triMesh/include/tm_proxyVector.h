@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 
 This file is part of the TriMesh library.
@@ -27,28 +29,51 @@ This file is part of the TriMesh library.
 
 */
 
-#include <iostream>
-#include <tm_repo.h>
-#include <tm_ioUtil.h>
+#include <tm_defines.h>
+#include <memory>
+#include <vector>
+#include <tm_vector3.h>
+#include <tm_iterator.h>
 
-using namespace std;
-using namespace TriMesh;
+#define IS_ITER_CONST (IterType < FORW)
 
-void CMeshRepo::write(std::ostream& out) const
-{
-	uint8_t version = 0;
-	out.write((char*)&version, sizeof(version));
+namespace TriMesh {
+	class CMesh;
+	using CMeshPtr = std::shared_ptr<CMesh>;
 
-	IoUtil::writeObj(out, _vertices);
-	IoUtil::writeObj(out, _edges);
-	IoUtil::write(out, _tris);
-}
+	template<class T>
+	class ProxyVector
+	{
+	public:
+		using iterator = tm_iterator<ProxyVector<T>, T, FORW>;
+		using const_iterator = tm_iterator<ProxyVector<T>, T, FORW_CONST>;
+		using reverse_iterator = tm_iterator<ProxyVector<T>, T, REV>;
+		using const_reverse_iterator = tm_iterator<ProxyVector<T>, T, REV_CONST>;
 
-void CMeshRepo::read(std::istream& in)
-{
-	uint8_t version;
-	in.read((char*)&version, sizeof(version));
-	IoUtil::readObj(in, _vertices);
-	IoUtil::readObj(in, _edges);
-	IoUtil::read(in, _tris);
+		friend class iterator;
+		friend class const_iterator;
+		friend class reverse_iterator;
+		friend class const_reverse_iterator;
+
+		ProxyVector(CMesh* pMesh);
+
+		T& operator[](size_t idx);
+		const T& operator[](size_t idx) const;
+		size_t size() const;
+		void push_back(const T& idx);
+		void pop_back();
+
+		const_iterator begin() const noexcept;
+		iterator begin() noexcept;
+		const_iterator end() const noexcept;
+		iterator end() noexcept;
+
+		std::vector<size_t>& getIndices();
+		const std::vector<size_t>& getIndices() const;
+
+	protected:
+		CMesh* _pMesh;
+		std::vector<size_t> _indices;
+	};
+
 }
