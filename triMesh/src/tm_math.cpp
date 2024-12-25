@@ -80,3 +80,85 @@ double volumeUnderTriangle(Vector3d const* const pts[3], const Vector3d& axis) {
 	return vol;
 }
 
+template<class T>
+Vector3<T> BI_LERP(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2, const Vector3<T>& p3, T t, T u)
+{
+	auto pt0 = LERP(p0, p1, t);
+	auto pt1 = LERP(p3, p2, t);
+
+	return pt0 + u * (pt1 - pt0);
+}
+
+// pts must be size 8 or greater. No bounds checking is done.
+template<class T>
+Vector3<T> TRI_LERP(const Vector3<T> pts[8], T t, T u, T v)
+{
+	auto pt0 = BI_LERP(pts[0], pts[1], pts[2], pts[3], t, u);
+	auto pt1 = BI_LERP(pts[4], pts[5], pts[6], pts[7], t, u);
+
+	return pt0 + v * (pt1 - pt0);
+}
+
+template<class T>
+bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& uvw)
+{
+	const double step = 1.0e-10;
+	const double tol = 1.0e-10;
+	const double tolSqr = tol * tol;
+	if (pts.empty())
+		return false;
+
+	uvw = Vector3<T>(0.5, 0.5, 0.5);
+	Vector3<T> p0, p1, v;
+	T a, b, c, l;
+	bool done = false;
+	int count = 0;
+	while (!done && count++ < 10) {
+		p0 = TRI_LERP(pts, (T)0, uvw[1], uvw[2]);
+		p1 = TRI_LERP(pts, (T)1, uvw[1], uvw[2]);
+		v = p1 - p0;
+		l = v.norm();
+		v /= l;
+		a = (pt - p0).dot(v) / l;
+
+		p0 = TRI_LERP(pts, uvw[0], (T)0, uvw[2]);
+		p1 = TRI_LERP(pts, uvw[0], (T)1, uvw[2]);
+		v = p1 - p0;
+		l = v.norm();
+		v /= l;
+		b = (pt - p0).dot(v) / l;
+
+		p0 = TRI_LERP(pts, uvw[0], uvw[1], (T)0);
+		p1 = TRI_LERP(pts, uvw[0], uvw[1], (T)1);
+		v = p1 - p0;
+		l = v.norm();
+		v /= l;
+		c = (pt - p0).dot(v) / l;
+
+		uvw = Vector3<T>(a, b, c);
+		Vector3<T> guess = TRI_LERP(pts, uvw);
+		T distSqr = (guess - pt).squaredNorm();
+		if (distSqr < tolSqr)
+			return true;
+	}
+	return false;
+}
+
+namespace {
+	// After several attempts, textbook instantiation never linked correctly. This does.
+	template<class T>
+	bool instantiate()
+	{
+		Vector3<T> pt;
+		std::vector<Vector3<T>> pts;
+		Vector3<T> uvw;
+		if (pts.empty())
+			return false;
+		auto a = TRI_LERP(pts, (T)0, (T)0, (T)0);
+		a = TRI_LERP(pts.data(), (T)0, (T)0, (T)0);
+		a = BI_LERP(pt, pt, pt, pt, (T)0, (T)0);
+		return TRI_LERP_INV(pt, pts, uvw);
+	}
+	static bool dummy0 = instantiate<double>();
+	static bool dummy1 = instantiate<float>();
+}

@@ -193,33 +193,21 @@ inline Vector3d triangleCentroid(const Vector3d pts[]) {
 
 // LERP functions are usually used for points, but can be used for any kind of value that supports +, -  and *
 template<class T>
-inline T LERP(const T& p0, const T& p1, double t)
+inline Vector3<T> LERP(const Vector3<T>& p0, const Vector3<T>& p1, T t)
 {
 	return p0 + t * (p1 - p0);
 }
 
-template<class T>
-inline T BI_LERP(const T& p0, const T& p1, const T& p2, const T& p3, double t, double u)
-{
-	T pt0 = LERP(p0, p1, t);
-	T pt1 = LERP(p3, p2, t);
-
-	return pt0 + u * (pt1 - pt0);
-}
-
 // pts must be size 8 or greater. No bounds checking is done.
 template<class T>
-inline T TRI_LERP(const T pts[8], double t, double u, double v)
-{
-	T pt0 = BI_LERP(pts[0], pts[1], pts[2], pts[3], t, u);
-	T pt1 = BI_LERP(pts[4], pts[5], pts[6], pts[7], t, u);
-
-	return pt0 + v * (pt1 - pt0);
-}
-
-// pts must be size 8 or greater. No bounds checking is done.
-template<class T>
-inline T TRI_LERP(const std::vector<T>& pts, double t, double u, double v)
+inline Vector3<T> TRI_LERP(const std::vector<Vector3<T>>& pts, T t, T u, T v)
 {
 	return TRI_LERP(pts.data(), t, u, v);
 }
+
+template<class T>
+inline Vector3<T> TRI_LERP(const std::vector<Vector3<T>>& pts, const Vector3<T>& uvw)
+{
+	return TRI_LERP(pts, uvw[0], uvw[1], uvw[2]);
+}
+
