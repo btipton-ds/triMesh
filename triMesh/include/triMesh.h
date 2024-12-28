@@ -226,7 +226,8 @@ namespace TriMesh {
 		void getGlEdges(std::vector<float>& points, std::vector<unsigned int>& indices);
 
 		template<typename LAMBDA>
-		void getGlEdges(LAMBDA cuvatureToColorFunc, bool includeSmooth, std::vector<float>& points, std::vector<float>& color, std::vector<unsigned int>& indices);
+		void getGlEdges(LAMBDA curvatureToColorFunc, bool includeSmooth, std::vector<float>& points, std::vector<float>& colors,
+			double sinSharpAngle, std::vector<unsigned int>& sharpIndices, std::vector<unsigned int>& smoothIndices);
 
 		bool testSqueezeEdge(size_t idx);
 		bool testRemoveTri(size_t idx);
@@ -491,14 +492,17 @@ namespace TriMesh {
 	}
 
 	template<typename LAMBDA>
-	void CMesh::getGlEdges(LAMBDA curvatureToColorFunc, bool includeSmooth, std::vector<float>& points, std::vector<float>& colors, std::vector<unsigned int>& indices) // size = GlPoints.size() / 3
+	void CMesh::getGlEdges(LAMBDA curvatureToColorFunc, bool includeSmooth, std::vector<float>& points, std::vector<float>& colors,
+		double sinSharpAngle, std::vector<unsigned int>& sharpIndices, std::vector<unsigned int>& smoothIndices) // size = GlPoints.size() / 3
 	{
 		points.clear();
 		colors.clear();
-		indices.clear();
+		sharpIndices.clear();
+		smoothIndices.clear();
 
 		points.reserve(2 * 3 * _edges.size());
-		indices.reserve(2 * _edges.size());
+		sharpIndices.reserve(2 * _edges.size());
+		smoothIndices.reserve(2 * _edges.size());
 
 		unsigned int indexCount = 0;
 		for (size_t edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
@@ -506,10 +510,19 @@ namespace TriMesh {
 			if (!includeSmooth && fabs(curv) < 0.1)
 				continue;
 
+			unsigned int idx0 = indexCount++;
+			unsigned int idx1 = indexCount++;
+
+			if (isEdgeSharp(edgeIdx, sinSharpAngle)) {
+				sharpIndices.push_back(idx0);
+				sharpIndices.push_back(idx1);
+			} else {
+				smoothIndices.push_back(idx0);
+				smoothIndices.push_back(idx1);
+			}
+
 			float rgb[3];
 			if (curvatureToColorFunc(curv, rgb)) {
-				indices.push_back(indexCount++);
-				indices.push_back(indexCount++);
 
 				const auto& edge = _edges[edgeIdx];
 				for (int i = 0; i < 2; i++) {
@@ -519,11 +532,16 @@ namespace TriMesh {
 						colors.push_back(rgb[j]);
 					}
 				}
+			} else {
+				for (int j = 0; j < 3; j++) {
+					colors.push_back(0);
+				}
 			}
 		}
 		points.shrink_to_fit();
 		colors.shrink_to_fit();
-		indices.shrink_to_fit();
+		sharpIndices.shrink_to_fit();
+		smoothIndices.shrink_to_fit();
 	}
 
 	template<typename T>
