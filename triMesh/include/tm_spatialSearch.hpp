@@ -110,7 +110,7 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestT
 	if (boxesMatch(_bbox, bbox, testType)) {
 		for (const auto& entry : _contents) {
 			const auto& bb = entry.getBBox();
-			if (boxesMatch(_bbox, bbox, testType)) {
+			if (boxesMatch(bb, bbox, testType)) {
 				result.push_back(entry.getIndex());
 			}
 		}

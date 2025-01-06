@@ -108,32 +108,49 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 	if (pts.empty())
 		return false;
 
-	uvw = Vector3<T>(0.5, 0.5, 0.5);
-	Vector3<T> p0, p1, v;
 	T a, b, c, l;
+	Vector3<T> x, y, z, p0, p1, dir, v;
+
+	x = pts[1] - pts[0];
+	l = x.norm();
+	x /= l * l;
+
+	y = pts[3] - pts[0];
+	l = y.norm();
+	y /= l * l;
+
+	z = pts[4] - pts[0];
+	l = z.norm();
+	z /= l * l;
+
+	v = pt - pts[0];
+	uvw = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
 	bool done = false;
 	int count = 0;
-	while (!done && count++ < 10) {
+	while (!done && count++ < 100) {
 		p0 = TRI_LERP(pts, (T)0, uvw[1], uvw[2]);
 		p1 = TRI_LERP(pts, (T)1, uvw[1], uvw[2]);
-		v = p1 - p0;
-		l = v.norm();
-		v /= l;
-		a = (pt - p0).dot(v) / l;
+		dir = p1 - p0;
+		l = dir.norm();
+		dir /= l;
+		v = pt - p0;
+		a = v.dot(dir) / l;
 
 		p0 = TRI_LERP(pts, uvw[0], (T)0, uvw[2]);
 		p1 = TRI_LERP(pts, uvw[0], (T)1, uvw[2]);
-		v = p1 - p0;
-		l = v.norm();
-		v /= l;
-		b = (pt - p0).dot(v) / l;
+		dir = p1 - p0;
+		l = dir.norm();
+		dir /= l;
+		v = pt - p0;
+		b = v.dot(dir) / l;
 
 		p0 = TRI_LERP(pts, uvw[0], uvw[1], (T)0);
 		p1 = TRI_LERP(pts, uvw[0], uvw[1], (T)1);
-		v = p1 - p0;
-		l = v.norm();
-		v /= l;
-		c = (pt - p0).dot(v) / l;
+		dir = p1 - p0;
+		l = dir.norm();
+		dir /= l;
+		v = pt - p0;
+		c = v.dot(dir) / l;
 
 		uvw = Vector3<T>(a, b, c);
 		Vector3<T> guess = TRI_LERP(pts, uvw);
