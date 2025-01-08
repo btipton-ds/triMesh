@@ -75,6 +75,13 @@ CSSB_DCL::CSpatialSearchBase(const BOX_TYPE& bbox, int axis)
 }
 
 CSSB_TMPL
+CSSB_DCL::~CSpatialSearchBase()
+{
+	delete _left;
+	delete _right;
+}
+
+CSSB_TMPL
 void CSSB_DCL::reset(const BOX_TYPE& bbox) {
 	clear();
 	_bbox = bbox;
@@ -282,8 +289,8 @@ void CSSB_DCL::split(int depth) {
 	BOX_TYPE leftBBox, rightBBox;
 	_bbox.split(_axis, leftBBox, rightBBox, (SCALAR_TYPE)0.10);
 	int nextAxis = (_axis + 1) % 3;
-	_left = make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
-	_right = make_shared<CSpatialSearchBase>(rightBBox, nextAxis);
+	_left = new CSpatialSearchBase(leftBBox, nextAxis);
+	_right = new CSpatialSearchBase(rightBBox, nextAxis);
 
 	const vector<Entry> temp(_contents);
 	_contents.clear();

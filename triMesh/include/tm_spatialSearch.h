@@ -67,6 +67,7 @@ public:
 	};
 
 	CSpatialSearchBase(const BOX_TYPE& bbox = BOX_TYPE(), int axis = 0);
+	virtual ~CSpatialSearchBase();
 
 	void reset(const BOX_TYPE& bbox);
 	void clear();
@@ -98,7 +99,7 @@ private:
 	BOX_TYPE _bbox;
 	int _axis = 0;
 	std::vector<Entry> _contents;
-	std::shared_ptr<CSpatialSearchBase> _left, _right;
+	CSpatialSearchBase *_left = nullptr, *_right = nullptr;
 };
 
 template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
