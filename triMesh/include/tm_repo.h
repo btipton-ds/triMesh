@@ -55,6 +55,9 @@ namespace TriMesh {
 
 		template<class T>
 		const std::vector<T>& get() const;
+
+		size_t numBytes() const;
+
 	private:
 		std::vector<CVertex> _vertices;
 		std::vector<CEdge> _edges;
@@ -99,6 +102,19 @@ namespace TriMesh {
 	inline const std::vector<Vector3i>& CMeshRepo::get<Vector3i>() const
 	{
 		return _tris;
+	}
+
+	inline size_t CMeshRepo::numBytes() const
+	{
+		size_t result = sizeof(CMeshRepo);
+
+		for (const auto& v : _vertices) {
+			result += v.numBytes();
+		}
+		for (const auto& e : _edges) {
+			result += e.numBytes();
+		}
+		return result;
 	}
 
 }

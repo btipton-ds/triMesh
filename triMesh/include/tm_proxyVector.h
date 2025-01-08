@@ -57,6 +57,8 @@ namespace TriMesh {
 
 		ProxyVector(CMesh* pMesh);
 
+		size_t numBytes() const;
+
 		T& operator[](size_t idx);
 		const T& operator[](size_t idx) const;
 		size_t size() const;

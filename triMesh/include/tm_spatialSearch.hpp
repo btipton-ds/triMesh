@@ -89,6 +89,19 @@ void CSSB_DCL::clear() {
 }
 
 CSSB_TMPL
+size_t CSSB_DCL::numBytes() const
+{
+	size_t result = sizeof(CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>);
+
+	result += _contents.capacity() + sizeof(Entry);
+	if (_left)
+		result += _left->numBytes();
+	if (_right)
+		result += _right->numBytes();
+	return result;
+}
+
+CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
 		for (const auto& entry : _contents) {

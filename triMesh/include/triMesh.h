@@ -165,6 +165,7 @@ namespace TriMesh {
 		size_t numEdges() const;
 		size_t numTris() const;
 		size_t numLaminarEdges() const;
+		size_t numBytes() const;
 
 		CVertex& getVert(size_t idx);
 		const CVertex& getVert(size_t idx) const;

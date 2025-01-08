@@ -30,9 +30,7 @@ This file is part of the TriMesh library.
 */
 
 #include <tm_defines.h>
-#include <memory>
 #include <vector>
-#include <map>
 #include <ostream>
 #include <iomanip>
 
@@ -44,6 +42,9 @@ struct CVertex {
 	CVertex();
 	CVertex(const CVertex& src) = default;
 	CVertex(const Vector3d& pt);
+
+	size_t numBytes() const;
+
 	void write(std::ostream& out, size_t meshId) const;
 	bool read(std::istream& in, size_t meshId);
 
@@ -63,9 +64,28 @@ struct CVertex {
 
 	Vector3d _pt;
 	struct TopolEntry {
+		size_t _meshId;
 		std::vector<size_t> _faceIndices, _edgeIndices;
 	};
-	std::map<size_t, TopolEntry> _meshTopol;
+
+	struct Topology {
+		Topology() = default;
+		Topology(const Topology& src);
+		~Topology();
+
+		Topology& operator = (const Topology& rhs);
+
+		size_t size() const;
+		size_t capacity() const;
+		size_t numBytes() const;
+
+		TopolEntry* insert(size_t meshId);
+		const TopolEntry* find(size_t meshId) const;
+		TopolEntry* find(size_t meshId);
+
+		std::vector<TopolEntry*> _data;
+	};
+	Topology _meshTopol;
 };
 
 inline CVertex::CVertex() {

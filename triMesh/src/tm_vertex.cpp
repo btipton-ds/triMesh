@@ -37,15 +37,24 @@ This file is part of the TriMesh library.
 using namespace std;
 using namespace TriMesh;
 
+size_t CVertex::numBytes() const
+{
+	size_t result = sizeof(CVertex);
+
+	result += _meshTopol.numBytes();
+
+	return result;
+}
+
 void CVertex::write(ostream& out, size_t meshId) const {
 	uint8_t version = 0;
 	out.write((char*) &version, sizeof(version));
 
 	writeVector3(out, _pt);
 
-	auto iter = _meshTopol.find(meshId);
-	if (iter != _meshTopol.end()) {
-		auto& rec = iter->second;
+	auto pTopol = _meshTopol.find(meshId);
+	if (pTopol) {
+		auto& rec = *pTopol;
 		IoUtil::write(out, rec._edgeIndices);
 		IoUtil::write(out, rec._faceIndices);
 	}
@@ -57,10 +66,10 @@ bool CVertex::read(istream& in, size_t meshId) {
 
 	readVector3(in, _pt);
 
-	auto iter = _meshTopol.find(meshId);
-	if (iter == _meshTopol.end())
-		iter = _meshTopol.insert(make_pair(meshId, TopolEntry())).first;
-	auto& rec = iter->second;
+	auto pTopol = _meshTopol.find(meshId);
+	if (!pTopol)
+		pTopol = _meshTopol.insert(meshId);
+	auto& rec = *pTopol;
 	IoUtil::read(in, rec._edgeIndices);
 	IoUtil::read(in, rec._faceIndices);
 
@@ -69,9 +78,9 @@ bool CVertex::read(istream& in, size_t meshId) {
 
 const std::vector<size_t>* CVertex::getEdgeIndices(size_t meshId) const
 {
-	auto mIter = _meshTopol.find(meshId);
-	if (mIter != _meshTopol.end()) {
-		const auto& edgeIndices = mIter->second._edgeIndices;
+	auto pTopol = _meshTopol.find(meshId);
+	if (pTopol) {
+		const auto& edgeIndices = pTopol->_edgeIndices;
 		return &edgeIndices;
 	}
 	return nullptr;
@@ -79,9 +88,9 @@ const std::vector<size_t>* CVertex::getEdgeIndices(size_t meshId) const
 
 bool CVertex::containsEdgeIndex(size_t meshId, size_t index) const
 {
-	auto mIter = _meshTopol.find(meshId);
-	if (mIter != _meshTopol.end()) {
-		const auto& edgeIndices = mIter->second._edgeIndices;
+	auto pTopol = _meshTopol.find(meshId);
+	if (pTopol) {
+		const auto& edgeIndices = pTopol->_edgeIndices;
 		auto iter = find(edgeIndices.begin(), edgeIndices.end(), index);
 		return iter != edgeIndices.end();
 	}
@@ -90,11 +99,11 @@ bool CVertex::containsEdgeIndex(size_t meshId, size_t index) const
 
 void CVertex::addEdgeIndex(size_t meshId, size_t index)
 {
-	auto mIter = _meshTopol.find(meshId);
-	if (mIter == _meshTopol.end())
-		mIter = _meshTopol.insert(make_pair(meshId, TopolEntry())).first;
+	auto pTopol = _meshTopol.find(meshId);
+	if (!pTopol)
+		pTopol = _meshTopol.insert(meshId);
 
-	auto& edgeIndices = mIter->second._edgeIndices;
+	auto& edgeIndices = pTopol->_edgeIndices;
 	auto iter = find(edgeIndices.begin(), edgeIndices.end(), index);
 	if (iter == edgeIndices.end())
 		edgeIndices.push_back(index);
@@ -102,9 +111,9 @@ void CVertex::addEdgeIndex(size_t meshId, size_t index)
 
 void CVertex::removeEdgeIndex(size_t meshId, size_t index)
 {
-	auto mIter = _meshTopol.find(meshId);
-	if (mIter != _meshTopol.end()) {
-		auto& edgeIndices = mIter->second._edgeIndices;
+	auto pTopol = _meshTopol.find(meshId);
+	if (pTopol) {
+		auto& edgeIndices = pTopol->_edgeIndices;
 		auto iter = find(edgeIndices.begin(), edgeIndices.end(), index);
 		if (iter != edgeIndices.end())
 			edgeIndices.erase(iter);
@@ -113,9 +122,9 @@ void CVertex::removeEdgeIndex(size_t meshId, size_t index)
 
 void CVertex::changeEdgeIndex(size_t meshId, size_t oldEdgeIdx, size_t newEdgeIdx)
 {
-	auto mIter = _meshTopol.find(meshId);
-	if (mIter != _meshTopol.end()) {
-		auto& edgeIndices = mIter->second._edgeIndices;
+	auto pTopol = _meshTopol.find(meshId);
+	if (!pTopol) {
+		auto& edgeIndices = pTopol->_edgeIndices;
 		for (size_t i = 0; i < edgeIndices.size(); i++) {
 			if (edgeIndices[i] == oldEdgeIdx) {
 				edgeIndices[i] = newEdgeIdx;
@@ -127,9 +136,9 @@ void CVertex::changeEdgeIndex(size_t meshId, size_t oldEdgeIdx, size_t newEdgeId
 
 const std::vector<size_t>* CVertex::getFaceIndices(size_t meshId) const
 {
-	auto mIter = _meshTopol.find(meshId);
-	if (mIter != _meshTopol.end()) {
-		const auto& faceIndices = mIter->second._faceIndices;
+	auto pTopol = _meshTopol.find(meshId);
+	if (!pTopol) {
+		const auto& faceIndices = pTopol->_faceIndices;
 		return &faceIndices;
 	}
 	return nullptr;
@@ -137,9 +146,9 @@ const std::vector<size_t>* CVertex::getFaceIndices(size_t meshId) const
 
 bool CVertex::containsFaceIndex(size_t meshId, size_t index) const
 {
-	auto mIter = _meshTopol.find(meshId);
-	if (mIter != _meshTopol.end()) {
-		const auto& faceIndices = mIter->second._faceIndices;
+	auto pTopol = _meshTopol.find(meshId);
+	if (!pTopol) {
+		const auto& faceIndices = pTopol->_faceIndices;
 		auto iter = find(faceIndices.begin(), faceIndices.end(), index);
 		return iter != faceIndices.end();
 	}
@@ -148,11 +157,11 @@ bool CVertex::containsFaceIndex(size_t meshId, size_t index) const
 
 void CVertex::addFaceIndex(size_t meshId, size_t index)
 {
-	auto mIter = _meshTopol.find(meshId);
-	if (mIter == _meshTopol.end())
-		mIter = _meshTopol.insert(make_pair(meshId, TopolEntry())).first;
+	auto pTopol = _meshTopol.find(meshId);
+	if (!pTopol) 
+		pTopol = _meshTopol.insert(meshId);
 
-	auto& faceIndices = mIter->second._faceIndices;
+	auto& faceIndices = pTopol->_faceIndices;
 	auto iter = find(faceIndices.begin(), faceIndices.end(), index);
 	if (iter == faceIndices.end())
 		faceIndices.push_back(index);
@@ -160,9 +169,9 @@ void CVertex::addFaceIndex(size_t meshId, size_t index)
 
 void CVertex::removeFaceIndex(size_t meshId, size_t index)
 {
-	auto mIter = _meshTopol.find(meshId);
-	if (mIter != _meshTopol.end()) {
-		auto& faceIndices = mIter->second._faceIndices;
+	auto pTopol = _meshTopol.find(meshId);
+	if (pTopol) {
+		auto& faceIndices = pTopol->_faceIndices;
 		auto iter = find(faceIndices.begin(), faceIndices.end(), index);
 		if (iter != faceIndices.end())
 			faceIndices.erase(iter);
@@ -171,9 +180,9 @@ void CVertex::removeFaceIndex(size_t meshId, size_t index)
 
 void CVertex::changeFaceIndex(size_t meshId, size_t oldFaceIdx, size_t newFaceIdx)
 {
-	auto mIter = _meshTopol.find(meshId);
-	if (mIter != _meshTopol.end()) {
-		auto& faceIndices = mIter->second._faceIndices;
+	auto pTopol = _meshTopol.find(meshId);
+	if (pTopol) {
+		auto& faceIndices = pTopol->_faceIndices;
 		for (size_t i = 0; i < faceIndices.size(); i++) {
 			if (faceIndices[i] == oldFaceIdx) {
 				faceIndices[i] = newFaceIdx;
@@ -182,3 +191,115 @@ void CVertex::changeFaceIndex(size_t meshId, size_t oldFaceIdx, size_t newFaceId
 		}
 	}
 }
+
+CVertex::Topology::~Topology()
+{
+	for (size_t i = 0; i < _data.size(); i++) {
+		delete _data[i];
+		_data[i] = nullptr;
+	}
+}
+
+CVertex::Topology::Topology(const Topology& src)
+{
+	for (const TopolEntry* p : src._data) {
+		_data.push_back(new TopolEntry(*p));
+	}
+}
+
+CVertex::Topology& CVertex::Topology::operator =(const Topology& src)
+{
+	for (size_t i = 0; i < _data.size(); i++) {
+		delete _data[i];
+		_data[i] = 0;
+	}
+	_data.clear();
+
+	for (const TopolEntry* p : src._data) {
+		_data.push_back(new TopolEntry(*p));
+	}
+
+	return *this;
+}
+
+size_t CVertex::Topology::size() const
+{
+	return _data.size();
+}
+
+size_t CVertex::Topology::capacity() const
+{
+	return _data.capacity();
+}
+
+size_t CVertex::Topology::numBytes() const
+{
+	size_t result = 0;
+
+	result += _data.capacity() * sizeof(TopolEntry);
+	for (size_t i = 0; i < _data.size(); i++) {
+		const auto& rec = *_data[i];
+		result += rec._edgeIndices.capacity() * sizeof(size_t);
+		result += rec._faceIndices.capacity() * sizeof(size_t);
+	}
+
+	return result;
+}
+
+CVertex::TopolEntry* CVertex::Topology::insert(size_t meshId)
+{
+
+	TopolEntry* pEntry = find(meshId);
+	if (pEntry)
+		return pEntry;
+	pEntry = new TopolEntry;
+	pEntry->_meshId = meshId;
+	_data.push_back(pEntry);
+	std::sort(_data.begin(), _data.end(), [](const TopolEntry* pLhs, const TopolEntry* pRhs)->bool {
+		return pLhs->_meshId < pRhs->_meshId;
+	});
+
+	return pEntry;
+}
+
+const CVertex::TopolEntry* CVertex::Topology::find(size_t meshId) const
+{
+	size_t min = 0, max = _data.size() - 1, idx = _data.size() / 2;
+	while (idx < _data.size()) {
+		if (min == max) {
+			if (_data[idx]->_meshId == meshId)
+				return _data[idx];
+			break;
+		} else if (_data[idx]->_meshId < meshId) {
+			max = idx;
+			idx = (min + max) / 2;
+		}
+		else if (_data[idx]->_meshId > meshId) {
+			min = idx;
+			idx = (min + max) / 2;
+		}
+	}
+
+	return nullptr;
+}
+
+CVertex::TopolEntry* CVertex::Topology::find(size_t meshId)
+{
+	size_t min = 0, max = _data.size() - 1, idx = _data.size() / 2;
+	while (idx < _data.size()) {
+		if (min == max) {
+			if (_data[idx]->_meshId == meshId)
+				return _data[idx];
+			break;
+		} else if (_data[idx]->_meshId < meshId) {
+			max = idx;
+			idx = (min + max) / 2;
+		}
+		else if (_data[idx]->_meshId > meshId) {
+			min = idx;
+			idx = (min + max) / 2;
+		}
+	}
+	return nullptr;
+}
+

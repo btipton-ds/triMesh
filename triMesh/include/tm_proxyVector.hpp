@@ -40,6 +40,16 @@ namespace TriMesh {
 	{}
 
 	template<class T>
+	size_t ProxyVector<T>::numBytes() const
+	{
+		size_t result = 0;
+
+		result += _indices.capacity() * sizeof(T);
+
+		return result;
+	}
+
+	template<class T>
 	inline std::vector<size_t>& ProxyVector<T>::getIndices()
 	{
 		return _indices;

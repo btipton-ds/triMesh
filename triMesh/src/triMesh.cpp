@@ -246,9 +246,8 @@ bool CMesh::edgeReferencesTri(size_t edgeIdx, size_t triIdx) const
 {
 	if (edgeIdx < _edges.size() && triIdx < _tris.size()) {
 		const auto& edge = _edges[edgeIdx];
-		auto pTopol = edge.getTopol(_id);
-		for (int i = 0; i < pTopol->_numFaces; i++) {
-			if (pTopol->_faceIndices[i] == triIdx)
+		for (int i = 0; i < edge.numFaces(_id); i++) {
+			if (edge.getTriIdx(_id, i) == triIdx)
 				return true;
 		}
 	}
@@ -284,8 +283,7 @@ bool CMesh::vertReferencesEdge(size_t vertIdx, size_t edgeIdx) const
 void CMesh::squeezeEdge(size_t idx)
 {
 	auto& edge = _edges[idx];
-	auto pTopol = edge.getTopol(_id);
-	if (pTopol->_numFaces != 2)
+	if (edge.numFaces(_id) != 2)
 		return;
 
 	Vector3d dir = getEdgesLineSeg(idx).calcDir();
@@ -320,8 +318,8 @@ void CMesh::squeezeEdge(size_t idx)
 		vertIdxToRemove = edge._vertIndex[0];
 	}
 
-	size_t faceIdx0 = pTopol->_faceIndices[0];
-	size_t faceIdx1 = pTopol->_faceIndices[1];
+	size_t faceIdx0 = edge.getTriIdx(_id, 0);
+	size_t faceIdx1 = edge.getTriIdx(_id, 1);
 
 	// Remove the larger one first. If not, the first one can cause the second to move
 	if (faceIdx1 < faceIdx0)
@@ -421,9 +419,8 @@ bool CMesh::removeTri(size_t triIdx)
 		vert0.removeFaceIndex(_id, triIdx);
 
 		auto& edge = _edges[edgeIdx];
-		auto pTopol = edge.getTopol(_id);
 		edge.removeFaceIndex(_id, triIdx);
-		if (pTopol->_numFaces == 0) {
+		if (edge.numFaces(_id) == 0) {
 			auto& vert1 = _vertices[vertIdx1];
 			vert0.removeEdgeIndex(_id, edgeIdx);
 			vert1.removeEdgeIndex(_id, edgeIdx);
@@ -656,11 +653,10 @@ bool CMesh::verifyEdges(size_t edgeIdx, bool allowEmpty) const
 	}
 
 	const auto& edge = _edges[edgeIdx];
-	auto pTopol = edge.getTopol(_id);
-	if (pTopol->_numFaces == 0)
+	if (edge.numFaces(_id) == 0)
 		return allowEmpty;
 
-	if (pTopol->_numFaces > 2)
+	if (edge.numFaces(_id) > 2)
 		return false;
 
 	for (int i = 0; i < 2; i++) {
@@ -668,9 +664,9 @@ bool CMesh::verifyEdges(size_t edgeIdx, bool allowEmpty) const
 			return false;
 	}
 
-	for (int i = 0; i < pTopol->_numFaces; i++) {
+	for (int i = 0; i < edge.numFaces(_id); i++) {
 		bool found = false;
-		if (!triContainsEdge(pTopol->_faceIndices[i], edgeIdx))
+		if (!triContainsEdge(edge.getTriIdx(_id, i), edgeIdx))
 			return false;
 	}
 
@@ -746,10 +742,9 @@ size_t CMesh::addTriangle(const Vector3i& tri) {
 		vert.addFaceIndex(_id, triIdx);
 
 		auto& edge = _edges[edgeIdx];
-		edge.addFaceIndex(_id, triIdx);
-		auto pTopol = edge.getTopol(_id);
-		if (_enforceManifold && pTopol->_numFaces > 2)
+		if (_enforceManifold && edge.numFaces(_id) >= 2)
 			assert(!"Non manifold mesh");
+		edge.addFaceIndex(_id, triIdx);
 	}
 	triBox.grow(SAME_DIST_TOL);
 	_pTriTree->add(triBox, triIdx);
@@ -823,16 +818,15 @@ LineSegmentd CMesh::getEdgesLineSeg(size_t edgeIdx) const
 
 bool CMesh::isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const {
 	const CEdge& edge = _edges[edgeIdx];
-	auto pTopol = edge.getTopol(_id);
-	if (pTopol->_numFaces < 2)
+	if (edge.numFaces(_id) < 2)
 		return true;
 	const auto seg = getEdgesLineSeg(edgeIdx);
 	const Vector3d edgeV = seg.calcDir();
-	if (pTopol->_faceIndices[0] == pTopol->_faceIndices[1]) {
+	if (edge.getTriIdx(_id, 0) == edge.getTriIdx(_id, 1)) {
 		cout << "Duplicated faceIndex\n";
 	}
-	const Vector3d norm0 = triUnitNormal(pTopol->_faceIndices[0]);
-	const Vector3d norm1 = triUnitNormal(pTopol->_faceIndices[1]);
+	const Vector3d norm0 = triUnitNormal(edge.getTriIdx(_id, 0));
+	const Vector3d norm1 = triUnitNormal(edge.getTriIdx(_id, 1));
 
 	double sinTheta = norm0.cross(norm1).norm();
 	bool isSharp = sinTheta > sinEdgeAngle;
@@ -859,9 +853,8 @@ bool CMesh::createPatches(const vector<size_t>& triIndices, double sinSharpEdgeA
 				int j = (i + 1) % 3;
 				size_t triEdgeIdx = findEdge(CEdge(tri[i], tri[j]));
 				const auto& edge = _edges[triEdgeIdx];
-				auto pTopol = edge.getTopol(_id);
-				for (int j = 0; j < pTopol->_numFaces; j++) {
-					size_t nextTriIdx = pTopol->_faceIndices[j];
+				for (int j = 0; j < edge.numFaces(_id); j++) {
+					size_t nextTriIdx = edge.getTriIdx(_id, j);
 					if (triSet.contains(nextTriIdx)) {
 						stack.push_back(nextTriIdx);
 						triSet.erase(nextTriIdx);
@@ -963,10 +956,43 @@ size_t CMesh::numTris() const {
 size_t CMesh::numLaminarEdges() const {
 	size_t result = 0;
 	for (const auto& edge : _edges) {
-		auto pTopol = edge.getTopol(_id);
-		if (pTopol->_numFaces == 1)
+		if (edge.numFaces(_id) == 1)
 			result++;
 	}
+	return result;
+}
+
+size_t CMesh::numBytes() const
+{
+	size_t result = 0;
+
+	result += _edgeToIdxMap.size() * sizeof(pair<CEdgeGeo, size_t>);
+	result += _glTriPoints.capacity() * sizeof(size_t);
+	result += _glTriNormals.capacity() * sizeof(size_t);
+	result += _glTriParams.capacity() * sizeof(size_t);
+	result += _glTriCurvatureColors.capacity() * sizeof(size_t);
+	result += _glTriIndices.capacity() * sizeof(unsigned int);
+
+	result += _edges.numBytes();
+	result += _vertices.numBytes();
+	result += _tris.numBytes();
+
+	result += _pVertTree->numBytes();
+	result += _pEdgeTree->numBytes();
+	result += _pTriTree->numBytes();
+
+	result += _centroids.capacity() * sizeof(Vector3d);
+	result += _normals.capacity() * sizeof(Vector3d);
+	result += _sharpEdgeIndices.capacity() * sizeof(size_t);
+	result += _sharpEdgeLoops.capacity() * sizeof(vector<size_t>);
+	for (const auto& vec : _sharpEdgeLoops) {
+		result += vec.capacity() * sizeof(size_t);
+	}
+
+	result += _edgeCurvature.capacity() * sizeof(double);
+	result += _vertCurvature.capacity() * sizeof(double);
+	result += _triGap.capacity() * sizeof(double);
+
 	return result;
 }
 
@@ -1345,16 +1371,15 @@ void CMesh::calGaps(bool multiCore) const
 double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 {
 	const auto& edge = _edges[edgeIdx];
-	auto pTopol = edge.getTopol(_id);
-	if (pTopol->_numFaces != 2)
+	if (edge.numFaces(_id) != 2)
 		return 0;
 
 	auto seg = getEdgesLineSeg(edgeIdx);
 	const Vector3d& origin = seg._pts[0];
 	Vector3d vEdge = seg.calcDir();
 
-	Vector3d norm0 = triUnitNormal(pTopol->_faceIndices[0]);
-	Vector3d norm1 = triUnitNormal(pTopol->_faceIndices[1]);
+	Vector3d norm0 = triUnitNormal(edge.getTriIdx(_id, 0));
+	Vector3d norm1 = triUnitNormal(edge.getTriIdx(_id, 1));
 
 	double magCp = norm0.cross(norm1).norm();
 	if (magCp > sinEdgeAngle)
@@ -1363,8 +1388,8 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 		return 0;
 
 	Planed edgePlane(origin, vEdge);
-	size_t vertIdx0 = getOtherVertIdx(edge, pTopol->_faceIndices[0]);
-	size_t vertIdx1 = getOtherVertIdx(edge, pTopol->_faceIndices[1]);
+	size_t vertIdx0 = getOtherVertIdx(edge, edge.getTriIdx(_id, 0));
+	size_t vertIdx1 = getOtherVertIdx(edge, edge.getTriIdx(_id, 1));
 
 	// Both edge vertices AND each of the opposite vertices lie on the actual surface
 				// Project the points to a plane perpendicular to the edge and fit a circle through it

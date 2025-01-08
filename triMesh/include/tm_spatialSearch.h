@@ -71,6 +71,7 @@ public:
 	void reset(const BOX_TYPE& bbox);
 	void clear();
 	size_t numInTree() const;
+	size_t numBytes() const;
 	const BOX_TYPE& getBounds() const;
 
 	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::Intersects) const;
