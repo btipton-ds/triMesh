@@ -1,5 +1,3 @@
-#pragma once
-
 /*
 
 This file is part of the TriMesh library.
@@ -30,80 +28,38 @@ This file is part of the TriMesh library.
 */
 
 #include <tm_defines.h>
-#include <map>
-#include <vector>
-#include <iostream>
 
-#include <tm_math.h>
-#include <tm_spatialSearch.h>
-#include <tm_edge.h>
-#include <tm_ray.h>
-#include <tm_vertex.h>
-#include <tm_ioUtil.h>
+#include <tm_repo.h>
+#include <tm_lineSegment.hpp>
 
-namespace TriMesh {
+using namespace TriMesh;
 
-	class CMeshRepo;
-	using CMeshRepoPtr = std::shared_ptr<CMeshRepo>;
+size_t CMeshRepo::numBytes() const
+{
+	size_t result = sizeof(CMeshRepo);
 
-	class CMeshRepo {
-	public:
-		CMeshRepo();
+	for (const auto& v : _vertices) {
+		result += v.numBytes();
+	}
+	for (const auto& e : _edges) {
+		result += e.numBytes();
+	}
+	return result;
+}
 
-		template<class T>
-		std::vector<T>& get();
-
-		template<class T>
-		const std::vector<T>& get() const;
-
-		size_t numBytes() const;
-
-		bool intersectsTri(const LineSegmentd& seg, size_t triIdx, double tol, RayHitd& hit) const;
-
-	private:
-		std::vector<CVertex> _vertices;
-		std::vector<CEdge> _edges;
-		std::vector<Vector3i> _tris;
+bool CMeshRepo::intersectsTri(const LineSegmentd& seg, size_t triIdx, double tol, RayHitd& hit) const
+{
+	const auto& tri = _tris[triIdx];
+	const Vector3d* pts[] = {
+		&_vertices[tri[0]]._pt,
+		&_vertices[tri[1]]._pt,
+		&_vertices[tri[2]]._pt,
 	};
 
-	inline CMeshRepo::CMeshRepo()
-	{
+	if (seg.intersectTri(pts, hit, tol)) {
+		hit.triIdx = triIdx;
+		return true;
 	}
 
-	template<>
-	inline std::vector<CEdge>& CMeshRepo::get<CEdge>()
-	{
-		return _edges;
-	}
-
-	template<>
-	inline const std::vector<CEdge>& CMeshRepo::get<CEdge>() const
-	{
-		return _edges;
-	}
-
-	template<>
-	inline std::vector<CVertex>& CMeshRepo::get<CVertex>()
-	{
-		return _vertices;
-	}
-
-	template<>
-	inline const std::vector<CVertex>& CMeshRepo::get<CVertex>() const
-	{
-		return _vertices;
-	}
-
-	template<>
-	inline std::vector<Vector3i>& CMeshRepo::get<Vector3i>()
-	{
-		return _tris;
-	}
-
-	template<>
-	inline const std::vector<Vector3i>& CMeshRepo::get<Vector3i>() const
-	{
-		return _tris;
-	}
-
+	return false;
 }
