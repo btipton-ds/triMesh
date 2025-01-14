@@ -94,14 +94,14 @@ double distanceFromPlane(const Vector3<T>& pt, const Plane<T>& plane) {
 }
 
 template<class T>
-bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt)
+bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt, T tol)
 {
 	const Vector3<T>* pts[] = { &pt0, &pt1, &pt2 };
-	return pointInTriangle(pts, pt);
+	return pointInTriangle(pts, pt, tol);
 }
 
 template<class T>
-bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt)
+bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, T tol)
 {
 	Vector3<T> v0 = (*pts[1]) - (*pts[0]);
 	Vector3<T> v1 = (*pts[2]) - (*pts[0]);
@@ -122,7 +122,7 @@ bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt)
 		v0 = v0 - v1.dot(v0) * v1;
 		Vector3<T> v2 = v1.cross(v0);
 		T cp = v2.dot(norm);
-		if (cp < -SAME_DIST_TOL)
+		if (cp < -tol)
 			return false;
 	}
 

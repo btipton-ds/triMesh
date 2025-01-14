@@ -78,16 +78,19 @@ template<class T>
 double distanceFromPlane(const Vector3<T>& pt, const Plane<T>& plane);
 
 template<class T>
-bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt);
+bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt, T tol = (T)SAME_DIST_TOL);
 
 template<class T>
-bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt);
+bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, T tol = (T)SAME_DIST_TOL);
 
 template<class T>
-bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit);
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit = (T)SAME_DIST_TOL);
 
 template<class T>
 bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit);
+
+template<class T>
+bool collisionTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T tol = (T)SAME_DIST_TOL);
 
 template<class T>
 Vector3<T> orthoganalizeVector(const Vector3<T>& v, const Vector3<T>& unitVector);

@@ -30,7 +30,9 @@ This file is part of the TriMesh library.
 #include <tm_defines.h>
 
 #include <tm_math.h>
+#include <tm_plane.h>
 #include <tm_ray.h>
+#include <tm_lineSegment.hpp>
 
 bool intersectRayPlane(const Ray<double>& ray, const Vector3d& origin, const Vector3d& normal, RayHitd& hit)
 {
@@ -161,21 +163,61 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 	return false;
 }
 
+template<class T>
+bool collisionTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T tol)
+{
+	RayHit<T> hit;
+	Plane<T> triPlane0(triPts0[0], triPts0[1], triPts0[2]);
+
+	// Check 1 against 0
+	for (int i = 0; i < 3; i++) {
+		int j = (i + 1) % 3;
+
+		LineSegment<T> seg(triPts1[i], triPts1[j]);
+
+		if (seg.intersectTri(triPts0[0], triPts0[1], triPts0[2], hit, tol))
+			return true;		
+	}
+
+	Plane<T> triPlane1(triPts1[0], triPts1[1], triPts1[2]);
+	// Check 0 against 1
+	for (int i = 0; i < 3; i++) {
+		int j = (i + 1) % 3;
+
+		LineSegment<T> seg(triPts0[i], triPts0[j]);
+
+		if (seg.intersectTri(triPts1[0], triPts1[1], triPts1[2], hit, tol))
+			return true;
+		
+	}
+
+	return false;
+}
+
 namespace {
 	// After several attempts, textbook instantiation never linked correctly. This does.
 	template<class T>
 	bool instantiate()
 	{
-		Vector3<T> pt;
-		std::vector<Vector3<T>> pts;
-		Vector3<T> uvw;
-		if (pts.empty())
-			return false;
-		auto a = TRI_LERP(pts, (T)0, (T)0, (T)0);
-		a = TRI_LERP(pts.data(), (T)0, (T)0, (T)0);
-		a = BI_LERP(pt, pt, pt, pt, (T)0, (T)0);
-		return TRI_LERP_INV(pt, pts, uvw);
+		try {
+			Vector3<T> pt;
+			Vector3<T>
+				tri0[] = { pt, pt, pt },
+				tri1[] = { pt, pt, pt };
+			collisionTriTri<T>(tri0, tri1);
+
+			std::vector<Vector3<T>> pts;
+			Vector3<T> uvw;
+			if (pts.empty())
+				return false;
+			auto a = TRI_LERP(pts, (T)0, (T)0, (T)0);
+			a = TRI_LERP(pts.data(), (T)0, (T)0, (T)0);
+			a = BI_LERP(pt, pt, pt, pt, (T)0, (T)0);
+			return TRI_LERP_INV(pt, pts, uvw);
+		} catch (...) {}
+		return false;
 	}
 	static bool dummy0 = instantiate<double>();
 	static bool dummy1 = instantiate<float>();
+
 }

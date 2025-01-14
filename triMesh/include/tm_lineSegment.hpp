@@ -132,12 +132,11 @@ template<class T>
 bool LineSegment<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<T>& hit, T tol) const
 {
 	POINT_TYPE unitDir = _pts[1] - _pts[0];
-	SCALAR_TYPE l = unitDir.norm();
+	auto l = unitDir.norm();
 	unitDir /= l;
 	Ray<SCALAR_TYPE> ray(_pts[0], unitDir);
 	if (intersectRayTri(getRay(), pts, hit)) {
-		POINT_TYPE v1 = hit.hitPt - _pts[0];
-		SCALAR_TYPE d = unitDir.dot(v1);
+		auto d = hit.dist;
 		if (-tol < d && d < l + tol) {
 			return true;
 		}
