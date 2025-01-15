@@ -50,9 +50,9 @@ Plane<T>::Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& 
 }
 
 template<class T>
-Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal)
+Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool alreadyNormalzed)
 	: _origin(origin)
-	, _normal(normal.normalized())
+	, _normal(alreadyNormalzed ? normal : normal.normalized())
 	, _xRef(0, 0, 0)
 {
 }

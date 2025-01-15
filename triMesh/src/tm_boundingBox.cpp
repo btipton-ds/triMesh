@@ -224,11 +224,11 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<SCALAR_
 			continue;
 
 		RayHit<SCALAR_TYPE> hitPt;
-		Plane<SCALAR_TYPE> minPlane(_min, _axes[i]);
+		Plane<SCALAR_TYPE> minPlane(_min, _axes[i], true);
 		if (minPlane.intersectLineSegment(seg, hitPt, tol) && contains(hitPt.hitPt, tol))
 			return true;
 
-		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i]);
+		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], true);
 		if (maxPlane.intersectLineSegment(seg, hitPt, tol) && contains(hitPt.hitPt, tol))
 			return true;
 	}
@@ -261,12 +261,12 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, vector
 	for (int i = 0; i < 3; i++) {
 		RayHit<SCALAR_TYPE> hit;
 
-		Plane<SCALAR_TYPE> minPlane(_min, _axes[i]);
+		Plane<SCALAR_TYPE> minPlane(_min, -_axes[i], true);
 		if (minPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
 			pts.push_back(hit.hitPt);
 		}
 
-		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i]);
+		Plane<SCALAR_TYPE> maxPlane(_max, _axes[i], true);
 		if (maxPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
 			pts.push_back(hit.hitPt);
 		}

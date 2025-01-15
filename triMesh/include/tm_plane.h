@@ -65,7 +65,7 @@ public:
 
 	Plane() = default;
 	Plane(const Plane& src) = default;
-	Plane(const POINT_TYPE& origin, const POINT_TYPE& normal);
+	Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool alreadyNormalzed = false);
 	Plane(const POINT_TYPE* pts[3]);
 	Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2);
 
@@ -139,10 +139,16 @@ inline bool Plane<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit, T tol) con
 	if (fabs(dp) < MIN_COS_ANGLE)
 		return false;
 
-	POINT_TYPE v = ray._origin - _origin;
+	POINT_TYPE v;
+	v[0] = ray._origin[0] - _origin[0];
+	v[1] = ray._origin[1] - _origin[1];
+	v[2] = ray._origin[2] - _origin[2];
+
 	auto h = v.dot(_normal);
 	hit.dist = -h / dp;
-	hit.hitPt = ray._origin + hit.dist * ray._dir;
+	hit.hitPt[0] = ray._origin[0] + hit.dist * ray._dir[0];
+	hit.hitPt[1] = ray._origin[1] + hit.dist * ray._dir[1];
+	hit.hitPt[2] = ray._origin[2] + hit.dist * ray._dir[2];
 
 #if FULL_TESTS // Verification code
 	POINT_TYPE vTest = hit.hitPt - _origin;
