@@ -124,16 +124,19 @@ namespace TriMesh {
 		size_t findEdge(size_t vertIdx0, size_t vertIdx1) const;
 		size_t findEdge(const CEdge& edge) const;
 
-		template<class POINT_TYPE>
-		size_t addTriangle(const POINT_TYPE pts[3]);
-		template<class POINT_TYPE>
-		size_t addTriangle(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2);
-		template<class POINT_TYPE>
-		size_t addVertex(const POINT_TYPE& ptUnk);
+		template<class T>
+		size_t addTriangle(const Vector3<T> pts[3], T maxEdgeLength = -1);
+		template<class T>
+		size_t addTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, T maxEdgeLength = -1);
+		template<class T>
+		size_t addVertex(const Vector3<T>& ptUnk);
 
-		template<class POINT_TYPE>
-		size_t addQuad(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, const POINT_TYPE& pt3);
+		template<class T>
+		size_t addQuad(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt3, T maxEdgeLength = -1);
+		template<class T>
+		size_t addQuad(const Vector3<T> pts[4], T maxEdgeLength = -1);
 
+		void splitLongTris(double maxEdgeLength);
 		void squeezeSkinnyTriangles(double minAngleDegrees);
 		void squeezeEdge(size_t idx);
 		CMeshPtr fix(double maxEdgeLength);
@@ -141,8 +144,8 @@ namespace TriMesh {
 		// takes a vector of 8 points in {
 		// 0,3,2,1
 		// 4,5,6,7 } order
-		template<class POINT_TYPE>
-		size_t addRectPrism(const std::vector<POINT_TYPE>& pts);
+		template<class T>
+		size_t addRectPrism(const std::vector<Vector3<T>>& pts);
 
 		const BoundingBox& getBBox() const {
 			return _pVertTree->getBounds();
@@ -244,6 +247,10 @@ namespace TriMesh {
 		static bool sameTri(const Vector3i& tri0, const Vector3i& tri1);
 		static bool areTriPointsDegenerate(const Vector3i& tri);
 
+		size_t addVertex_d(const Vector3d& ptUnk);
+		size_t addTriangle_d(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, double maxEdgeLength);
+		size_t addQuad_d(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& pt3, double maxEdgeLength);
+
 		double findTriMinimumGap(size_t i) const;
 		double calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const;
 		double calSinVertexAngle(size_t triIdx, size_t vertIdx, size_t& oppositeEdgeIdx) const;
@@ -253,6 +260,9 @@ namespace TriMesh {
 		bool deleteEdgeFromStorage(size_t edgeIdx);
 		void mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove);
 		bool addVertexToEdgeLine(std::vector<size_t>& vertLine, std::set<size_t>& availEdges, double sinEdgeAngle) const;
+
+		void addTriangle_d(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& srcNorm, double maxEdgeLength, int isIsoscelesTipIdx = -1);
+		void addTriangleStrip(std::vector<Vector3d>& pts0, std::vector<Vector3d>& pts1, const Vector3d& norm, double maxEdgeLength);
 
 		bool triContainsVertex(size_t triIdx, size_t vertIdx) const;
 		bool triContainsEdge(size_t triIdx, size_t edgeIdx) const;
@@ -347,89 +357,31 @@ namespace TriMesh {
 		return false;
 	}
 
-	template<class POINT_TYPE>
-	size_t CMesh::addTriangle(const POINT_TYPE pts[3]) {
-		size_t indices[3];
-		for (int i = 0; i < 3; i++)
-			indices[i] = addVertex(pts[i]);
-
-		if (indices[0] == indices[1] || indices[0] == indices[2] || indices[1] == indices[2])
-			return stm1;
-		return addTriangle(Vector3i(indices[0], indices[1], indices[2]));
+	template<class T>
+	inline size_t CMesh::addVertex(const Vector3<T>& ptUnk) {
+		return addVertex_d(Vector3d(ptUnk));
 	}
 
-	template<class POINT_TYPE>
-	size_t CMesh::addTriangle(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2) {
-		POINT_TYPE pts[] = { pt0, pt1, pt2 };
-
-		return addTriangle(pts);
+	template<class T>
+	inline size_t CMesh::addTriangle(const Vector3<T> pts[3], T maxEdgeLength) {
+		return addTriangle_d(pts[0], pts[1], pts[2], maxEdgeLength);
 	}
 
-	template<class POINT_TYPE>
-	size_t CMesh::addVertex(const POINT_TYPE& ptUnk) {
-		Vector3d pt(ptUnk);
-		BoundingBox ptBBox(pt), thisBBox = getBBox();
-		ptBBox.grow(SAME_DIST_TOL);
-		if (!thisBBox.contains(pt, SAME_DIST_TOL)) {
-			std::cout << "CMesh::addVertex box intersects: Error\n";
-		}
-
-		std::vector<size_t> results;
-		_pVertTree->find(ptBBox, results);
-		for (const auto& index : results) {
-			if ((_vertices[index]._pt - ptUnk).norm() < SAME_DIST_TOL) {
-				return index;
-			}
-		}
-		size_t result = _vertices.size();
-		_vertices.push_back(CVertex(ptUnk));
-		_pVertTree->add(ptBBox, result);
-
-#if FULL_TESTS && defined(_DEBUG)
-		// Testing
-		std::vector<size_t> testResults;
-		_pVertTree->find(ptBBox, testResults);
-		int numFound = 0;
-		for (const auto& index : testResults) {
-			if (index == result)
-				numFound++;
-		}
-		if (numFound != 1) {
-			std::cout << "CMesh::addVertex numFound: Error. numFound: " << numFound << "\n";
-			_pVertTree->find(ptBBox, testResults);
-		}
-#endif
-		return result;
+	template<class T>
+	inline size_t CMesh::addTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, T maxEdgeLength) {
+		return addTriangle_d(pt0, pt1, pt2, maxEdgeLength);
 	}
 
-	template<class POINT_TYPE>
-	size_t CMesh::addQuad(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, const POINT_TYPE& pt3)
+	template<class T>
+	inline size_t CMesh::addQuad(const Vector3<T> pts[4], T maxEdgeLength)
 	{
-		addTriangle(pt0, pt1, pt2);
-		addTriangle(pt0, pt2, pt3);
-
-		return _tris.size();
+		return addQuad_d(pts[0], pts[1], pts[2], pts[3], maxEdgeLength);
 	}
 
-	template<class POINT_TYPE>
-	size_t CMesh::addRectPrism(const std::vector<POINT_TYPE>& pts)
+	template<class T>
+	inline size_t CMesh::addQuad(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt3, T maxEdgeLength)
 	{
-		if (pts.size() != 8)
-			return -1;
-
-		// add bottom and top
-		addQuad(pts[0], pts[3], pts[2], pts[1]);
-		addQuad(pts[4], pts[5], pts[6], pts[7]);
-
-		// add left and right
-		addQuad(pts[0], pts[4], pts[7], pts[3]);
-		addQuad(pts[1], pts[2], pts[6], pts[5]);
-
-		// add front and back
-		addQuad(pts[0], pts[1], pts[5], pts[4]);
-		addQuad(pts[2], pts[3], pts[7], pts[6]);
-
-		return _tris.size();
+		return addQuad_d(pt0, pt1, pt2, pt3, maxEdgeLength);
 	}
 
 	inline size_t CMesh::getId() const
@@ -463,87 +415,6 @@ namespace TriMesh {
 		return _edges[idx];
 	}
 
-	template<typename LAMBDA>
-	const std::vector<float>& CMesh::getGlTriCurvatureColors(LAMBDA curvatureToColorFunc) const // size = GlPoints.size() / 3
-	{
-		size_t requiredSize = 3 * 3 * _tris.size();
-		if (_vertCurvature.empty()) {
-			_glTriCurvatureColors.clear();
-		} else if (_glTriCurvatureColors.size() == requiredSize)
-			return _glTriCurvatureColors;
-		else {
-			_glTriCurvatureColors.clear();
-			_glTriCurvatureColors.reserve(requiredSize);
-
-			for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
-				const auto& tri = _tris[triIdx];
-				for (int i = 0; i < 3; i++) {
-					auto curv = _vertCurvature[tri[i]];
-					float rgb[3];
-					if (curvatureToColorFunc(curv, rgb)) {
-						_glTriCurvatureColors.push_back(rgb[0]);
-						_glTriCurvatureColors.push_back(rgb[1]);
-						_glTriCurvatureColors.push_back(rgb[2]);
-					}
-				}
-			}
-		}
-
-		return _glTriCurvatureColors;
-	}
-
-	template<typename LAMBDA>
-	void CMesh::getGlEdges(LAMBDA curvatureToColorFunc, bool includeSmooth, std::vector<float>& points, std::vector<float>& colors,
-		double sinSharpAngle, std::vector<unsigned int>& sharpIndices, std::vector<unsigned int>& smoothIndices) // size = GlPoints.size() / 3
-	{
-		points.clear();
-		colors.clear();
-		sharpIndices.clear();
-		smoothIndices.clear();
-
-		points.reserve(2 * 3 * _edges.size());
-		sharpIndices.reserve(2 * _edges.size());
-		smoothIndices.reserve(2 * _edges.size());
-
-		unsigned int indexCount = 0;
-		for (size_t edgeIdx = 0; edgeIdx < _edges.size(); edgeIdx++) {
-			float curv = (float)_edgeCurvature[edgeIdx];
-			if (!includeSmooth && fabs(curv) < 0.1)
-				continue;
-
-			unsigned int idx0 = indexCount++;
-			unsigned int idx1 = indexCount++;
-
-			if (isEdgeSharp(edgeIdx, sinSharpAngle)) {
-				sharpIndices.push_back(idx0);
-				sharpIndices.push_back(idx1);
-			} else {
-				smoothIndices.push_back(idx0);
-				smoothIndices.push_back(idx1);
-			}
-
-			float rgb[3];
-			if (curvatureToColorFunc(curv, rgb)) {
-
-				const auto& edge = _edges[edgeIdx];
-				for (int i = 0; i < 2; i++) {
-					const auto& pt = getVert(edge._vertIndex[i])._pt;
-					for (int j = 0; j < 3; j++) {
-						points.push_back((float)pt[j]);
-						colors.push_back(rgb[j]);
-					}
-				}
-			} else {
-				for (int j = 0; j < 3; j++) {
-					colors.push_back(0);
-				}
-			}
-		}
-		points.shrink_to_fit();
-		colors.shrink_to_fit();
-		sharpIndices.shrink_to_fit();
-		smoothIndices.shrink_to_fit();
-	}
 
 	template<typename T>
 	inline ScopedSetVal<T>::ScopedSetVal(T& variable, T newVal)

@@ -40,6 +40,12 @@ namespace TriMesh {
 	{}
 
 	template<class T>
+	ProxyVector<T>::~ProxyVector()
+	{
+		clear();
+	}
+
+	template<class T>
 	size_t ProxyVector<T>::numBytes() const
 	{
 		size_t result = 0;
@@ -82,17 +88,33 @@ namespace TriMesh {
 	}
 
 	template<class T>
+	void ProxyVector<T>::clear()
+	{
+		while (size() > 0)
+			pop_back();
+	}
+
+	template<class T>
 	void ProxyVector<T>::push_back(const T& val)
 	{
-		auto& vals = _pMesh->getRepo()->get<T>();
-		size_t idx = vals.size();
-		vals.push_back(val);
+		const auto& pRepo = _pMesh->getRepo();
+		auto& vals = pRepo->get<T>();
+		size_t idx = pRepo->getAvailEntry<T>();
+		if (idx < vals.size()) {
+			vals[idx] = val;
+		} else {
+			idx = vals.size();
+			vals.push_back(val);
+		}
 		_indices.push_back(idx);
 	}
 
 	template<class T>
 	void ProxyVector<T>::pop_back()
 	{
+		const auto& pRepo = _pMesh->getRepo();
+		if (!_indices.empty())
+			pRepo->release<T>(_indices.size() - 1);
 		_indices.pop_back();
 	}
 

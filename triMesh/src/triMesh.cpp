@@ -51,6 +51,10 @@ using namespace std;
 
 using namespace TriMesh;
 
+namespace
+{
+	const double g_maxLengthScale = 1 / 1.5;
+}
 atomic<size_t> CMesh::_statId = 0;
 
 CMesh::CMesh(const CMeshRepoPtr& pRepo)
@@ -81,9 +85,32 @@ CMesh::CMesh(const Vector3d& min, const Vector3d& max, const CMeshRepoPtr& pRepo
 void CMesh::reset(const BoundingBox& bbox) {
 	BoundingBox bb(bbox);
 	bb.grow(SAME_DIST_TOL);
+
+	_edgeToIdxMap.clear();
+
+	_glTriPoints.clear();
+	_glTriNormals.clear();
+	_glTriParams.clear();
+	_glTriCurvatureColors.clear();
+	_glTriIndices.clear();
+
+	_vertices.clear();
+	_edges.clear();
+	_tris.clear();
+
+
 	_pVertTree->reset(bb);
 	_pEdgeTree->reset(bb);
 	_pTriTree->reset(bb);
+
+	// These are cached data and can be reproduced. Marked mutable so they can be accessed from const getters
+	_centroids.clear();
+	_sharpEdgeIndices.clear();
+	_sharpEdgeLoops.clear();
+	_normals.clear();
+	_edgeCurvature.clear();
+	_vertCurvature.clear();
+	_triGap.clear();
 }
 
 void CMesh::dumpTris(const wstring& filename) const
@@ -1070,6 +1097,130 @@ size_t CMesh::rayCast(size_t triIdx, vector<RayHitd>& hits, bool biDir) const {
 	return hits.size();
 }
 
+size_t CMesh::addVertex_d(const Vector3d& pt) {
+	BoundingBox ptBBox(pt), thisBBox = getBBox();
+	ptBBox.grow(SAME_DIST_TOL);
+	if (!thisBBox.contains(pt, SAME_DIST_TOL)) {
+		std::cout << "CMesh::addVertex box intersects: Error\n";
+	}
+
+	std::vector<size_t> results;
+	_pVertTree->find(ptBBox, results);
+	for (const auto& index : results) {
+		if ((_vertices[index]._pt - pt).norm() < SAME_DIST_TOL) {
+			return index;
+		}
+	}
+	size_t result = _vertices.size();
+	_vertices.push_back(pt);
+	_pVertTree->add(ptBBox, result);
+
+#if FULL_TESTS && defined(_DEBUG)
+	// Testing
+	std::vector<size_t> testResults;
+	_pVertTree->find(ptBBox, testResults);
+	int numFound = 0;
+	for (const auto& index : testResults) {
+		if (index == result)
+			numFound++;
+	}
+	if (numFound != 1) {
+		std::cout << "CMesh::addVertex numFound: Error. numFound: " << numFound << "\n";
+		_pVertTree->find(ptBBox, testResults);
+	}
+#endif
+	return result;
+}
+
+
+size_t CMesh::addTriangle_d(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, double maxEdgeLength) {
+	size_t idx0 = addVertex_d(pt0);
+	size_t idx1 = addVertex_d(pt1);
+	size_t idx2 = addVertex_d(pt2);
+
+	if (idx0 == idx1 || idx0 == idx2 || idx1 == idx2)
+		return stm1;
+	return addTriangle(Vector3i(idx0, idx1, idx2));
+}
+
+size_t CMesh::addQuad_d(const Vector3d& qpt0, const Vector3d& qpt1, const Vector3d& qpt2, const Vector3d& qpt3, double maxEdgeLength)
+{
+	Vector3d qp[] = { qpt0, qpt1, qpt2, qpt3 };
+
+	double edgeLen[] = {
+		(qp[1] - qp[0]).norm(),
+		(qp[2] - qp[1]).norm(),
+		(qp[3] - qp[2]).norm(),
+		(qp[0] - qp[3]).norm(),
+	};
+
+	double maxLen = 0;
+	int maxIdx = 0;
+	for (int i = 0; i < 4; i++) {
+		if (edgeLen[i] > maxLen) {
+			maxLen = edgeLen[i];
+			maxIdx = i;
+		}
+	}
+
+	if (maxEdgeLength != -1 && maxLen > maxEdgeLength) {
+		Vector3d v0 = qp[1] - qp[0];
+		Vector3d v1 = qp[2] - qp[0];
+		Vector3d srcNorm = v1.cross(v0);
+
+		int adjIdx = (maxIdx + 2) % 4;
+		vector<Vector3d> edgePointsVec[2];
+		for (int i = 0; i < 2; i++) {
+			auto& ptVec = edgePointsVec[i];
+			Vector3d pt0, pt1;
+			double len;
+			if (i == 0) {
+				pt0 = qp[maxIdx];
+				pt1 = qp[(maxIdx + 1) % 4];
+				len = edgeLen[maxIdx];
+			} else {
+				pt0 = qp[adjIdx];
+				pt1 = qp[(adjIdx + 1) % 4];
+				len = edgeLen[adjIdx];
+			}
+
+			const double divLen = maxEdgeLength * g_maxLengthScale;
+			size_t numSegs = (size_t) (len / divLen + 1);
+			double l = len / numSegs;
+			if (l > divLen)
+				numSegs++;
+
+			size_t numPts = numSegs + 1;
+			if (numPts < 2)
+				numPts = 2;
+			ptVec.resize(numPts);
+			for (size_t j = 0; j < numPts; j++) {
+				double t = j / (numPts - 1.0);
+				ptVec[j] = LERP(pt0, pt1, t);
+			}
+		}
+
+		if (edgePointsVec[1].size() > edgePointsVec[0].size())
+			std::swap(edgePointsVec[0], edgePointsVec[1]);
+		addTriangleStrip(edgePointsVec[0], edgePointsVec[1], srcNorm, maxEdgeLength);
+
+		return _tris.size();
+	}
+
+	auto diagLen0 = (qpt2 - qpt0).norm();
+	auto diagLen1 = (qpt3 - qpt1).norm();
+
+	if (diagLen0 <= diagLen1) {
+		addTriangle_d(qpt0, qpt1, qpt2, maxEdgeLength);
+		addTriangle_d(qpt0, qpt2, qpt3, maxEdgeLength);
+	} else {
+		addTriangle_d(qpt1, qpt2, qpt3, maxEdgeLength);
+		addTriangle_d(qpt1, qpt3, qpt0, maxEdgeLength);
+	}
+
+	return _tris.size();
+}
+
 double CMesh::findTriMinimumGap(size_t i) const {
 	vector<RayHitd> hits;
 	if (rayCast(i, hits) == 0)
@@ -1689,6 +1840,263 @@ double CMesh::edgeLength(size_t edgeIdx) const
 	const Vector3d& pt0 = _vertices[edge._vertIndex[0]]._pt;
 	const Vector3d& pt1 = _vertices[edge._vertIndex[1]]._pt;
 	return (pt1 - pt0).norm();
+}
+
+void CMesh::splitLongTris(double maxEdgeLength)
+{
+	// capture all the points
+	vector<Vector3d> points;
+	for (const auto& tri : _tris) {
+		for (int i = 0; i < 3; i++)
+			points.push_back(getVert(tri[i])._pt);
+	}
+
+	reset(getBBox());
+
+	size_t numTris = points.size() / 3, vertIdx = 0;
+	for (size_t triIdx = 0; triIdx < numTris; triIdx++) {
+		Vector3d triPts[] = {
+			points[vertIdx++],
+			points[vertIdx++],
+			points[vertIdx++],
+		};
+
+		Vector3d v0 = triPts[1] - triPts[0];
+		Vector3d v1 = triPts[2] - triPts[0];
+		Vector3d srcNorm = v1.cross(v0);
+		addTriangle_d(triPts[0], triPts[1], triPts[2], srcNorm, maxEdgeLength);
+	}
+}
+
+void CMesh::addTriangle_d(const Vector3d& tpt0, const Vector3d& tpt1, const Vector3d& tpt2, const Vector3d& srcNorm, double maxEdgeLength, int isIsoscelesTipIdx)
+{
+	Vector3d pts[] = { tpt0, tpt1, tpt2 };
+	int numLong = 0;
+	double lengths[3];
+	for (int i = 0; i < 3; i++) {
+		int j = (i + 1) % 3;
+
+		const auto& pt0 = pts[i];
+		const auto& pt1 = pts[j];
+		Vector3d v = pt1 - pt0;
+		lengths[i] = v.norm();
+		if (lengths[i] > maxEdgeLength)
+			numLong++;
+	}
+
+	if (numLong == 0) {
+		// No trimming required. Put the triangle back in the list.
+		addTriangle(pts);
+		return;
+	}
+
+	double min = DBL_MAX, max = -1;
+	int shortIdx = 3, midIdx, longIdx = -1;
+	for (int i = 0; i < 3; i++) {
+		if (lengths[i] < min) {
+			min = lengths[i];
+			shortIdx = i;
+		}
+		if (lengths[i] > max) {
+			max = lengths[i];
+			longIdx = i;
+		}
+	}
+
+	for (int i = 0; i < 3; i++) {
+		if (i != shortIdx && i != longIdx)
+			midIdx = i;
+	}
+
+	if (isIsoscelesTipIdx == -1) {
+		const auto& pt0 = pts[longIdx];
+		const auto& pt1 = pts[(longIdx + 1) % 3];
+		const auto& ptMid = pts[(longIdx + 2) % 3];
+		Vector3d v0 = (pt1 - pt0).normalized();
+		Vector3d v1 = ptMid - pt0;
+		double l = v1.dot(v0);
+		Vector3d splitPt = pt0 + v0 * l;
+		addTriangle_d(pt0, splitPt, ptMid, srcNorm, maxEdgeLength, 0);
+		addTriangle_d(splitPt, pt1, ptMid, srcNorm, maxEdgeLength, 1);
+		return;
+	}
+
+	std::vector<Vector3d> edgePointsVec[2];
+
+	for (int i = 0; i < 2; i++) {
+		int idx0, idx1;
+		if (isIsoscelesTipIdx == 0) {
+			idx0 = 0;
+			if (i == 0)
+				idx1 = 1;
+			else
+				idx1 = 2;
+		} else {
+			idx0 = 1;
+			if (i == 0)
+				idx1 = 0;
+			else
+				idx1 = 2;
+		}
+
+		const auto& pt0 = pts[idx0];
+		const auto& pt1 = pts[idx1];
+
+		auto& edgePoints = edgePointsVec[i];
+		Vector3d v = pt1 - pt0;
+		double l = v.norm();
+		if (l > maxEdgeLength) {
+			const double divLen = maxEdgeLength * g_maxLengthScale;
+			int numSegs = (int)(l / divLen + 1);
+			if (numSegs < 1)
+				numSegs = 1;
+			double l2 = l / numSegs;
+			if (l2 > divLen)
+				numSegs++;
+			int numPts = numSegs + 1;
+			assert(numPts >= 2);
+			for (size_t i = 0; i < numPts; i++) {
+				double t = i / (numPts - 1.0);
+				Vector3d pt = LERP(pt0, pt1, t);
+				edgePoints.push_back(pt);
+			}
+		} else {
+			edgePoints.push_back(pt0);
+			edgePoints.push_back(pt1);
+		}
+	}
+
+	addTriangleStrip(edgePointsVec[0], edgePointsVec[1], srcNorm, maxEdgeLength);
+}
+
+struct LocalEdge
+{
+	inline LocalEdge(size_t idx0, size_t idx1)
+		: _idx0(idx0)
+		, _idx1(idx1)
+	{}
+	size_t _idx0, _idx1;
+};
+
+void CMesh::addTriangleStrip(std::vector<Vector3d>& pts0, std::vector<Vector3d>& pts1, const Vector3d& srcNorm, double maxEdgeLength)
+{
+	if (pts0.empty() || pts1.empty())
+		return;
+	// These two vectors define two legs of a quad or triangle
+
+	double len[] = {
+		(pts0.front() - pts1.front()).norm(),
+		(pts0.front() - pts1.back()).norm(),
+		(pts0.back() - pts1.front()).norm(),
+		(pts0.back() - pts1.back()).norm() 
+	};
+
+	double minLen = DBL_MAX;
+	int shortIdx = 4;
+	for (int i = 0; i < 4; i++) {
+		if (len[i] < minLen) {
+			shortIdx = i;
+			minLen = len[i];
+		}
+	}
+
+	switch (shortIdx) {
+	case 0:
+		break;
+	case 1:
+		reverse(pts1.begin(), pts1.end());
+		break;
+	case 2:
+		reverse(pts0.begin(), pts0.end());
+		break;
+	case 3:
+		reverse(pts0.begin(), pts0.end());
+		reverse(pts1.begin(), pts1.end());
+		break;
+	}
+
+	size_t idx0 = 1, idx1 = 1;
+	LocalEdge lastCrossEdge(0, 0);
+
+	bool done = false;
+	do {
+		Vector3d triPts[] = {
+			pts0[lastCrossEdge._idx0],  // idx0
+			pts0[idx0],							// idx0
+			pts1[idx1],							// idx1
+			pts1[lastCrossEdge._idx1]	// idx1
+		};
+
+		int triPtSide[] = { 0, 0, 1, 1 };
+		size_t triPtIndices[] = { lastCrossEdge._idx0, idx0, idx1, lastCrossEdge._idx1 };
+
+		double edgeLen[] = {
+			(triPts[1] - triPts[0]).norm(),
+			(triPts[2] - triPts[1]).norm(),
+			(triPts[3] - triPts[2]).norm(),
+			(triPts[0] - triPts[3]).norm(),
+		};
+
+		vector<int> edges;
+		int skipSide = -1;
+		for (int i = 0; i < 4; i++) {
+			if (edgeLen[i] >= SAME_DIST_TOL)
+				edges.push_back(i);
+			else
+				skipSide = triPtSide[i];
+		}
+
+		size_t maxIdx0, maxIdx1;
+
+		switch (edges.size()) {
+		case 3: {
+			Vector3d v0 = (triPts[edges[1]] - triPts[edges[0]]);
+			Vector3d v1 = (triPts[edges[2]] - triPts[edges[0]]);
+			Vector3d norm = v1.cross(v0);
+			addTriangle_d(triPts[edges[0]], triPts[edges[1]], triPts[edges[2]], srcNorm, maxEdgeLength);
+			break;
+		}
+		case 4: {
+			Vector3d v0 = (triPts[edges[1]] - triPts[edges[0]]);
+			Vector3d v1 = (triPts[edges[2]] - triPts[edges[0]]);
+			Vector3d norm = v1.cross(v0);
+			if (norm.dot(srcNorm) < 0) {
+				swap(edges[0], edges[1]);
+				swap(edges[2], edges[3]);
+			}
+			addQuad_d(triPts[edges[0]], triPts[edges[1]], triPts[edges[2]], triPts[edges[3]], maxEdgeLength);
+			break;
+		}
+		default:
+			done = true;
+			break;
+		}
+
+		maxIdx0 = maxIdx1 = -1;
+		for (int ptIdx : edges) {
+			auto tmpIdx = triPtIndices[ptIdx];
+			if (triPtSide[ptIdx] == 0) {
+				if (maxIdx0 == -1 || tmpIdx > maxIdx0)
+					maxIdx0 = tmpIdx;
+			}
+			else {
+				if (maxIdx1 == -1 || tmpIdx > maxIdx1)
+					maxIdx1 = tmpIdx;
+			}
+		}
+
+		lastCrossEdge = LocalEdge(maxIdx0, maxIdx1);
+		idx0 = lastCrossEdge._idx0 + 1;
+		idx1 = lastCrossEdge._idx1 + 1;
+
+		if (idx0 >= pts0.size())
+			idx0 = pts0.size() - 1;
+
+		if (idx1 >= pts1.size())
+			idx1 = pts1.size() - 1;
+
+		done = idx0 == lastCrossEdge._idx0 && idx1 == lastCrossEdge._idx1;
+	} while (!done);
 }
 
 void CMesh::squeezeSkinnyTriangles(double minAngleDegrees)

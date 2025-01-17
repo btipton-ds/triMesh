@@ -58,9 +58,11 @@ add_library (
     "src/tm_spatialSearch.cpp"
     "src/tm_proxyEdges.cpp"
     "src/tm_proxyTriangles.cpp"
+    "src/tm_repo.cpp"
     "src/tm_proxyVertices.cpp"
+    "../stlReader/src/readWriteStl.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
-  "include/tm_proxyVector.h"  "src/tm_repo.cpp")
+)
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

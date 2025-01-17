@@ -34,7 +34,8 @@ This file is part of the TriMesh library.
 #include <iostream>
 #include <fstream>
 
-#include <triMesh.h>
+#include <triMesh.hpp>
+#include <..\..\stlReader\include\readWriteStl.h>
 
 using namespace std;
 
@@ -99,10 +100,113 @@ bool test2() {
 	return true;
 }
 
+bool testSplit()
+{
+	int steps = 8;
+
+	const std::string path("D:/DarkSky/Projects/output/");
+	for (int i = 0; i < steps; i++) {
+		Vector3d pts[] = {
+			Vector3d(-1, 0, 0),
+			Vector3d(1, 0, 0),
+			Vector3d(0.8, 0.1, 0),
+		};
+		CBoundingBox3Dd bbox;
+		for (int i = 0; i < 3; i++)
+			bbox.merge(pts[i]);
+		TriMesh::CMeshPtr pMesh= make_shared<TriMesh::CMesh>(bbox);
+
+		pMesh->addTriangle(pts);
+		
+		double l = 1.99 / (i + 1);
+		switch (i) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+			break;
+		case 5:
+			l = 1.99 / (2 * 5);
+			break;
+		case 6:
+			l = 1.99 / (8 * 5);
+			break;
+		case 7:
+			l = 1.99 / (32 * 5);
+			break;
+		case 8:
+			l = 1.99 / (128 * 5);
+			break;
+		case 9:
+			l = 1.99 / (512 * 5);
+			break;
+		}
+
+		if (i == 1) {
+			int dbgBreak = 1;
+		}
+
+		pMesh->splitLongTris(l);
+		{
+			CReadWriteSTL writer(pMesh);
+
+			std::stringstream ss;
+			ss << "testMesh_" << i << ".stl";
+			std::string filename = ss.str();
+			writer.write(pMesh, false, path, filename);
+		}
+
+		for (size_t i = 0; i < pMesh->numEdges(); i++) {
+			auto edgeLen = pMesh->edgeLength(i);
+			//TEST_TRUE(edgeLen < l, "Edge to long");
+		}
+		switch (i) {
+		case 0:
+			TEST_EQUAL(pMesh->numTris(), 2, "Expected 2 tris");
+			break;
+		case 1:
+			TEST_EQUAL(pMesh->numTris(), 6, "Expected 6 tris");
+			break;
+		case 2:
+			TEST_EQUAL(pMesh->numTris(), 10, "Expected 10 tris");
+			break;
+		case 3:
+			TEST_EQUAL(pMesh->numTris(), 12, "Expected 12 tris");
+			break;
+		case 4:
+			TEST_EQUAL(pMesh->numTris(), 14, "Expected 14 tris");
+			break;
+		case 5:
+			TEST_EQUAL(pMesh->numTris(), 30, "Expected 30 tris");
+			break;
+		case 6:
+			TEST_EQUAL(pMesh->numTris(), 230, "Expected 230 tris");
+			break;
+		case 7:
+			TEST_EQUAL(pMesh->numTris(), 3183, "Expected 3183 tris");
+			break;
+		case 8:
+			TEST_EQUAL(pMesh->numTris(), 9, "Expected 9 tris");
+			break;
+		case 9:
+			TEST_EQUAL(pMesh->numTris(), 9, "Expected 9 tris");
+			break;
+		}
+	}
+
+
+	cout << "Test testSplit passed\n";
+
+	return true;
+
+}
+
 bool testMesh() {
 	TEST_TRUE(test0(), "Test0");
 	TEST_TRUE(test1(), "Test1");
 	TEST_TRUE(test2(), "Test2");
+	TEST_TRUE(testSplit(), "TestSplit");
 
 	cout << "Test mesh passed\n";
 

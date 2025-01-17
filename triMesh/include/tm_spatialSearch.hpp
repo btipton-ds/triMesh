@@ -77,8 +77,7 @@ CSSB_DCL::CSpatialSearchBase(const BOX_TYPE& bbox, int axis)
 CSSB_TMPL
 CSSB_DCL::~CSpatialSearchBase()
 {
-	delete _left;
-	delete _right;
+	clear();
 }
 
 CSSB_TMPL
@@ -89,6 +88,7 @@ void CSSB_DCL::reset(const BOX_TYPE& bbox) {
 
 CSSB_TMPL
 void CSSB_DCL::clear() {
+	_numInTree = 0;
 	_axis = 0;
 	_left = _right = nullptr;
 	_contents.clear();

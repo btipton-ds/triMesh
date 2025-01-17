@@ -56,12 +56,14 @@ namespace TriMesh {
 		friend class const_reverse_iterator;
 
 		ProxyVector(CMesh* pMesh);
+		virtual ~ProxyVector();
 
 		size_t numBytes() const;
 
 		T& operator[](size_t idx);
 		const T& operator[](size_t idx) const;
 		size_t size() const;
+		void clear();
 		void push_back(const T& idx);
 		void pop_back();
 

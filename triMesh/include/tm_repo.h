@@ -56,13 +56,26 @@ namespace TriMesh {
 		template<class T>
 		const std::vector<T>& get() const;
 
+		template<class T>
+		void release(size_t idx);
+
+		template<class T>
+		size_t getAvailEntry();
+
 		size_t numBytes() const;
 
 		bool intersectsTri(const LineSegmentd& seg, size_t triIdx, double tol, RayHitd& hit) const;
 
 	private:
+		static size_t getAvailEntry(std::vector<size_t>& vec);
+
+		std::vector<size_t> _availVertices;
 		std::vector<CVertex> _vertices;
+
+		std::vector<size_t> _availEdges;
 		std::vector<CEdge> _edges;
+
+		std::vector<size_t> _availTris;
 		std::vector<Vector3i> _tris;
 	};
 
@@ -106,4 +119,57 @@ namespace TriMesh {
 		return _tris;
 	}
 
+	template<>
+	inline void CMeshRepo::release<CEdge>(size_t idx) {
+		if (idx < _edges.size()) {
+			_edges[idx] = {};
+			_availEdges.push_back(idx);
+		}
+	}
+
+	template<>
+	inline void CMeshRepo::release<CVertex>(size_t idx) {
+		if (idx < _vertices.size()) {
+			_vertices[idx] = {};
+			_availVertices.push_back(idx);
+		}
+	}
+
+	template<>
+	inline void CMeshRepo::release<Vector3i>(size_t idx) {
+		if (idx < _tris.size()) {
+			_tris[idx] = {};
+			_availTris.push_back(idx);
+		}
+	}
+
+	inline size_t CMeshRepo::getAvailEntry(std::vector<size_t>& vec)
+	{
+		if (vec.empty()) {
+			return -1;
+		}
+		else {
+			size_t result = vec.back();
+			vec.pop_back();
+			return result;
+		}
+	}
+
+	template<>
+	inline size_t CMeshRepo::getAvailEntry<CEdge>()
+	{
+		return getAvailEntry(_availEdges);
+	}
+
+	template<>
+	inline size_t CMeshRepo::getAvailEntry<CVertex>()
+	{
+		return getAvailEntry(_availVertices);
+	}
+
+	template<>
+	inline size_t CMeshRepo::getAvailEntry<Vector3i>()
+	{
+		return getAvailEntry(_availTris);
+	}
 }
