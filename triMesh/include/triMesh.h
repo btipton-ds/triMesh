@@ -261,7 +261,7 @@ namespace TriMesh {
 		void mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove);
 		bool addVertexToEdgeLine(std::vector<size_t>& vertLine, std::set<size_t>& availEdges, double sinEdgeAngle) const;
 
-		void addTriangle_d(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& srcNorm, double maxEdgeLength, int isIsoscelesTipIdx = -1);
+		void addTriangle_d(const Vector3d& pt0, const Vector3d& pt1, const Vector3d& pt2, const Vector3d& srcNorm, double maxEdgeLength);
 		void addTriangleStrip(std::vector<Vector3d>& pts0, std::vector<Vector3d>& pts1, const Vector3d& norm, double maxEdgeLength);
 
 		bool triContainsVertex(size_t triIdx, size_t vertIdx) const;
