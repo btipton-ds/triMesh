@@ -1892,6 +1892,13 @@ void CMesh::addTriangle_d(const Vector3d& tpt0, const Vector3d& tpt1, const Vect
 			numLong++;
 	}
 
+	// reverse the normal
+	Vector3d v0 = pts[1] - pts[0];
+	Vector3d v1 = pts[2] - pts[0];
+	Vector3d norm = v1.cross(v0);
+	if (norm.dot(srcNorm) < 0)
+		swap(pts[1], pts[2]);
+
 	if (numLong == 0) {
 		// No trimming required. Put the triangle back in the list.
 
@@ -1927,7 +1934,7 @@ void CMesh::addTriangle_d(const Vector3d& tpt0, const Vector3d& tpt1, const Vect
 	const auto& ptNear = pts[nearIdx];
 	const auto& ptFar = pts[farIdx];
 	const auto& ptMid = pts[midIdx];
-	Vector3d v0 = ptFar - ptNear;
+	v0 = ptFar - ptNear;
 	double len = v0.norm();
 	v0 /= len;
 
