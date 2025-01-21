@@ -102,7 +102,7 @@ bool test2() {
 
 bool testSplit1()
 {
-	int steps = 9;
+	int steps = 10;
 
 	const std::string path("D:/DarkSky/Projects/output/");
 	for (int i = 0; i < steps; i++) {
@@ -187,10 +187,10 @@ bool testSplit1()
 			TEST_EQUAL(pMesh->numTris(), 229, "Expected 229 tris");
 			break;
 		case 8:
-			TEST_EQUAL(pMesh->numTris(), 844, "Expected 844 tris");
+			TEST_EQUAL(pMesh->numTris(), 837, "Expected 837 tris");
 			break;
 		case 9:
-			TEST_EQUAL(pMesh->numTris(), 9, "Expected 9 tris");
+			TEST_EQUAL(pMesh->numTris(), 3164, "Expected 3164 tris");
 			break;
 		}
 	}
