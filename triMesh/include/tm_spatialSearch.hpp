@@ -90,6 +90,8 @@ CSSB_TMPL
 void CSSB_DCL::clear() {
 	_numInTree = 0;
 	_axis = 0;
+	delete _left;
+	delete _right;
 	_left = _right = nullptr;
 	_contents.clear();
 	_numInTree = 0;
