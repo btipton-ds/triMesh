@@ -181,16 +181,16 @@ bool testSplit1()
 			TEST_EQUAL(pMesh->numTris(), 30, "Expected 30 tris");
 			break;
 		case 6:
-			TEST_EQUAL(pMesh->numTris(), 64, "Expected 64 tris");
+			TEST_EQUAL(pMesh->numTris(), 63, "Expected 63 tris");
 			break;
 		case 7:
-			TEST_EQUAL(pMesh->numTris(), 229, "Expected 229 tris");
+			TEST_EQUAL(pMesh->numTris(), 227, "Expected 227 tris");
 			break;
 		case 8:
-			TEST_EQUAL(pMesh->numTris(), 837, "Expected 837 tris");
+			TEST_EQUAL(pMesh->numTris(), 834, "Expected 834 tris");
 			break;
 		case 9:
-			TEST_EQUAL(pMesh->numTris(), 3164, "Expected 3164 tris");
+			TEST_EQUAL(pMesh->numTris(), 3161, "Expected 3161 tris");
 			break;
 		}
 	}
@@ -257,7 +257,7 @@ bool testSplit2()
 			break;
 		}
 
-		if (i == 6) {
+		if (i == 7) {
 			int dbgBreak = 1;
 		}
 
@@ -292,19 +292,19 @@ bool testSplit2()
 			TEST_EQUAL(pMesh->numTris(), 28, "Expected 28 tris");
 			break;
 		case 5:
-			TEST_EQUAL(pMesh->numTris(), 72, "Expected 72 tris");
+			TEST_EQUAL(pMesh->numTris(), 71, "Expected 71 tris");
 			break;
 		case 6:
-			TEST_EQUAL(pMesh->numTris(), 208, "Expected 208 tris");
+			TEST_EQUAL(pMesh->numTris(), 205, "Expected 205 tris");
 			break;
 		case 7:
-			TEST_EQUAL(pMesh->numTris(), 754, "Expected 754 tris");
+			TEST_EQUAL(pMesh->numTris(), 749, "Expected 749 tris");
 			break;
 		case 8:
-			TEST_EQUAL(pMesh->numTris(), 2809, "Expected 2809 tris");
+			TEST_EQUAL(pMesh->numTris(), 2803, "Expected 2803 tris");
 			break;
 		case 9:
-			TEST_EQUAL(pMesh->numTris(), 10787, "Expected 10787 tris");
+			TEST_EQUAL(pMesh->numTris(), 10780, "Expected 10780 tris");
 			break;
 		}
 	}

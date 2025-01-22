@@ -1183,20 +1183,25 @@ size_t CMesh::addQuad_d(const Vector3d& qpt0, const Vector3d& qpt1, const Vector
 				pt1 = qp[(adjIdx + 1) % 4];
 				len = edgeLen[adjIdx];
 			}
+			if (len > maxEdgeLength) {
+				const double divLen = maxEdgeLength * g_maxLengthScale;
+				size_t numSegs = (size_t)(len / divLen + 1);
+				double l = len / numSegs;
+				if (l > divLen)
+					numSegs++;
 
-			const double divLen = maxEdgeLength * g_maxLengthScale;
-			size_t numSegs = (size_t) (len / divLen + 1);
-			double l = len / numSegs;
-			if (l > divLen)
-				numSegs++;
-
-			size_t numPts = numSegs + 1;
-			if (numPts < 2)
-				numPts = 2;
-			ptVec.resize(numPts);
-			for (size_t j = 0; j < numPts; j++) {
-				double t = j / (numPts - 1.0);
-				ptVec[j] = LERP(pt0, pt1, t);
+				size_t numPts = numSegs + 1;
+				if (numPts < 2)
+					numPts = 2;
+				ptVec.resize(numPts);
+				for (size_t j = 0; j < numPts; j++) {
+					double t = j / (numPts - 1.0);
+					ptVec[j] = LERP(pt0, pt1, t);
+				}
+			} else {
+				ptVec.resize(2);
+				ptVec[0] = pt0;
+				ptVec[1] = pt1;
 			}
 		}
 
