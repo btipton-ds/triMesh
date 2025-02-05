@@ -90,7 +90,10 @@ template<class T>
 bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit);
 
 template<class T>
-bool collisionTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T tol = (T)SAME_DIST_TOL);
+bool intersectTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T tol = (T)SAME_DIST_TOL);
+
+template<class T>
+bool intersectTriTri(const Vector3<T>* triPts0[3], const Vector3<T>* triPts1[3], T tol = (T)SAME_DIST_TOL);
 
 template<class T>
 Vector3<T> orthoganalizeVector(const Vector3<T>& v, const Vector3<T>& unitVector);
@@ -131,6 +134,6 @@ template<class T>
 Vector3<T> TRI_LERP(const std::vector<Vector3<T>>& pts, const Vector3<T>& uvw);
 
 template<class T>
-bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& uvw);
+bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol = (T)1.0e-12);
 
 #include <tm_math.hpp>

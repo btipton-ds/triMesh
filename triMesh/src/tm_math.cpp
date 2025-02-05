@@ -102,10 +102,8 @@ Vector3<T> TRI_LERP(const Vector3<T> pts[8], T t, T u, T v)
 }
 
 template<class T>
-bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& uvw)
+bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
 {
-	const double step = 1.0e-10;
-	const double tol = 1.0e-10;
 	const double tolSqr = tol * tol;
 	if (pts.empty())
 		return false;
@@ -126,36 +124,36 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 	z /= l * l;
 
 	v = pt - pts[0];
-	uvw = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
+	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
 	bool done = false;
 	int count = 0;
 	while (!done && count++ < 100) {
-		p0 = TRI_LERP(pts, (T)0, uvw[1], uvw[2]);
-		p1 = TRI_LERP(pts, (T)1, uvw[1], uvw[2]);
+		p0 = TRI_LERP(pts, (T)0, tuv[1], tuv[2]);
+		p1 = TRI_LERP(pts, (T)1, tuv[1], tuv[2]);
 		dir = p1 - p0;
 		l = dir.norm();
 		dir /= l;
 		v = pt - p0;
 		a = v.dot(dir) / l;
 
-		p0 = TRI_LERP(pts, uvw[0], (T)0, uvw[2]);
-		p1 = TRI_LERP(pts, uvw[0], (T)1, uvw[2]);
+		p0 = TRI_LERP(pts, tuv[0], (T)0, tuv[2]);
+		p1 = TRI_LERP(pts, tuv[0], (T)1, tuv[2]);
 		dir = p1 - p0;
 		l = dir.norm();
 		dir /= l;
 		v = pt - p0;
 		b = v.dot(dir) / l;
 
-		p0 = TRI_LERP(pts, uvw[0], uvw[1], (T)0);
-		p1 = TRI_LERP(pts, uvw[0], uvw[1], (T)1);
+		p0 = TRI_LERP(pts, tuv[0], tuv[1], (T)0);
+		p1 = TRI_LERP(pts, tuv[0], tuv[1], (T)1);
 		dir = p1 - p0;
 		l = dir.norm();
 		dir /= l;
 		v = pt - p0;
 		c = v.dot(dir) / l;
 
-		uvw = Vector3<T>(a, b, c);
-		Vector3<T> guess = TRI_LERP(pts, uvw);
+		tuv = Vector3<T>(a, b, c);
+		Vector3<T> guess = TRI_LERP(pts, tuv);
 		T distSqr = (guess - pt).squaredNorm();
 		if (distSqr < tolSqr)
 			return true;
@@ -164,31 +162,41 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 }
 
 template<class T>
-bool collisionTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T tol)
+bool intersectTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T tol)
+{
+	const Vector3<T>* pPts0[] = { &triPts0[0], &triPts0[1], &triPts0[2] };
+	const Vector3<T>* pPts1[] = { &triPts1[0], &triPts1[1], &triPts1[2] };
+	return intersectTriTri(pPts0, pPts1, tol);
+}
+
+template<class T>
+bool intersectTriTri(const Vector3<T>* triPts0[3], const Vector3<T>* triPts1[3], T tol)
 {
 	RayHit<T> hit;
-	Plane<T> triPlane0(triPts0[0], triPts0[1], triPts0[2]);
+	Plane<T> triPlane0(*triPts0[0], *triPts0[1], *triPts0[2]);
 
 	// Check 1 against 0
 	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
 
-		LineSegment<T> seg(triPts1[i], triPts1[j]);
-
-		if (seg.intersectTri(triPts0[0], triPts0[1], triPts0[2], hit, tol))
-			return true;		
+		LineSegment<T> seg(*triPts1[i], *triPts1[j]);
+		if (triPlane0.intersectLineSegment(seg, hit, tol)) {
+			if (pointInTriangle<T>(triPts0, hit.hitPt, tol))
+				return true;
+		}
 	}
 
-	Plane<T> triPlane1(triPts1[0], triPts1[1], triPts1[2]);
+	Plane<T> triPlane1(*triPts1[0], *triPts1[1], *triPts1[2]);
 	// Check 0 against 1
 	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
 
-		LineSegment<T> seg(triPts0[i], triPts0[j]);
+		LineSegment<T> seg(*triPts0[i], *triPts0[j]);
 
-		if (seg.intersectTri(triPts1[0], triPts1[1], triPts1[2], hit, tol))
-			return true;
-		
+		if (triPlane1.intersectLineSegment(seg, hit, tol)) {
+			if (pointInTriangle<T>(triPts1, hit.hitPt, tol))
+				return true;
+		}
 	}
 
 	return false;
@@ -204,16 +212,16 @@ namespace {
 			Vector3<T>
 				tri0[] = { pt, pt, pt },
 				tri1[] = { pt, pt, pt };
-			collisionTriTri<T>(tri0, tri1);
+			intersectTriTri<T>(tri0, tri1);
 
 			std::vector<Vector3<T>> pts;
-			Vector3<T> uvw;
+			Vector3<T> tuv;
 			if (pts.empty())
 				return false;
 			auto a = TRI_LERP(pts, (T)0, (T)0, (T)0);
 			a = TRI_LERP(pts.data(), (T)0, (T)0, (T)0);
 			a = BI_LERP(pt, pt, pt, pt, (T)0, (T)0);
-			return TRI_LERP_INV(pt, pts, uvw);
+			return TRI_LERP_INV(pt, pts, tuv);
 		} catch (...) {}
 		return false;
 	}
