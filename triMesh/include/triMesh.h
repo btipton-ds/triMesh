@@ -39,10 +39,6 @@ This file is part of the TriMesh library.
 #include <tm_edge.h>
 #include <tm_ray.h>
 #include <tm_vertex.h>
-#include <tm_repo.h>
-#include <tm_proxyEdges.h>
-#include <tm_proxyVertices.h>
-#include <tm_proxyTriangles.h>
 
 /*
 	All vertices and triangles are stored in a CMeshRepo. If a shared repo is desired, create one and pass it as a parameter. If not
@@ -91,11 +87,9 @@ namespace TriMesh {
 			// OPT_NEXT = 4, etc
 		};
 
-		CMesh(const CMeshRepoPtr& pRepo = std::make_shared<CMeshRepo>());
-		CMesh(const BoundingBox& bbox, const CMeshRepoPtr& pRepo = std::make_shared<CMeshRepo>());
-		CMesh(const Vector3d& min, const Vector3d& max, const CMeshRepoPtr& pRepo = std::make_shared<CMeshRepo>());
-
-		const CMeshRepoPtr& getRepo() const;
+		CMesh();
+		CMesh(const BoundingBox& bbox);
+		CMesh(const Vector3d& min, const Vector3d& max);
 
 		void reset(const BoundingBox& bbox);
 		void setEnforceManifold(bool val);
@@ -275,7 +269,6 @@ namespace TriMesh {
 		bool verifyVerts(size_t vertIdx) const;
 		bool verifyEdges(size_t edgeIdx, bool allowEmpty) const;
 
-		CMeshRepoPtr _pRepo;
 		bool _enforceManifold = true;
 		size_t _options = 0;
 		static std::atomic<size_t> _statId;
@@ -287,9 +280,9 @@ namespace TriMesh {
 		mutable std::vector<float> _glTriPoints, _glTriNormals, _glTriParams, _glTriCurvatureColors;
 		mutable std::vector<unsigned int> _glTriIndices;
 
-		ProxyEdges _edges;
-		ProxyVertices _vertices;
-		ProxyTriangles _tris;
+		std::vector<CEdge> _edges;
+		std::vector<CVertex> _vertices;
+		std::vector<Vector3i> _tris;
 
 		SearchTreePtr _pVertTree;
 		SearchTreePtr _pEdgeTree;
@@ -308,15 +301,17 @@ namespace TriMesh {
 
 	using CMeshPtr = std::shared_ptr<CMesh>;
 
-	inline CMesh::CMesh(const BoundingBox& bbox, const CMeshRepoPtr& pRepo)
-		: CMesh(bbox.getMin(), bbox.getMax(), pRepo)
+	inline CMesh::CMesh(const BoundingBox& bbox)
+		: CMesh(bbox.getMin(), bbox.getMax())
 	{
 	}
 
+	/*
 	inline const CMeshRepoPtr& CMesh::getRepo() const
 	{
 		return _pRepo;
 	}
+	*/
 
 	inline void CMesh::setEnforceManifold(bool val)
 	{

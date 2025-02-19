@@ -134,32 +134,7 @@ namespace IoUtil
 	}
 
 	template<class T>
-	void write(std::ostream& out, const ::TriMesh::ProxyVector<T>& vals)
-	{
-		std::vector<T> tmp;
-		tmp.insert(tmp.end(), vals.begin(), vals.end());
-		size_t num = tmp.size();
-		out.write((char*)&num, sizeof(num));
-		out.write((char*)tmp.data(), num * sizeof(T));
-	}
-
-	template<class T>
-	void read(std::istream& in, ::TriMesh::ProxyVector<T>& vals)
-	{
-		size_t num;
-		in.read((char*)&num, sizeof(num));
-		if (num > 0) {
-			std::vector<T> tmp;
-			tmp.resize(num);
-			in.read((char*)tmp.data(), num * sizeof(T));
-
-			for (const auto& val : tmp)
-				vals.push_back(val);
-		}
-	}
-
-	template<class T>
-	void writeObj(std::ostream& out, const ::TriMesh::ProxyVector<T>& vals, size_t meshId)
+	void writeObj(std::ostream& out, const std::vector<T>& vals, size_t meshId)
 	{
 		size_t num = vals.size();
 		out.write((char*)&num, sizeof(num));
@@ -169,7 +144,7 @@ namespace IoUtil
 	}
 
 	template<class T>
-	void readObj(std::istream& in, ::TriMesh::ProxyVector<T>& vals, size_t meshId)
+	void readObj(std::istream& in, std::vector<T>& vals, size_t meshId)
 	{
 		size_t num;
 		in.read((char*)&num, sizeof(num));

@@ -56,10 +56,10 @@ add_library (
     "src/tm_lineSegment.cpp"
     "src/tm_boundingBox.cpp" 
     "src/tm_spatialSearch.cpp"
-    "src/tm_proxyEdges.cpp"
-    "src/tm_proxyTriangles.cpp"
-    "src/tm_repo.cpp"
-    "src/tm_proxyVertices.cpp"
+    
+    
+    
+    
     "../stlReader/src/readWriteStl.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
 )

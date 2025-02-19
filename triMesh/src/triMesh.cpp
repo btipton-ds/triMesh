@@ -42,9 +42,6 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 #include <triMesh.h>
 #include <triMeshPatch.h>
 #include <MultiCoreUtil.h>
-#include <tm_proxyEdges.h>
-#include <tm_proxyTriangles.h>
-#include <tm_proxyVertices.h>
 #include <tm_ioUtil.h>
 
 using namespace std;
@@ -57,12 +54,8 @@ namespace
 }
 atomic<size_t> CMesh::_statId = 0;
 
-CMesh::CMesh(const CMeshRepoPtr& pRepo)
-	: _pRepo(pRepo)
-	, _edges(this)
-	, _vertices(this)
-	, _tris(this)
-	, _id(_statId++)
+CMesh::CMesh()
+	: _id(_statId++)
 	, _changeNumber(0)
 	, _pVertTree(make_shared<SearchTree>())
 	, _pEdgeTree(make_shared<SearchTree>())
@@ -70,12 +63,8 @@ CMesh::CMesh(const CMeshRepoPtr& pRepo)
 {
 }
 
-CMesh::CMesh(const Vector3d& min, const Vector3d& max, const CMeshRepoPtr& pRepo)
-	: _pRepo(pRepo)
-	, _edges(this)
-	, _vertices(this)
-	, _tris(this)
-	, _id(_statId++)
+CMesh::CMesh(const Vector3d& min, const Vector3d& max)
+	: _id(_statId++)
 	, _pVertTree(make_shared<SearchTree>(BoundingBox(min, max)))
 	, _pEdgeTree(make_shared<SearchTree>(BoundingBox(min, max)))
 	, _pTriTree(make_shared<SearchTree>(BoundingBox(min, max)))
@@ -1000,9 +989,9 @@ size_t CMesh::numBytes() const
 	result += _glTriCurvatureColors.capacity() * sizeof(size_t);
 	result += _glTriIndices.capacity() * sizeof(unsigned int);
 
-	result += _edges.numBytes();
-	result += _vertices.numBytes();
-	result += _tris.numBytes();
+	result += size(_edges) + _edges.capacity() * sizeof(CEdge);
+	result += size(_vertices) + _vertices.capacity() * sizeof(CVertex);
+	result += size(_tris) + _tris.capacity() * sizeof(Vector3i);
 
 	result += _pVertTree->numBytes();
 	result += _pEdgeTree->numBytes();
