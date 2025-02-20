@@ -141,9 +141,7 @@ namespace TriMesh {
 		template<class T>
 		size_t addRectPrism(const std::vector<Vector3<T>>& pts);
 
-		const BoundingBox& getBBox() const {
-			return _pVertTree->getBounds();
-		}
+		BoundingBox getBBox() const;
 
 		BoundingBox getTriBBox(size_t triIdx) const;
 		BoundingBox getEdgeBBox(size_t edgeIdx) const;

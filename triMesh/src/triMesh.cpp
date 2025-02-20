@@ -762,6 +762,14 @@ size_t CMesh::addTriangle(const Vector3i& tri) {
 	return triIdx;
 }
 
+CMesh::BoundingBox CMesh::getBBox() const {
+	BoundingBox bbox;
+	bbox.merge(_pVertTree->getBounds());
+	bbox.merge(_pEdgeTree->getBounds());
+	bbox.merge(_pTriTree->getBounds());
+	return bbox;
+}
+
 CMesh::BoundingBox CMesh::getTriBBox(size_t triIdx) const
 {
 	BoundingBox result;
