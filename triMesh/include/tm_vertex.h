@@ -45,47 +45,25 @@ struct CVertex {
 
 	size_t numBytes() const;
 
-	void write(std::ostream& out, size_t meshId) const;
-	bool read(std::istream& in, size_t meshId);
+	void write(std::ostream& out) const;
+	bool read(std::istream& in);
 
-	const std::vector<size_t>* getEdgeIndices(size_t meshId) const;
-	bool containsEdgeIndex(size_t meshId, size_t index) const;
-	void addEdgeIndex(size_t meshId, size_t index);
-	void removeEdgeIndex(size_t meshId, size_t index);
-	void changeEdgeIndex(size_t meshId, size_t oldEdgeIdx, size_t newEdgeIdx);
+	const std::vector<size_t>& getEdgeIndices() const;
+	bool containsEdgeIndex(size_t index) const;
+	void addEdgeIndex(size_t index);
+	void removeEdgeIndex(size_t index);
+	void changeEdgeIndex(size_t oldEdgeIdx, size_t newEdgeIdx);
 
-	const std::vector<size_t>* getFaceIndices(size_t meshId) const;
-	bool containsFaceIndex(size_t meshId, size_t index) const;
-	void addFaceIndex(size_t meshId, size_t index);
-	void removeFaceIndex(size_t meshId, size_t index);
-	void changeFaceIndex(size_t meshId, size_t oldFaceIdx, size_t newFaceIdx);
+	const std::vector<size_t>& getFaceIndices() const;
+	bool containsFaceIndex(size_t index) const;
+	void addFaceIndex(size_t index);
+	void removeFaceIndex(size_t index);
+	void changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx);
 
 	void dump(std::ostream& out) const;
 
 	Vector3d _pt;
-	struct TopolEntry {
-		size_t _meshId;
-		std::vector<size_t> _faceIndices, _edgeIndices;
-	};
-
-	struct Topology {
-		Topology() = default;
-		Topology(const Topology& src);
-		~Topology();
-
-		Topology& operator = (const Topology& rhs);
-
-		size_t size() const;
-		size_t capacity() const;
-		size_t numBytes() const;
-
-		TopolEntry* insert(size_t meshId);
-		const TopolEntry* find(size_t meshId) const;
-		TopolEntry* find(size_t meshId);
-
-		std::vector<TopolEntry*> _data;
-	};
-	Topology _meshTopol;
+	std::vector<size_t> _faceIndices, _edgeIndices;
 };
 
 inline CVertex::CVertex() {

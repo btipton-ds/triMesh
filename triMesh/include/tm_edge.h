@@ -64,46 +64,24 @@ public:
 #define TRI_MESH_MAX_EDGE_CONNECTED_FACES 6
 class CEdge : public CEdgeGeo {
 public:
-	struct TopolEntry {
-		size_t _meshId;
-		int _numFaces = 0;
-		size_t _faceIndices[TRI_MESH_MAX_EDGE_CONNECTED_FACES] = { stm1, stm1 };
-	};
-	struct Topology {
-		Topology() = default;
-		Topology(const Topology& src);
-		~Topology();
-
-		Topology& operator = (const Topology& rhs);
-
-		size_t size() const;
-		size_t capacity() const;
-		size_t numBytes() const;
-
-		TopolEntry* insert(size_t meshId);
-		const TopolEntry* find(size_t meshId) const;
-		TopolEntry* find(size_t meshId);
-
-		std::vector<TopolEntry*> _data;
-	};
-
 	CEdge(size_t vertIdx0 = stm1, size_t vertIdx1 = stm1);
 
 	size_t numBytes() const;
 
-	int numFaces(size_t meshId) const;
-	size_t getTriIdx(size_t meshId, int idx) const;
-	bool isAttachedToFace(size_t meshId, size_t faceIdx) const;
-	void addFaceIndex(size_t meshId, size_t faceIdx);
-	void removeFaceIndex(size_t meshId, size_t faceIdx);
-	void changeFaceIndex(size_t meshId, size_t oldFaceIdx, size_t newFaceIdx);
+	int numFaces() const;
+	size_t getTriIdx(int idx) const;
+	bool isAttachedToFace(size_t faceIdx) const;
+	void addFaceIndex(size_t faceIdx);
+	void removeFaceIndex(size_t faceIdx);
+	void changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx);
 
-	void write(std::ostream& out, size_t meshId) const;
-	bool read(std::istream& in, size_t meshId);
+	void write(std::ostream& out) const;
+	bool read(std::istream& in);
 
 	void dump(std::ostream& out) const;
 
-	Topology _meshTopol;
+	int _numFaces = 0;
+	size_t _faceIndices[TRI_MESH_MAX_EDGE_CONNECTED_FACES] = { stm1, stm1 };
 };
 
 inline size_t CEdgeGeo::otherVertIdx(size_t vertIndex) const

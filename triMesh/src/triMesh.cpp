@@ -262,8 +262,8 @@ bool CMesh::edgeReferencesTri(size_t edgeIdx, size_t triIdx) const
 {
 	if (edgeIdx < _edges.size() && triIdx < _tris.size()) {
 		const auto& edge = _edges[edgeIdx];
-		for (int i = 0; i < edge.numFaces(_id); i++) {
-			if (edge.getTriIdx(_id, i) == triIdx)
+		for (int i = 0; i < edge.numFaces(); i++) {
+			if (edge.getTriIdx(i) == triIdx)
 				return true;
 		}
 	}
@@ -273,11 +273,9 @@ bool CMesh::edgeReferencesTri(size_t edgeIdx, size_t triIdx) const
 bool CMesh::vertReferencesTri(size_t vertIdx, size_t triIdx) const
 {
 	if (vertIdx < _vertices.size() && triIdx < _tris.size()) {
-		auto pFaceIndices = _vertices[vertIdx].getFaceIndices(_id);
-		if (pFaceIndices) {
-			if (find(pFaceIndices->begin(), pFaceIndices->end(), triIdx) != pFaceIndices->end())
-				return true;
-		}
+		auto& faceIndices = _vertices[vertIdx].getFaceIndices();
+		if (find(faceIndices.begin(), faceIndices.end(), triIdx) != faceIndices.end())
+			return true;
 		return false;
 	}
 	return false;
@@ -286,11 +284,9 @@ bool CMesh::vertReferencesTri(size_t vertIdx, size_t triIdx) const
 bool CMesh::vertReferencesEdge(size_t vertIdx, size_t edgeIdx) const
 {
 	if (vertIdx < _vertices.size() && edgeIdx < _edges.size()) {
-		auto pEdgeIndices = _vertices[vertIdx].getEdgeIndices(_id);
-		if (pEdgeIndices) {
-			if (find(pEdgeIndices->begin(), pEdgeIndices->end(), edgeIdx) != pEdgeIndices->end())
-				return true;
-		}
+		auto& edgeIndices = _vertices[vertIdx].getEdgeIndices();
+		if (find(edgeIndices.begin(), edgeIndices.end(), edgeIdx) != edgeIndices.end())
+			return true;
 		return false;
 	}
 	return false;
@@ -299,7 +295,7 @@ bool CMesh::vertReferencesEdge(size_t vertIdx, size_t edgeIdx) const
 void CMesh::squeezeEdge(size_t idx)
 {
 	auto& edge = _edges[idx];
-	if (edge.numFaces(_id) != 2)
+	if (edge.numFaces() != 2)
 		return;
 
 	Vector3d dir = getEdgesLineSeg(idx).calcDir();
@@ -308,18 +304,16 @@ void CMesh::squeezeEdge(size_t idx)
 	double minDist[] = { DBL_MAX, DBL_MAX };
 	for (size_t i = 0; i < 2; i++) {
 		const auto& vert = _vertices[edge._vertIndex[i]];
-		auto pEdgeIndices = vert.getEdgeIndices(_id);
-		if (pEdgeIndices) {
-			for (size_t edgeIdx : *pEdgeIndices) {
-				if (edgeIdx == idx)
-					continue;
-				auto seg = getEdgesLineSeg(edgeIdx);
-				Vector3d v = seg.calcDir();
-				double cp = v.cross(dir).norm();
-				if (cp < minCp[i]) {
-					minCp[i] = cp;
-					minDist[i] = seg.calLength();
-				}
+		auto& edgeIndices = vert.getEdgeIndices();
+		for (size_t edgeIdx : edgeIndices) {
+			if (edgeIdx == idx)
+				continue;
+			auto seg = getEdgesLineSeg(edgeIdx);
+			Vector3d v = seg.calcDir();
+			double cp = v.cross(dir).norm();
+			if (cp < minCp[i]) {
+				minCp[i] = cp;
+				minDist[i] = seg.calLength();
 			}
 		}
 	}
@@ -334,8 +328,8 @@ void CMesh::squeezeEdge(size_t idx)
 		vertIdxToRemove = edge._vertIndex[0];
 	}
 
-	size_t faceIdx0 = edge.getTriIdx(_id, 0);
-	size_t faceIdx1 = edge.getTriIdx(_id, 1);
+	size_t faceIdx0 = edge.getTriIdx(0);
+	size_t faceIdx1 = edge.getTriIdx(1);
 
 	// Remove the larger one first. If not, the first one can cause the second to move
 	if (faceIdx1 < faceIdx0)
@@ -432,14 +426,14 @@ bool CMesh::removeTri(size_t triIdx)
 		size_t edgeIdx = findEdge(vertIdx0, vertIdx1);
 
 		auto& vert0 = _vertices[vertIdx0];
-		vert0.removeFaceIndex(_id, triIdx);
+		vert0.removeFaceIndex(triIdx);
 
 		auto& edge = _edges[edgeIdx];
-		edge.removeFaceIndex(_id, triIdx);
-		if (edge.numFaces(_id) == 0) {
+		edge.removeFaceIndex(triIdx);
+		if (edge.numFaces() == 0) {
 			auto& vert1 = _vertices[vertIdx1];
-			vert0.removeEdgeIndex(_id, edgeIdx);
-			vert1.removeEdgeIndex(_id, edgeIdx);
+			vert0.removeEdgeIndex(edgeIdx);
+			vert1.removeEdgeIndex(edgeIdx);
 			edgesToRemove.insert(edgeIdx);
 		}
 	}
@@ -480,11 +474,11 @@ bool CMesh::deleteTriFromStorage(size_t triIdx)
 			size_t edgeIdx = findEdge(vertIdx0, vertIdx1);
 
 			auto& vert0 = _vertices[vertIdx0];
-			vert0.changeFaceIndex(_id, srcIdx, triIdx);
-			vert0.changeEdgeIndex(_id, srcIdx, triIdx);
+			vert0.changeFaceIndex(srcIdx, triIdx);
+			vert0.changeEdgeIndex(srcIdx, triIdx);
 
 			auto& edge = _edges[edgeIdx];
-			edge.changeFaceIndex(_id, srcIdx, triIdx);
+			edge.changeFaceIndex(srcIdx, triIdx);
 		}
 		BoundingBox bbox = getTriBBox(triIdx);
 		_pTriTree->add(bbox, triIdx);
@@ -531,8 +525,8 @@ bool CMesh::deleteEdgeFromStorage(size_t edgeIdx)
 		size_t vertIdx1 = edge._vertIndex[1];
 		auto& vert0 = _vertices[vertIdx0];
 		auto& vert1 = _vertices[vertIdx1];
-		vert0.changeEdgeIndex(_id, srcIdx, edgeIdx);
-		vert1.changeEdgeIndex(_id, srcIdx, edgeIdx);
+		vert0.changeEdgeIndex(srcIdx, edgeIdx);
+		vert1.changeEdgeIndex(srcIdx, edgeIdx);
 
 		// Must add back to BOTH _edgeTree and _edgeToIdxMap
 		_pEdgeTree->add(srcBbox, edgeIdx);
@@ -545,9 +539,9 @@ bool CMesh::deleteEdgeFromStorage(size_t edgeIdx)
 void CMesh::mergeVertices(size_t vertIdxToKeep, size_t vertIdxToRemove)
 {
 	auto& vertToRemove = _vertices[vertIdxToRemove];
-	auto triIdsToModify = vertToRemove.getFaceIndices(_id);
+	auto& triIdsToModify = vertToRemove.getFaceIndices();
 
-	for (size_t triIdx : *triIdsToModify) {
+	for (size_t triIdx : triIdsToModify) {
 		auto tri = _tris[triIdx];
 		int vertIdxToSwap = -1;
 		for (int i = 0; i < 3; i++) {
@@ -636,14 +630,14 @@ bool CMesh::verifyVerts(size_t vertIdx) const
 			return false;
 	}
 
-	const auto& vert = _vertices[vertIdx];
+	const auto& verts = _vertices[vertIdx];
 
-	for (auto triIdx : *vert.getFaceIndices(_id)) {
+	for (auto triIdx : verts.getFaceIndices()) {
 		if (!vertReferencesTri(vertIdx, triIdx))
 			return false;
 	}
 
-	for (auto edgeIdx : *vert.getEdgeIndices(_id)) {
+	for (auto edgeIdx : verts.getEdgeIndices()) {
 		if (!vertReferencesEdge(vertIdx, edgeIdx))
 			return false;
 	}
@@ -669,10 +663,10 @@ bool CMesh::verifyEdges(size_t edgeIdx, bool allowEmpty) const
 	}
 
 	const auto& edge = _edges[edgeIdx];
-	if (edge.numFaces(_id) == 0)
+	if (edge.numFaces() == 0)
 		return allowEmpty;
 
-	if (edge.numFaces(_id) > 2)
+	if (edge.numFaces() > 2)
 		return false;
 
 	for (int i = 0; i < 2; i++) {
@@ -680,9 +674,9 @@ bool CMesh::verifyEdges(size_t edgeIdx, bool allowEmpty) const
 			return false;
 	}
 
-	for (int i = 0; i < edge.numFaces(_id); i++) {
+	for (int i = 0; i < edge.numFaces(); i++) {
 		bool found = false;
-		if (!triContainsEdge(edge.getTriIdx(_id, i), edgeIdx))
+		if (!triContainsEdge(edge.getTriIdx(i), edgeIdx))
 			return false;
 	}
 
@@ -703,8 +697,8 @@ size_t CMesh::addEdge(size_t vertIdx0, size_t vertIdx1) {
 	auto& vert0 = _vertices[vertIdx0];
 	auto& vert1 = _vertices[vertIdx1];
 
-	vert0.addEdgeIndex(_id, result);
-	vert1.addEdgeIndex(_id, result);
+	vert0.addEdgeIndex(result);
+	vert1.addEdgeIndex(result);
 
 	BoundingBox edgeBox;
 	edgeBox.merge(vert0._pt);
@@ -755,12 +749,12 @@ size_t CMesh::addTriangle(const Vector3i& tri) {
 		size_t edgeIdx = addEdge(tri[i], tri[j]); // addEdge adds itself to its vertices
 
 		auto& vert = _vertices[tri[i]];
-		vert.addFaceIndex(_id, triIdx);
+		vert.addFaceIndex(triIdx);
 
 		auto& edge = _edges[edgeIdx];
-		if (_enforceManifold && edge.numFaces(_id) >= 2)
+		if (_enforceManifold && edge.numFaces() >= 2)
 			assert(!"Non manifold mesh");
-		edge.addFaceIndex(_id, triIdx);
+		edge.addFaceIndex(triIdx);
 	}
 	triBox.grow(SAME_DIST_TOL);
 	_pTriTree->add(triBox, triIdx);
@@ -834,15 +828,15 @@ LineSegmentd CMesh::getEdgesLineSeg(size_t edgeIdx) const
 
 bool CMesh::isEdgeSharp(size_t edgeIdx, double sinEdgeAngle) const {
 	const CEdge& edge = _edges[edgeIdx];
-	if (edge.numFaces(_id) < 2)
+	if (edge.numFaces() < 2)
 		return true;
 	const auto seg = getEdgesLineSeg(edgeIdx);
 	const Vector3d edgeV = seg.calcDir();
-	if (edge.getTriIdx(_id, 0) == edge.getTriIdx(_id, 1)) {
+	if (edge.getTriIdx(0) == edge.getTriIdx(1)) {
 		cout << "Duplicated faceIndex\n";
 	}
-	const Vector3d norm0 = triUnitNormal(edge.getTriIdx(_id, 0));
-	const Vector3d norm1 = triUnitNormal(edge.getTriIdx(_id, 1));
+	const Vector3d norm0 = triUnitNormal(edge.getTriIdx(0));
+	const Vector3d norm1 = triUnitNormal(edge.getTriIdx(1));
 
 	double sinTheta = norm0.cross(norm1).norm();
 	bool isSharp = sinTheta > sinEdgeAngle;
@@ -869,8 +863,8 @@ bool CMesh::createPatches(const vector<size_t>& triIndices, double sinSharpEdgeA
 				int j = (i + 1) % 3;
 				size_t triEdgeIdx = findEdge(CEdge(tri[i], tri[j]));
 				const auto& edge = _edges[triEdgeIdx];
-				for (int j = 0; j < edge.numFaces(_id); j++) {
-					size_t nextTriIdx = edge.getTriIdx(_id, j);
+				for (int j = 0; j < edge.numFaces(); j++) {
+					size_t nextTriIdx = edge.getTriIdx(j);
 					if (triSet.contains(nextTriIdx)) {
 						stack.push_back(nextTriIdx);
 						triSet.erase(nextTriIdx);
@@ -923,7 +917,7 @@ size_t CMesh::createSharpEdgeVertexLines(size_t sharpVertIdx, set<size_t>& avail
 {
 	const double sinEdgeAngle = sin(sharpEdgeAngleRadians);
 	const auto& vert = getVert(sharpVertIdx);
-	const auto& vEdges = *vert.getEdgeIndices(_id);
+	const auto& vEdges = vert.getEdgeIndices();
 	for (size_t edgeIdx : vEdges) {
 		if (availEdges.contains(edgeIdx) && isEdgeSharp(edgeIdx, sinEdgeAngle)) {
 			vector<size_t> vertLine;
@@ -941,7 +935,7 @@ bool CMesh::addVertexToEdgeLine(vector<size_t>& vertLine, set<size_t>& availEdge
 {
 	size_t lastIdx = vertLine.back();
 	const auto& vert = getVert(lastIdx);
-	const auto& edgeIndices = *vert.getEdgeIndices(_id);
+	const auto& edgeIndices = vert.getEdgeIndices();
 	for (size_t edgeIdx : edgeIndices) {
 		if (availEdges.contains(edgeIdx) && isEdgeSharp(edgeIdx, sinEdgeAngle)) {
 			const auto& edge = getEdge(edgeIdx);
@@ -972,7 +966,7 @@ size_t CMesh::numTris() const {
 size_t CMesh::numLaminarEdges() const {
 	size_t result = 0;
 	for (const auto& edge : _edges) {
-		if (edge.numFaces(_id) == 1)
+		if (edge.numFaces() == 1)
 			result++;
 	}
 	return result;
@@ -1523,15 +1517,15 @@ void CMesh::calGaps(bool multiCore) const
 double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 {
 	const auto& edge = _edges[edgeIdx];
-	if (edge.numFaces(_id) != 2)
+	if (edge.numFaces() != 2)
 		return 0;
 
 	auto seg = getEdgesLineSeg(edgeIdx);
 	const Vector3d& origin = seg._pts[0];
 	Vector3d vEdge = seg.calcDir();
 
-	Vector3d norm0 = triUnitNormal(edge.getTriIdx(_id, 0));
-	Vector3d norm1 = triUnitNormal(edge.getTriIdx(_id, 1));
+	Vector3d norm0 = triUnitNormal(edge.getTriIdx(0));
+	Vector3d norm1 = triUnitNormal(edge.getTriIdx(1));
 
 	double magCp = norm0.cross(norm1).norm();
 	if (magCp > sinEdgeAngle)
@@ -1540,8 +1534,8 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 		return 0;
 
 	Planed edgePlane(origin, vEdge);
-	size_t vertIdx0 = getOtherVertIdx(edge, edge.getTriIdx(_id, 0));
-	size_t vertIdx1 = getOtherVertIdx(edge, edge.getTriIdx(_id, 1));
+	size_t vertIdx0 = getOtherVertIdx(edge, edge.getTriIdx(0));
+	size_t vertIdx1 = getOtherVertIdx(edge, edge.getTriIdx(1));
 
 	// Both edge vertices AND each of the opposite vertices lie on the actual surface
 				// Project the points to a plane perpendicular to the edge and fit a circle through it
@@ -1797,7 +1791,7 @@ Vector3d CMesh::vertUnitNormal(size_t vertIdx) const
 	Vector3d result(0, 0, 0);
 
 	const auto& vert = _vertices[vertIdx];
-	const auto& tris = *vert.getFaceIndices(_id);
+	const auto& tris = vert.getFaceIndices();
 	for (size_t triIdx : tris) {
 		result += triUnitNormal(triIdx);
 	}
@@ -2115,7 +2109,7 @@ void CMesh::squeezeSkinnyTriangles(double minAngleDegrees)
 	for (size_t vertIdx = 0; vertIdx < _vertices.size(); vertIdx++) {
 		auto& vert = _vertices[vertIdx];
 
-		const auto& vertFaces = *vert.getFaceIndices(_id);
+		const auto& vertFaces = vert.getFaceIndices();
 		if (vertFaces.size() <= 10)
 			continue;
 
@@ -2149,7 +2143,7 @@ bool CMesh::isVertConvex(size_t vIdx, bool& isConvex, LineSegmentd& axis) const
 	Vector3d perimeterCtr(0, 0, 0);
 	double perimeter = 0;
 	const auto& vert = getVert(vIdx);
-	const auto& triIndices = *vert.getFaceIndices(_id);
+	const auto& triIndices = vert.getFaceIndices();
 	for (size_t triIdx : triIndices) {
 		const auto& tri = getTri(triIdx);
 		bool first = true;
@@ -2366,8 +2360,8 @@ void CMesh::write(ostream& out) const {
 
 	out.write((char*)&_enforceManifold, sizeof(_enforceManifold));
 
-	IoUtil::writeObj(out, _vertices, _id);
-	IoUtil::writeObj(out, _edges, _id);
+	IoUtil::writeObj(out, _vertices);
+	IoUtil::writeObj(out, _edges);
 	IoUtil::write(out, _tris);
 }
 
@@ -2377,8 +2371,8 @@ bool CMesh::read(istream& in) {
 
 	in.read((char*)&_enforceManifold, sizeof(_enforceManifold));
 
-	IoUtil::readObj(in, _vertices, _id);
-	IoUtil::readObj(in, _edges, _id);
+	IoUtil::readObj(in, _vertices);
+	IoUtil::readObj(in, _edges);
 	IoUtil::read(in, _tris);
 
 	BoundingBox bbox;
@@ -2421,7 +2415,7 @@ bool CMesh::testSqueezeEdge(size_t idx)
 	size_t worstVertIdx = -1, maxEdges = 0;
 	for (size_t i = 0; i < numVertices(); i++) {
 		const auto& vert = getVert(i);
-		const auto& vertEdgeIndices = *vert.getEdgeIndices(_id);
+		const auto& vertEdgeIndices = vert.getEdgeIndices();
 		if (vertEdgeIndices.size() > maxEdges) {
 			maxEdges = vertEdgeIndices.size();
 			worstVertIdx = i;
@@ -2430,7 +2424,7 @@ bool CMesh::testSqueezeEdge(size_t idx)
 
 	map<double, vector<size_t>> aspectRatioToShortEdgeIdxMap; // Using a vector for indices is overkill, but there is a remote chance of a duplicated aspect ratio
 	auto& vert = getVert(worstVertIdx);
-	auto& vertFaces = *vert.getFaceIndices(_id);
+	auto& vertFaces = vert.getFaceIndices();
 
 	for (size_t faceIdx : vertFaces) {
 		size_t oppositeEdgeIdx;

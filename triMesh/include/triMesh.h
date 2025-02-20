@@ -176,14 +176,14 @@ namespace TriMesh {
 		size_t rayCast(const Rayd& ray, std::vector<RayHitd>& hits, bool biDir = true) const;
 		size_t rayCast(const LineSegmentd& seg, std::vector<RayHitd>& hits, double tol = 1.0e-6) const;
 
-		size_t findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
-		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findVerts(const BoundingBox& bbox, std::vector<SearchEntry>& vertIndices, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+		size_t findVerts(const BoundingBox& bbox, std::vector<size_t>& vertIndices, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 
-		size_t findEdges(const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
-		size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findEdges(const BoundingBox& bbox, std::vector<SearchEntry>& edgeIndices, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+		size_t findEdges(const BoundingBox& bbox, std::vector<size_t>& edgeIndices, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 
-		size_t findTris(const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
-		size_t findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
+		size_t findTris(const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+		size_t findTris(const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 
 		Vector3d triCentroid(size_t triIdx) const;
 		Vector3d triUnitNormal(size_t triIdx) const;

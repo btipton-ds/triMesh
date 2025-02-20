@@ -57,6 +57,7 @@ public:
 	bool intersects(const Ray<SCALAR_TYPE>& ray, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const;
 	bool intersects(const LineSegment<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const;
 	bool intersects(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, int skipAxis) const;
+	bool intersects(const CBoundingBox3D& otherBox, SCALAR_TYPE tol) const;
 
 	bool intersectsOrContains(const CBoundingBox3D& otherBox, SCALAR_TYPE tol) const;
 	bool intersectsOrContains(const LineSegment<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const;

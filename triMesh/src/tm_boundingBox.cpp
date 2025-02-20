@@ -145,6 +145,12 @@ bool CBoundingBox3D<SCALAR_TYPE>::contains(const CBoundingBox3D& other, SCALAR_T
 }
 
 template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox, SCALAR_TYPE tol) const
+{
+	return intersectsOrContains(otherBox, tol) && !contains(otherBox, tol);
+}
+
+template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const
 {
 	vector<POINT_TYPE> pts;

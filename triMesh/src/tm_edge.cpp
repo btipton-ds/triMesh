@@ -84,43 +84,32 @@ size_t CEdge::numBytes() const
 {
 	size_t result = sizeof(CEdge);
 
-	result += _meshTopol.size() * sizeof(pair<size_t, TopolEntry>);
-
 	return result;
 }
 
-int CEdge::numFaces(size_t meshId) const
+int CEdge::numFaces() const
 {
-	auto pTopol = _meshTopol.find(meshId);
-	if (pTopol)
-		return pTopol->_numFaces;
-
-	return 0;
+	return _numFaces;
 }
 
-size_t CEdge::getTriIdx(size_t meshId, int idx) const
+size_t CEdge::getTriIdx(int idx) const
 {
-	auto pTopol = _meshTopol.find(meshId);
-	if (pTopol && idx < pTopol->_numFaces)
-		return pTopol->_faceIndices[idx];
+	if (idx < _numFaces)
+		return _faceIndices[idx];
 
 	return -1;
 }
 
-bool CEdge::isAttachedToFace(size_t meshId, size_t faceIdx) const
+bool CEdge::isAttachedToFace(size_t faceIdx) const
 {
-	auto pTopol = _meshTopol.find(meshId);
-	if (pTopol) {
-		const auto& r = *pTopol;
-		for (int i = 0; i < r._numFaces; i++) {
-			if (r._faceIndices[i] == faceIdx)
-				return true;
-		}
+	for (int i = 0; i < _numFaces; i++) {
+		if (_faceIndices[i] == faceIdx)
+			return true;
 	}
 	return false;
 }
 
-void CEdge::write(std::ostream& out, size_t meshId) const
+void CEdge::write(std::ostream& out) const
 {
 	uint8_t version = 0;
 	out.write((char*) &version, sizeof(version));
@@ -128,16 +117,11 @@ void CEdge::write(std::ostream& out, size_t meshId) const
 	out.write((char*)&_vertIndex[0], sizeof(size_t));
 	out.write((char*)&_vertIndex[1], sizeof(size_t));
 
-	auto pTopol = _meshTopol.find(meshId);
-	if (pTopol) {
-
-		auto& rec = *pTopol;
-		out.write((char*) &rec._numFaces, sizeof(int));
-		out.write((char*) rec._faceIndices, rec._numFaces * sizeof(size_t));
-	}
+	out.write((char*)&_numFaces, sizeof(int));
+	out.write((char*)_faceIndices, _numFaces * sizeof(size_t));
 }
 
-bool CEdge::read(std::istream& in, size_t meshId)
+bool CEdge::read(std::istream& in)
 {
 	uint8_t version = -1;
 	in.read((char*)&version, sizeof(version));
@@ -145,61 +129,45 @@ bool CEdge::read(std::istream& in, size_t meshId)
 	in.read((char*)&_vertIndex[0], sizeof(size_t));
 	in.read((char*)&_vertIndex[1], sizeof(size_t));
 
-	auto pTopol = _meshTopol.find(meshId);
-	if (!pTopol)
-		pTopol = _meshTopol.insert(meshId);
-
-	auto& rec = *pTopol;
-	in.read((char*)&rec._numFaces, sizeof(int));
-	in.read((char*)rec._faceIndices, rec._numFaces * sizeof(size_t));
+	in.read((char*)&_numFaces, sizeof(int));
+	in.read((char*)_faceIndices, _numFaces * sizeof(size_t));
 
 	return true;
 }
 
-void CEdge::addFaceIndex(size_t meshId, size_t faceIdx) {
-	auto pTopol = _meshTopol.find(meshId);
-	if (!pTopol)
-		pTopol = _meshTopol.insert(meshId);
-	auto& r = *pTopol;
-	for (int i = 0; i < r._numFaces; i++) {
-		if (r._faceIndices[i] == faceIdx)
+void CEdge::addFaceIndex(size_t faceIdx) {
+	for (int i = 0; i < _numFaces; i++) {
+		if (_faceIndices[i] == faceIdx)
 			return;
 	}
-	if (r._numFaces < TRI_MESH_MAX_EDGE_CONNECTED_FACES) {
-		r._faceIndices[r._numFaces++] = faceIdx;
+
+	if (_numFaces < TRI_MESH_MAX_EDGE_CONNECTED_FACES) {
+		_faceIndices[_numFaces++] = faceIdx;
 	}
 }
 
-void CEdge::removeFaceIndex(size_t meshId, size_t faceIdx)
+void CEdge::removeFaceIndex(size_t faceIdx)
 {
-	auto pTopol = _meshTopol.find(meshId);
-	if (pTopol) {
-		auto& r = *pTopol;
-		for (int i = 0; i < r._numFaces; i++) {
-			if (r._faceIndices[i] == faceIdx) {
-				if (i == 0) {
-					r._faceIndices[i] = r._faceIndices[i + 1];
-				}
-				r._numFaces--;
-				r._faceIndices[1] = -1;
-				if (r._numFaces == 0)
-					r._faceIndices[0] = -1;
-				return;
+	for (int i = 0; i < _numFaces; i++) {
+		if (_faceIndices[i] == faceIdx) {
+			if (i == 0) {
+				_faceIndices[i] = _faceIndices[i + 1];
 			}
+			_numFaces--;
+			_faceIndices[1] = -1;
+			if (_numFaces == 0)
+				_faceIndices[0] = -1;
+			return;
 		}
 	}
 }
 
-void CEdge::changeFaceIndex(size_t meshId, size_t oldFaceIdx, size_t newFaceIdx)
+void CEdge::changeFaceIndex(size_t oldFaceIdx, size_t newFaceIdx)
 {
-	auto pTopol = _meshTopol.find(meshId);
-	if (pTopol) {
-		auto& r = *pTopol;
-		for (int i = 0; i < r._numFaces; i++) {
-			if (r._faceIndices[i] == oldFaceIdx) {
-				r._faceIndices[i] = newFaceIdx;
-				return;
-			}
+	for (int i = 0; i < _numFaces; i++) {
+		if (_faceIndices[i] == oldFaceIdx) {
+			_faceIndices[i] = newFaceIdx;
+			return;
 		}
 	}
 }
@@ -212,108 +180,4 @@ void CEdge::dump(std::ostream& out) const {
 	}
 */
 	out << ") }\n";
-}
-
-CEdge::Topology::Topology(const Topology& src)
-{
-	for (const TopolEntry* p : src._data) {
-		_data.push_back(new TopolEntry(*p));
-	}
-}
-
-CEdge::Topology::~Topology()
-{
-	for (size_t i = 0; i < _data.size(); i++) {
-		delete _data[i];
-		_data[i] = nullptr;
-	}
-}
-
-CEdge::Topology& CEdge::Topology::operator =(const Topology& src)
-{
-	for (size_t i = 0; i < _data.size(); i++) {
-		delete _data[i];
-		_data[i] = 0;
-	}
-	_data.clear();
-
-	for (const TopolEntry* p : src._data) {
-		_data.push_back(new TopolEntry(*p));
-	}
-
-	return *this;
-}
-
-size_t CEdge::Topology::size() const
-{
-	return _data.size();
-}
-
-size_t CEdge::Topology::capacity() const
-{
-	return _data.capacity();
-}
-
-size_t CEdge::Topology::numBytes() const
-{
-	size_t result = 0;
-
-	result += _data.capacity() * sizeof(TopolEntry);
-
-	return result;
-}
-
-CEdge::TopolEntry* CEdge::Topology::insert(size_t meshId)
-{
-
-	TopolEntry* pEntry = find(meshId);
-	if (pEntry)
-		return pEntry;
-	pEntry = new TopolEntry;
-	pEntry->_meshId = meshId;
-	_data.push_back(pEntry);
-	std::sort(_data.begin(), _data.end(), [](const TopolEntry* pLhs, const TopolEntry* pRhs)->bool {
-		return pLhs->_meshId < pRhs->_meshId;
-	});
-
-	return pEntry;
-}
-
-const CEdge::TopolEntry* CEdge::Topology::find(size_t meshId) const
-{
-	size_t min = 0, max = _data.size() - 1, idx = _data.size() / 2;
-	while (idx < _data.size()) {
-		if (min == max) {
-			if (_data[idx]->_meshId == meshId)
-				return _data[idx];
-			break;
-		} else if (_data[idx]->_meshId < meshId) {
-			max = idx;
-			idx = (min + max) / 2;
-		} else if (_data[idx]->_meshId > meshId) {
-			min = idx;
-			idx = (min + max) / 2;
-		}
-	}
-
-	return nullptr;
-}
-
-CEdge::TopolEntry* CEdge::Topology::find(size_t meshId)
-{
-	size_t min = 0, max = _data.size() - 1, idx = _data.size() / 2;
-	while (idx < _data.size()) {
-		if (min == max) {
-			if (_data[idx]->_meshId == meshId)
-				return _data[idx];
-			break;
-		} else if (_data[idx]->_meshId < meshId) {
-			max = idx;
-			idx = (min + max) / 2;
-		} else if (_data[idx]->_meshId > meshId) {
-			min = idx;
-			idx = (min + max) / 2;
-		}
-	}
-	return nullptr;
 }

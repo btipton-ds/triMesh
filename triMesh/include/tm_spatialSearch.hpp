@@ -311,8 +311,13 @@ void CSSB_DCL::split(int depth) {
 CSSB_TMPL
 inline bool CSSB_DCL::boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType)
 {
-	if (testType == BoxTestType::Contains)
-		return lhs.contains(rhs, (SCALAR_TYPE)SAME_DIST_TOL);
-	else
-		return lhs.intersectsOrContains(rhs, (SCALAR_TYPE)SAME_DIST_TOL);
+	switch (testType) {
+		default:
+		case BoxTestType::IntersectsOrContains:
+			return lhs.intersectsOrContains(rhs, (SCALAR_TYPE)SAME_DIST_TOL);
+		case BoxTestType::Contains:
+			return lhs.contains(rhs, (SCALAR_TYPE)SAME_DIST_TOL);
+		case BoxTestType::Intersects:
+			return lhs.intersects(rhs, (SCALAR_TYPE)SAME_DIST_TOL);
+	}
 }

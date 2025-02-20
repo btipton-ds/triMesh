@@ -49,7 +49,7 @@ public:
 	using SpatialSearchBasePtr = CSpatialSearchBasePtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>;
 
 	enum class BoxTestType {
-		Contains, Intersects
+		Contains, Intersects, IntersectsOrContains
 	};
 
 	struct Entry {
@@ -75,8 +75,8 @@ public:
 	size_t numBytes() const;
 	const BOX_TYPE& getBounds() const;
 
-	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::Intersects) const;
-	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::Intersects) const;
+	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
 	SpatialSearchBasePtr getSubTree(const BOX_TYPE& bbox) const;
 
