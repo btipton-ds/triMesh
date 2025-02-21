@@ -219,7 +219,7 @@ bool CReadWriteSTL::readBinary(std::istream& in, std::vector<Vector3f>& points)
 	return true;
 }
 
-bool CReadWriteSTL::write(TriMesh::CMeshPtr& pMesh, bool binary, const std::string& path, const std::string& filename)
+bool CReadWriteSTL::write(const TriMesh::CMeshPtr& pMesh, bool binary, const std::string& path, const std::string& filename)
 {
 	ofstream out(path + filename);
 	std::vector<Vector3f> pts;
@@ -231,7 +231,7 @@ bool CReadWriteSTL::write(TriMesh::CMeshPtr& pMesh, bool binary, const std::stri
 		return writeText(out, pts);
 }
 
-bool CReadWriteSTL::write(TriMesh::CMeshPtr& pMesh, bool binary, const std::wstring& path, const std::wstring& filename)
+bool CReadWriteSTL::write(const TriMesh::CMeshPtr& pMesh, bool binary, const std::wstring& path, const std::wstring& filename)
 {
 	ofstream out(path + filename);
 	std::vector<Vector3f> pts;

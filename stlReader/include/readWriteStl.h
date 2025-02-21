@@ -44,8 +44,8 @@ public:
 
 	bool read(const std::string& path, const std::string& filename);
 	bool read(const std::wstring& path, const std::wstring& filename);
-	bool write(TriMesh::CMeshPtr& pMesh, bool binary, const std::string& path, const std::string& filename);
-	bool write(TriMesh::CMeshPtr& pMesh, bool binary, const std::wstring& path, const std::wstring& filename);
+	bool write(const TriMesh::CMeshPtr& pMesh, bool binary, const std::string& path, const std::string& filename);
+	bool write(const TriMesh::CMeshPtr& pMesh, bool binary, const std::wstring& path, const std::wstring& filename);
 
 	const std::shared_ptr<TriMesh::CMesh>& getMeshPtr() const {
 		return _meshPtr;

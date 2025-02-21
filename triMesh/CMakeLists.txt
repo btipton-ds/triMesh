@@ -22,7 +22,7 @@ if (UNIX)
     "/usr/include/eigen3/"
     "../../utilities/threads/include"
     "../triMesh/include" 
-    "../stlReader/include" 
+    "../stlReader/include"
 
     )
     set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")

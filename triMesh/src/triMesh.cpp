@@ -1871,6 +1871,46 @@ void CMesh::splitLongTris(double maxEdgeLength)
 	}
 }
 
+CMeshConstPtr CMesh::splitWithPlane(const Planed& splitPlane, double tol) const
+{
+	CMeshPtr result = make_shared<CMesh>(getBBox());
+
+	for (size_t triIdx = 0; triIdx < _tris.size(); triIdx++) {
+		const auto& tri = _tris[triIdx];
+
+		Vector3d pts[] = {
+			getVert(tri[0])._pt,
+			getVert(tri[1])._pt,
+			getVert(tri[2])._pt,
+		}, splitPts0[3], splitPts1[3], splitPts2[3];
+
+		if (triIdx == 155) {
+			int dbgBreak = 1;
+		}
+		int numNewTris = triangleSplitWithPlane(pts, splitPlane, splitPts0, splitPts1, splitPts2, tol);
+		switch (numNewTris) {
+		default:
+		case 0:
+			result->addTriangle(pts);
+			break;
+		case 2:
+			result->addTriangle(splitPts0);
+			result->addTriangle(splitPts1);
+			break;
+
+		case 3:
+			result->addTriangle(splitPts0);
+			result->addTriangle(splitPts1);
+			result->addTriangle(splitPts2);
+			break;
+		}
+	}
+
+	if (result->numTris() > numTris())
+		return result;
+	return shared_from_this();
+}
+
 void CMesh::addTriangle_d(const Vector3d& tpt0, const Vector3d& tpt1, const Vector3d& tpt2, const Vector3d& srcNorm, double maxEdgeLength)
 {
 	const double paramTol = 1.0e-9;

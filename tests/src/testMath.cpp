@@ -306,14 +306,9 @@ bool testPointRotation()
 	return true;
 }
 template<class T>
-bool testTriangleSplitWithPlane() {
+bool testTriangleSplitWithPlane0(Vector3<T> triPts[3]) {
 	const auto tol = sameDistTol<T>();
 
-	Vector3<T> triPts[] = {
-		Vector3<T>(0, 0, 0),
-		Vector3<T>(4, 0, 0),
-		Vector3<T>(2, 2, 0),
-	};
 	Vector3<T> splitTri0[3], splitTri1[3], splitTri2[3];
 
 	int numNewTris;
@@ -355,6 +350,23 @@ bool testTriangleSplitWithPlane() {
 	TEST_TRUE(tolerantEquals(splitTri2[0], Vector3<T>(1, 0, 0), tol), "Check vertex 2, 0 B");
 	TEST_TRUE(tolerantEquals(splitTri2[1], Vector3<T>(2, 2, 0), tol), "Check vertex 2, 1 B");
 	TEST_TRUE(tolerantEquals(splitTri2[2], Vector3<T>(1, 1, 0), tol), "Check vertex 2, 2 B");
+
+	return true;
+}
+
+template<class T>
+bool testTriangleSplitWithPlane() {
+	Vector3<T> pt0(0, 0, 0);
+	Vector3<T> pt1(4, 0, 0);
+	Vector3<T> pt2(2, 2, 0);
+
+	Vector3<T> triPts0[] = { pt0, pt1, pt2 };
+	Vector3<T> triPts1[] = { pt1, pt2, pt0 };
+	Vector3<T> triPts2[] = { pt2, pt0, pt1 };
+
+	TEST_TRUE(testTriangleSplitWithPlane0<T>(triPts0), "testTriangleSplitWithPlane 0 1 2");
+	TEST_TRUE(testTriangleSplitWithPlane0<T>(triPts1), "testTriangleSplitWithPlane 1 2 0");
+	TEST_TRUE(testTriangleSplitWithPlane0<T>(triPts2), "testTriangleSplitWithPlane 2 0 1");
 
 	cout << "testTriangleSplitWithPlane passed\n";
 	return true;

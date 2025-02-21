@@ -131,6 +131,7 @@ namespace TriMesh {
 		size_t addQuad(const Vector3<T> pts[4], T maxEdgeLength = -1);
 
 		void splitLongTris(double maxEdgeLength);
+		CMeshConstPtr splitWithPlane(const Planed& splitPlane, double tol = sameDistTol<double>()) const;
 		void squeezeSkinnyTriangles(double minAngleDegrees);
 		void squeezeEdge(size_t idx);
 		CMeshPtr fix(double maxEdgeLength);

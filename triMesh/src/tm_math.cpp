@@ -100,8 +100,8 @@ int triangleSplitWithPlane(Vector3<T> const triPts[3], const Plane<T>& plane,
 	Vector3<T> triPts0[3], Vector3<T> triPts1[3], Vector3<T> triPts2[3], T tol)
 {
 	int numSplits = 0;
-	Vector3<T> splitPts[3];
-	int splitLegIndices[3];
+	Vector3<T> splitPts[2];
+	int splitLegIndices[2];
 	int numIntersectVertIndices = 0;
 	int intersectVertIndices[3];
 
@@ -137,9 +137,7 @@ int triangleSplitWithPlane(Vector3<T> const triPts[3], const Plane<T>& plane,
 
 	// The found check will screen out a leg which lies on the plane.
 
-	if (numIntersectVertIndices >= 2)
-		return 0;
-	else if (numSplits == 1 && numIntersectVertIndices == 1) {
+	if (numSplits == 1 && numIntersectVertIndices == 1) {
 		// The plane splits the triangle and a vertex lies on the plane
 
 		int vertIdx = intersectVertIndices[0];
@@ -153,25 +151,45 @@ int triangleSplitWithPlane(Vector3<T> const triPts[3], const Plane<T>& plane,
 		return 2;
 	} else if (numSplits == 2) {
 		// The plane splits two legs
-		int minIdx = 4;
-		for (int i = 0; i < 2; i++) {
-			if (splitLegIndices[i] < minIdx)
-				minIdx = splitLegIndices[i];
+		int triIdx0;
+		if (0 == splitLegIndices[0] && 2 == splitLegIndices[1]) {
+			triIdx0 = 0;
+		} else if (0 == splitLegIndices[0] && 1 == splitLegIndices[1]) {
+			triIdx0 = 1;
+		} else {
+			triIdx0 = 2;
 		}
 
-		int idx0 = (splitLegIndices[minIdx] + 1) % 3;
-		int idx1 = (idx0 + 1) % 3;
+		int triIdx1, triIdx2, ptIdx0, ptIdx1;
+
+		triIdx1 = (triIdx0 + 1) % 3;
+		triIdx2 = (triIdx1 + 1) % 3;
+
+		switch (triIdx0) {
+			case 0:
+				ptIdx0 = 0;
+				ptIdx1 = 1;
+				break;
+			case 1:
+				ptIdx0 = 1;
+				ptIdx1 = 0;
+				break;
+			case 2:
+				ptIdx0 = 1;
+				ptIdx1 = 0;
+				break;
+		}
 
 		Vector3<T> quadPts[4];
-		quadPts[0] = splitPts[minIdx];
-		quadPts[1] = triPts[idx0];
-		quadPts[2] = triPts[idx1];
-		quadPts[3] = splitPts[(minIdx + 1) % 3];
+		quadPts[0] = splitPts[ptIdx0];
+		quadPts[1] = triPts[triIdx1];
+		quadPts[2] = triPts[triIdx2];
+		quadPts[3] = splitPts[ptIdx1];
 
 		// Make the triangle
-		triPts0[0] = triPts[minIdx];
-		triPts0[1] = splitPts[0];
-		triPts0[2] = splitPts[1];
+		triPts0[0] = triPts[triIdx0];
+		triPts0[1] = splitPts[ptIdx0];
+		triPts0[2] = splitPts[ptIdx1];
 
 		// make the two triangles forming the quad
 		triPts1[0] = quadPts[0];
