@@ -41,7 +41,7 @@ using namespace std;
 
 template<class T>
 bool testDistToPlane() {
-	const T tol = sameDistTolTempl<T>();
+	const T tol = sameDistTol<T>();
 	Plane<T> plane(Vector3<T>(0, 0, 0), Vector3<T>(0, 0, 1));
 	plane.makePrincipal();
 	Vector3<T> pt0(0, 0, 1);
@@ -57,7 +57,7 @@ bool testDistToPlane() {
 
 template<class T>
 bool testRayPlaneIntersect() {
-	const T tol = sameDistTolTempl<T>();
+	const T tol = sameDistTol<T>();
 	Plane<T> plane0(Vector3<T>(0, 0, 0), Vector3<T>(0, 0, 1));
 	plane0.makePrincipal();
 	Vector3<T> dir0(-1, -1, -1);
@@ -84,7 +84,7 @@ bool testRayPlaneIntersect() {
 
 template<class T>
 bool testRayTriIntersectVerts() {
-	const T tol = sameDistTolTempl<T>();
+	const T tol = sameDistTol<T>();
 
 	Vector3<T> pt0(0, 0, 0);
 	Vector3<T> pt1(1, 0, 0);
@@ -141,7 +141,7 @@ bool testRayTriIntersectVerts() {
 
 template<class T>
 bool testRayTriIntersectEdges() {
-	const T tol = sameDistTolTempl<T>();
+	const T tol = sameDistTol<T>();
 
 	Vector3<T> pt0(0, 0, 0);
 	Vector3<T> pt1(1, 0, 0);
@@ -165,7 +165,7 @@ bool testRayTriIntersectEdges() {
 
 template<class T>
 bool testRayTriIntersect() {
-	const T tol = sameDistTolTempl<T>();
+	const T tol = sameDistTol<T>();
 
 	Vector3<T> pt0(0, 0, 0);
 	Vector3<T> pt1(1, 0, 0);
@@ -305,6 +305,60 @@ bool testPointRotation()
 	cout << "testPointRotation passed\n";
 	return true;
 }
+template<class T>
+bool testTriangleSplitWithPlane() {
+	const auto tol = sameDistTol<T>();
+
+	Vector3<T> triPts[] = {
+		Vector3<T>(0, 0, 0),
+		Vector3<T>(4, 0, 0),
+		Vector3<T>(2, 2, 0),
+	};
+	Vector3<T> splitTri0[3], splitTri1[3], splitTri2[3];
+
+	int numNewTris;
+
+	Vector3<T> norm(1, 0, 0);
+
+	numNewTris = triangleSplitWithPlane(triPts, Plane<T>(Vector3<T>(-1, 0, 0), norm), splitTri0, splitTri1, splitTri2);
+	TEST_EQUAL(numNewTris, 0, "Check num result triangles is 0");
+
+	numNewTris = triangleSplitWithPlane(triPts, Plane<T>(Vector3<T>(5, 0, 0), norm), splitTri0, splitTri1, splitTri2);
+	TEST_EQUAL(numNewTris, 0, "Check num result triangles is 0");
+
+	numNewTris = triangleSplitWithPlane(triPts, Plane<T>(Vector3<T>(0, 0, 0), norm), splitTri0, splitTri1, splitTri2);
+	TEST_EQUAL(numNewTris, 0, "Check num result triangles is 0");
+
+	numNewTris = triangleSplitWithPlane(triPts, Plane<T>(Vector3<T>(4, 0, 0), norm), splitTri0, splitTri1, splitTri2);
+	TEST_EQUAL(numNewTris, 0, "Check num result triangles is 0");
+
+	numNewTris = triangleSplitWithPlane(triPts, Plane<T>(Vector3<T>(2, 0, 0), norm), splitTri0, splitTri1, splitTri2);
+	TEST_EQUAL(numNewTris, 2, "Check num result triangles is 2");
+	TEST_TRUE(tolerantEquals(splitTri0[0], Vector3<T>(2, 2, 0), tol), "Check vertex 0, 0 A");
+	TEST_TRUE(tolerantEquals(splitTri0[1], Vector3<T>(0, 0, 0), tol), "Check vertex 0, 1 A");
+	TEST_TRUE(tolerantEquals(splitTri0[2], Vector3<T>(2, 0, 0), tol), "Check vertex 0, 2 A");
+
+	TEST_TRUE(tolerantEquals(splitTri1[0], Vector3<T>(2, 2, 0), tol), "Check vertex 1, 0 A");
+	TEST_TRUE(tolerantEquals(splitTri1[1], Vector3<T>(2, 0, 0), tol), "Check vertex 1, 1 A");
+	TEST_TRUE(tolerantEquals(splitTri1[2], Vector3<T>(4, 0, 0), tol), "Check vertex 1, 2 A");
+
+	numNewTris = triangleSplitWithPlane(triPts, Plane<T>(Vector3<T>(1, 0, 0), norm), splitTri0, splitTri1, splitTri2);
+	TEST_EQUAL(numNewTris, 3, "Check num result triangles is 3");
+	TEST_TRUE(tolerantEquals(splitTri0[0], Vector3<T>(0, 0, 0), tol), "Check vertex 0, 0 B");
+	TEST_TRUE(tolerantEquals(splitTri0[1], Vector3<T>(1, 0, 0), tol), "Check vertex 0, 1 B");
+	TEST_TRUE(tolerantEquals(splitTri0[2], Vector3<T>(1, 1, 0), tol), "Check vertex 0, 2 B");
+
+	TEST_TRUE(tolerantEquals(splitTri1[0], Vector3<T>(1, 0, 0), tol), "Check vertex 1, 0 B");
+	TEST_TRUE(tolerantEquals(splitTri1[1], Vector3<T>(4, 0, 0), tol), "Check vertex 1, 1 B");
+	TEST_TRUE(tolerantEquals(splitTri1[2], Vector3<T>(2, 2, 0), tol), "Check vertex 1, 2 B");
+
+	TEST_TRUE(tolerantEquals(splitTri2[0], Vector3<T>(1, 0, 0), tol), "Check vertex 2, 0 B");
+	TEST_TRUE(tolerantEquals(splitTri2[1], Vector3<T>(2, 2, 0), tol), "Check vertex 2, 1 B");
+	TEST_TRUE(tolerantEquals(splitTri2[2], Vector3<T>(1, 1, 0), tol), "Check vertex 2, 2 B");
+
+	cout << "testTriangleSplitWithPlane passed\n";
+	return true;
+}
 
 template<class T>
 bool testTempl() {
@@ -316,6 +370,7 @@ bool testTempl() {
 	TEST_TRUE(testRayTriIntersectEdges<T>(), "testRayTriIntersectEdges");
 	TEST_TRUE(testRayTriIntersect<T>(), "testRayTriIntersect");
 	TEST_TRUE(testRayTriIntersectVerts<T>(), "testRayTriIntersectVerts");
+	TEST_TRUE(testTriangleSplitWithPlane<T>(), "testTriangleSplitWithPlane");
 
 	return true;
 }

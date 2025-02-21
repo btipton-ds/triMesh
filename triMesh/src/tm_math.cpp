@@ -102,41 +102,54 @@ int triangleSplitWithPlane(Vector3<T> const triPts[3], const Plane<T>& plane,
 	int numSplits = 0;
 	Vector3<T> splitPts[3];
 	int splitLegIndices[3];
-	bool found = false;
-	int dupPtIdx = -1;
+	int numIntersectVertIndices = 0;
+	int intersectVertIndices[3];
 
 	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
 		RayHit<T> hit;
-		if (plane.intersectLine(triPts[i], triPts[j], hit, tol)) {
-			for (int k = 0; k < numSplits; k++) {
-				if (tolerantEquals(splitPts[k], hit.hitPt, tol)) {
-					dupPtIdx = k;
-					found = true;
-					break;
+		LineSegment<T> seg(triPts[i], triPts[j]);
+		if (plane.intersectLineSegment(seg, hit, tol)) {
+			if (hit.dist < tol) {
+				// This vertex lies on the plane
+				intersectVertIndices[numIntersectVertIndices++] = i;
+			} else {
+				for (int k = 0; k < numIntersectVertIndices; k++) {
+					if (intersectVertIndices[k] == i || intersectVertIndices[k] == j)
+						continue;
 				}
-			}
+				bool found = false;
+				for (int k = 0; k < 3; k++) {
+					if (tolerantEquals(hit.hitPt, triPts[k], tol)) {
+						found = true;
+						break;
+					}
+				}
 
-			if (!found) {
-				splitLegIndices[numSplits] = i;
-				splitPts[numSplits] = hit.hitPt;
-				numSplits++;
+				if (!found) {
+					splitLegIndices[numSplits] = i;
+					splitPts[numSplits] = hit.hitPt;
+					numSplits++;
+				}
 			}
 		}
 	}
 
 	// The found check will screen out a leg which lies on the plane.
 
-	if (numSplits == 1 && dupPtIdx != -1) {
+	if (numIntersectVertIndices >= 2)
+		return 0;
+	else if (numSplits == 1 && numIntersectVertIndices == 1) {
 		// The plane splits the triangle and a vertex lies on the plane
 
-		triPts0[0] = triPts[dupPtIdx];
-		triPts0[1] = triPts[(dupPtIdx + 1) % 3];
-		triPts0[2] = splitPts[numSplits];
+		int vertIdx = intersectVertIndices[0];
+		triPts0[0] = triPts[vertIdx];
+		triPts0[1] = triPts[(vertIdx + 1) % 3];
+		triPts0[2] = splitPts[0];
 
-		triPts1[0] = triPts[dupPtIdx];
-		triPts1[1] = splitPts[numSplits];
-		triPts1[2] = splitPts[(dupPtIdx + 2) % 3];
+		triPts1[0] = triPts[vertIdx];
+		triPts1[1] = splitPts[0];
+		triPts1[2] = triPts[(vertIdx + 2) % 3];
 		return 2;
 	} else if (numSplits == 2) {
 		// The plane splits two legs
@@ -152,8 +165,8 @@ int triangleSplitWithPlane(Vector3<T> const triPts[3], const Plane<T>& plane,
 		Vector3<T> quadPts[4];
 		quadPts[0] = splitPts[minIdx];
 		quadPts[1] = triPts[idx0];
-		quadPts[2] = splitPts[(minIdx + 1) % 3];
-		quadPts[3] = triPts[idx1];
+		quadPts[2] = triPts[idx1];
+		quadPts[3] = splitPts[(minIdx + 1) % 3];
 
 		// Make the triangle
 		triPts0[0] = triPts[minIdx];

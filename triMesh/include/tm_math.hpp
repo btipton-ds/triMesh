@@ -29,18 +29,6 @@ This file is part of the TriMesh library.
 
 */
 
-template<>
-inline double sameDistTolTempl()
-{
-	return SAME_DIST_TOL;
-}
-
-template<>
-inline float sameDistTolTempl()
-{
-	return 1.0e-5f;
-}
-
 template <class SCALAR_TYPE>
 inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol) {
 	return fabs(v1 - v0) < tol;
