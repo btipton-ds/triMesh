@@ -135,7 +135,7 @@ bool LineSegment<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<T>& hit, T to
 	auto l = unitDir.norm();
 	unitDir /= l;
 	Ray<SCALAR_TYPE> ray(_pts[0], unitDir);
-	if (intersectRayTri(getRay(), pts, hit)) {
+	if (intersectRayTri(getRay(), pts, hit, tol)) {
 		auto d = hit.dist;
 		if (-tol < d && d < l + tol) {
 			return true;

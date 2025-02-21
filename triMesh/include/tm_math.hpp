@@ -29,6 +29,18 @@ This file is part of the TriMesh library.
 
 */
 
+template<>
+inline double sameDistTolTempl()
+{
+	return SAME_DIST_TOL;
+}
+
+template<>
+inline float sameDistTolTempl()
+{
+	return 1.0e-5f;
+}
+
 template <class SCALAR_TYPE>
 inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol) {
 	return fabs(v1 - v0) < tol;
@@ -130,13 +142,13 @@ bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, T tol)
 }
 
 template<class T>
-bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit) {
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit, T tol) {
 	const Vector3<T>* pts[] = { &pt0, &pt1, &pt2 };
-	return intersectRayTri(ray, pts, hit);
+	return intersectRayTri(ray, pts, hit, tol);
 }
 
 template<class T>
-bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit) {
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit, T tol) {
 
 	Vector3<T> v0 = *pts[1] - *pts[0];
 	Vector3<T> v1 = *pts[2] - *pts[0];
@@ -148,10 +160,10 @@ bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit
 	norm /= l;
 
 	Plane<T> pl(*(pts[0]), norm);
-	if (!pl.intersectRay(ray, hit, (T)SAME_DIST_TOL))
+	if (!pl.intersectRay(ray, hit, tol))
 		return false;
 
-	return pointInTriangle(pts, hit.hitPt);
+	return pointInTriangle(pts, hit.hitPt, tol);
 }
 
 template<class T>
@@ -182,13 +194,6 @@ Vector3<T> triangleUnitNormal(const Vector3<T> pts[3]) {
 	Vector3<T> v1 = pts[2] - pts[0];
 	Vector3<T> n = safeNormalize(v0.cross(v1));
 	return n;
-}
-
-inline Vector3d triangleCentroid(Vector3d const* const pts[3]) {
-	return ngonCentroid(3, pts);
-}
-inline Vector3d triangleCentroid(const Vector3d pts[]) {
-	return ngonCentroid(3, pts);
 }
 
 // LERP functions are usually used for points, but can be used for any kind of value that supports +, -  and *

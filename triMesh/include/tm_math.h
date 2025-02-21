@@ -44,6 +44,9 @@ This file is part of the TriMesh library.
 using lint = long long;
 
 template<class T>
+T sameDistTolTempl();
+
+template<class T>
 struct LineSegment;
 
 template <class SCALAR_TYPE>
@@ -78,22 +81,22 @@ template<class T>
 double distanceFromPlane(const Vector3<T>& pt, const Plane<T>& plane);
 
 template<class T>
-bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt, T tol = (T)SAME_DIST_TOL);
+bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt, T tol = sameDistTolTempl<T>());
 
 template<class T>
-bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, T tol = (T)SAME_DIST_TOL);
+bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, T tol = sameDistTolTempl<T>());
 
 template<class T>
-bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit = (T)SAME_DIST_TOL);
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit, T tol = sameDistTolTempl<T>());
 
 template<class T>
-bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit);
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit, T tol = sameDistTolTempl<T>());
 
 template<class T>
-bool intersectTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T tol = (T)SAME_DIST_TOL);
+bool intersectTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T tol = sameDistTolTempl<T>());
 
 template<class T>
-bool intersectTriTri(const Vector3<T>* triPts0[3], const Vector3<T>* triPts1[3], T tol = (T)SAME_DIST_TOL);
+bool intersectTriTri(const Vector3<T>* triPts0[3], const Vector3<T>* triPts1[3], T tol = sameDistTolTempl<T>());
 
 template<class T>
 Vector3<T> orthoganalizeVector(const Vector3<T>& v, const Vector3<T>& unitVector);
@@ -107,13 +110,22 @@ Vector3<T> triangleUnitNormal(const Vector3<T>* pts[3]);
 template<class T>
 Vector3<T> triangleUnitNormal(const Vector3<T> pts[3]);
 
-Vector3d ngonCentroid(int numPoints, Vector3d const* const pts[]);
-Vector3d ngonCentroid(int numPoints, const Vector3d pts[]);
+template<class T>
+Vector3<T> ngonCentroid(int numPoints, Vector3<T> const* const pts[]);
+template<class T>
+Vector3<T> ngonCentroid(int numPoints, const Vector3<T> pts[]);
 
-Vector3d triangleCentroid(Vector3d const* const pts[3]);
-Vector3d triangleCentroid(const Vector3d pts[]);
+template<class T>
+Vector3<T> triangleCentroid(Vector3<T> const* const pts[3]);
+template<class T>
+Vector3<T> triangleCentroid(const Vector3<T> pts[]);
 
-double volumeUnderTriangle(Vector3d const* const pts[3], const Vector3d& axis);
+template<class T>
+T volumeUnderTriangle(Vector3<T> const* const pts[3], const Vector3<T>& axis);
+
+template<class T>
+int triangleSplitWithPlane(Vector3<T> const triPts[3], const Plane<T>& plane, 
+	Vector3<T> triPts0[3], Vector3<T> triPts1[3], Vector3<T> triPts2[3], T tol = (T) SAME_DIST_TOL);
 
 // LERP functions are usually used for points, but can be used for any kind of value that supports +, -  and *
 template<class T>

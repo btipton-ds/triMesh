@@ -37,56 +37,65 @@ This file is part of the TriMesh library.
 #include <tm_math_transforms.h>
 
 using namespace std;
-bool testDistToPlane() {
-	Plane<double> plane(Vector3d(0, 0, 0), Vector3d(0, 0, 1));
-	plane.makePrincipal();
-	Vector3d pt0(0, 0, 1);
-	Vector3d pt1(0, 0, -1);
-	Vector3d pt2(1, 1, 1);
 
-	TEST_TRUE(distanceFromPlane(pt0, plane) - 1 < SAME_DIST_TOL, "Point is 1 unit from plane?");
-	TEST_TRUE(distanceFromPlane(pt1, plane) - -1 < SAME_DIST_TOL, "Point is -1 unit from plane?");
-	TEST_TRUE(distanceFromPlane(pt2, plane) - 1 < SAME_DIST_TOL, "Point is 1 unit from plane?");
+
+template<class T>
+bool testDistToPlane() {
+	const T tol = sameDistTolTempl<T>();
+	Plane<T> plane(Vector3<T>(0, 0, 0), Vector3<T>(0, 0, 1));
+	plane.makePrincipal();
+	Vector3<T> pt0(0, 0, 1);
+	Vector3<T> pt1(0, 0, -1);
+	Vector3<T> pt2(1, 1, 1);
+
+	TEST_TRUE(distanceFromPlane(pt0, plane) - 1 < tol, "Point is 1 unit from plane?");
+	TEST_TRUE(distanceFromPlane(pt1, plane) - -1 < tol, "Point is -1 unit from plane?");
+	TEST_TRUE(distanceFromPlane(pt2, plane) - 1 < tol, "Point is 1 unit from plane?");
 
 	return true;
 }
 
+template<class T>
 bool testRayPlaneIntersect() {
-	Plane<double> plane0(Vector3d(0, 0, 0), Vector3d(0, 0, 1));
+	const T tol = sameDistTolTempl<T>();
+	Plane<T> plane0(Vector3<T>(0, 0, 0), Vector3<T>(0, 0, 1));
 	plane0.makePrincipal();
-	Vector3d dir0(-1, -1, -1);
-	Ray<double> ray0(plane0.getOrgin() - dir0, dir0);
-	RayHit<double> hit;
+	Vector3<T> dir0(-1, -1, -1);
+	Ray<T> ray0(plane0.getOrgin() - dir0, dir0);
+	RayHit<T> hit;
 
-	TEST_TRUE(plane0.intersectRay(ray0, hit, SAME_DIST_TOL), "Ray intersects plane?");
-	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
+	TEST_TRUE(plane0.intersectRay(ray0, hit, tol), "Ray intersects plane?");
+	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < tol, "Intersection point lies on plane?");
 
-	Vector3d delta(.1, -.023, 1.35);
+	Vector3<T> delta((T).1, (T)-.023, (T)1.35);
 	ray0._origin += delta;
-	TEST_TRUE(plane0.intersectRay(ray0, hit, SAME_DIST_TOL), "Ray + delta intersects plane?");
-	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
+	TEST_TRUE(plane0.intersectRay(ray0, hit, tol), "Ray + delta intersects plane?");
+	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < tol, "Intersection point lies on plane?");
 
-	Plane<double> plane1(Vector3d(0, 0, 0), Vector3d(1, 0, 0).cross(dir0).normalized());
+	Plane<T> plane1(Vector3<T>(0, 0, 0), Vector3<T>(1, 0, 0).cross(dir0).normalized());
 	plane1.makePrincipal();
-	TEST_FALSE(plane1.intersectRay(ray0, hit, SAME_DIST_TOL), "Ray does not intersect parrallel plane");
-	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < SAME_DIST_TOL, "Intersection point lies on plane?");
+	TEST_FALSE(plane1.intersectRay(ray0, hit, tol), "Ray does not intersect parrallel plane");
+	TEST_TRUE(distanceFromPlane(hit.hitPt, plane0) < tol, "Intersection point lies on plane?");
 
 	cout << "testRayPlaneIntersect passed\n";
 
 	return true;
 }
 
+template<class T>
 bool testRayTriIntersectVerts() {
-	Vector3d pt0(0, 0, 0);
-	Vector3d pt1(1, 0, 0);
-	Vector3d pt2(1, 1, 0);
-	Vector3d* pts[] = {
+	const T tol = sameDistTolTempl<T>();
+
+	Vector3<T> pt0(0, 0, 0);
+	Vector3<T> pt1(1, 0, 0);
+	Vector3<T> pt2(1, 1, 0);
+	Vector3<T>* pts[] = {
 		&pt0, &pt1, &pt2
 	};
 
-	Vector3d pt, dir(0, 1.0 / 3.0, 1), ctr(0, 0, 0);
+	Vector3<T> pt, dir(0, (T)(1.0 / 3.0), 1), ctr(0, 0, 0);
 	dir.normalize();
-	RayHit<double> hit;
+	RayHit<T> hit;
 	for (int i = 0; i < 3; i++) {
 		ctr += *pts[i];
 	}
@@ -94,56 +103,59 @@ bool testRayTriIntersectVerts() {
 
 	for (int i = 0; i < 3; i++) {
 		pt = *pts[i];
-		Ray<double> ray(pt - dir, dir);
-		TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Test on vert " + to_string(i));
+		Ray<T> ray(pt - dir, dir);
+		TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit, tol), "Test on vert " + to_string(i));
 	}
 
 	for (int i = 0; i < 3; i++) {
 		pt = *pts[i];
-		Vector3d v = (ctr - pt).normalized();
-		pt += SAME_DIST_TOL * v;
-		Ray<double> ray(pt - dir, dir);
-		TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Test inside vert " + to_string(i));
+		Vector3<T> v = (ctr - pt).normalized();
+		pt += tol * v;
+		Ray<T> ray(pt - dir, dir);
+		TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit, tol), "Test inside vert " + to_string(i));
 	}
 
 	for (int i = 0; i < 3; i++) {
 		pt = *pts[i];
-		Vector3d v = (ctr - pt);
-		Vector3d v2 = (pt - *pts[(i + 1) % 3]).normalized();
+		Vector3<T> v = (ctr - pt);
+		Vector3<T> v2 = (pt - *pts[(i + 1) % 3]).normalized();
 		v = (v - v2.dot(v) * v2).normalized();
-		pt -= SAME_DIST_TOL * v;
-		Ray<double> ray(pt - dir, dir);
-		TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Test outside vert within tol " + to_string(i));
+		pt -= (tol - tol / 10) * v; // The floating case needs a little more margin
+		Ray<T> ray(pt - dir, dir);
+		TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit, tol), "Test outside vert within tol " + to_string(i));
 	}
 
 	for (int i = 0; i < 3; i++) {
 		pt = *pts[i];
-		Vector3d v = (ctr - pt);
-		Vector3d v2 = (pt - *pts[(i + 1) % 3]).normalized();
+		Vector3<T> v = (ctr - pt);
+		Vector3<T> v2 = (pt - *pts[(i + 1) % 3]).normalized();
 		v = (v - v2.dot(v) * v2).normalized();
-		pt -= 2 * SAME_DIST_TOL * v;
-		Ray<double> ray(pt - dir, dir);
-		TEST_FALSE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Test outside vert " + to_string(i));
+		pt -= 2 * tol * v;
+		Ray<T> ray(pt - dir, dir);
+		TEST_FALSE(intersectRayTri(ray, pt0, pt1, pt2, hit, tol), "Test outside vert " + to_string(i));
 	}
 
 	cout << "testRayTriIntersectVerts passed\n";
 	return true;
 }
 
+template<class T>
 bool testRayTriIntersectEdges() {
-	Vector3d pt0(0, 0, 0);
-	Vector3d pt1(1, 0, 0);
-	Vector3d pt2(1, 1, 0);
-	Vector3d* pts[] = {
+	const T tol = sameDistTolTempl<T>();
+
+	Vector3<T> pt0(0, 0, 0);
+	Vector3<T> pt1(1, 0, 0);
+	Vector3<T> pt2(1, 1, 0);
+	Vector3<T>* pts[] = {
 		&pt0, &pt1, &pt2
 	};
 
-	Vector3d pt, dir(0, 0, 1);
-	RayHit<double> hit;
+	Vector3<T> pt, dir(0, 0, 1);
+	RayHit<T> hit;
 
 	for (int i = 0; i < 3; i++) {
 		pt = (*pts[i] + *pts[(i + 1) % 3]) / 2;
-		Ray<double> ray(pt - dir, dir);
+		Ray<T> ray(pt - dir, dir);
 		if (!intersectRayTri(ray, pt0, pt1, pt2, hit)) return 1;
 	}
 
@@ -151,11 +163,14 @@ bool testRayTriIntersectEdges() {
 	return true;
 }
 
+template<class T>
 bool testRayTriIntersect() {
-	Vector3d pt0(0, 0, 0);
-	Vector3d pt1(1, 0, 0);
-	Vector3d pt2(1, 1, 0);
-	Vector3d* pts[] = {
+	const T tol = sameDistTolTempl<T>();
+
+	Vector3<T> pt0(0, 0, 0);
+	Vector3<T> pt1(1, 0, 0);
+	Vector3<T> pt2(1, 1, 0);
+	Vector3<T>* pts[] = {
 		&pt0, &pt1, &pt2
 	};
 
@@ -163,29 +178,28 @@ bool testRayTriIntersect() {
 	for (int i = 0; i < steps; i++) {
 		for (int j = 0; j < steps; j++) {
 			for (int k = 0; k < steps; k++) {
-				Vector3d dir(.01 + i/(steps - 1.0), .01 + j / (steps - 1.0), .01 + k / (steps - 1.0));
+				Vector3<T> dir((T)(.01 + i / (steps - 1.0)), (T)(.01 + j / (steps - 1.0)), (T)(.01 + k / (steps - 1.0)));
 				dir.normalize();
-				Ray<double> ray(*pts[0] - dir, dir);
-				RayHit<double> hit;
+				Ray<T> ray(*pts[0] - dir, dir);
+				RayHit<T> hit;
 
-				if (!intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
-				if ((hit.hitPt - pt0).norm() > SAME_DIST_TOL) return false;
+				TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit), "");
+				TEST_TRUE((hit.hitPt - pt0).norm() < tol, "Hit point outside tolerance");
 
-				ray._origin = pt0 + Vector3d(-0.1, 0, 0) - dir;
-				if (intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
+				ray._origin = pt0 + Vector3<T>((T)-0.1, 0, 0) - dir;
+				TEST_FALSE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Ray intersected triangle when it should not");
 
-				ray._origin = pt0 + Vector3d(0.1, 0, 0) - dir;
-				if (!intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
+				ray._origin = pt0 + Vector3<T>((T)0.1, 0, 0) - dir;
+				TEST_TRUE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Ray missed triangle when it should hit");
 
-				ray._origin = pt0 + Vector3d(0, -2 * SAME_DIST_TOL, 0) - dir;
-				if (intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
+				ray._origin = pt0 + Vector3<T>(0, -2 * tol, 0) - dir;
+				TEST_FALSE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Ray intersected triangle when it should not");
 
-				ray._origin = pt0 + Vector3d(0, -0.5 * SAME_DIST_TOL, 0) - dir;
-				if (!intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
+				ray._origin = pt0 + Vector3<T>(0, (T)(-0.5 * tol), 0) - dir;
+				TEST_TRUE (intersectRayTri(ray, pt0, pt1, pt2, hit), "Ray missed triangle when it should hit");
 
-				ray._origin[1] = 0.5 * SAME_DIST_TOL;
-				if (intersectRayTri(ray, pt0, pt1, pt2, hit)) return false;
-
+				ray._origin[1] = (T)(0.5 * tol);
+				TEST_FALSE(intersectRayTri(ray, pt0, pt1, pt2, hit), "Ray intersected triangle when it should not");
 			}
 		}
 	}
@@ -292,19 +306,25 @@ bool testPointRotation()
 	return true;
 }
 
+template<class T>
+bool testTempl() {
+	TEST_TRUE(testVectorRotation<T>(), "testVectorRotation");
+	TEST_TRUE(testPointRotation<T>(), "testPointRotation");
+
+	TEST_TRUE(testDistToPlane<T>(), "testDistToPlane");
+	TEST_TRUE(testRayPlaneIntersect<T>(), "testRayPlaneIntersect");
+	TEST_TRUE(testRayTriIntersectEdges<T>(), "testRayTriIntersectEdges");
+	TEST_TRUE(testRayTriIntersect<T>(), "testRayTriIntersect");
+	TEST_TRUE(testRayTriIntersectVerts<T>(), "testRayTriIntersectVerts");
+
+	return true;
+}
+
 bool testMath() {
-	TEST_TRUE(testVectorRotation<double>(), "testVectorRotation<double>");
-	TEST_TRUE(testPointRotation<double>(), "testPointRotation<double>");
-
-	TEST_TRUE(testVectorRotation<float>(), "testVectorRotation<float>");
-	TEST_TRUE(testPointRotation<float>(), "testPointRotation<float>");
-
-	TEST_TRUE(testDistToPlane(), "testDistToPlane");
-	TEST_TRUE(testRayPlaneIntersect(), "testRayPlaneIntersect");
-	TEST_TRUE(testRayTriIntersectVerts(), "testRayTriIntersectVerts");
-	TEST_TRUE(testRayTriIntersectEdges(), "testRayTriIntersectEdges");
-	TEST_TRUE(testRayTriIntersect(), "testRayTriIntersect");
-
+	if (!testTempl<double>())
+		return false;
+	if (!testTempl<float>())
+		return false;
 	cout << "testMath passed\n";
 	return true;
 

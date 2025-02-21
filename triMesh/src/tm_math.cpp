@@ -55,31 +55,123 @@ bool intersectRayPlane(const Ray<double>& ray, const Vector3d& origin, const Vec
 	return true;
 }
 
-Vector3d ngonCentroid(int numPoints, Vector3d const* const pts[]) {
-	Vector3d result(0, 0, 0);
+template<class T>
+Vector3<T> ngonCentroid(int numPoints, Vector3<T> const* const pts[]) {
+	Vector3<T> result(0, 0, 0);
 	for (int i = 0; i < numPoints; i++)
 		result += *pts[i];
 	result /= numPoints;
 	return result;
 }
 
-Vector3d ngonCentroid(int numPoints, const Vector3d pts[]) {
-	Vector3d result(0, 0, 0);
-	for (int i = 0; i < numPoints; i++)
-		result += pts[i];
-	result /= numPoints;
-	return result;
+template<class T>
+Vector3<T> ngonCentroid(int numPoints, const Vector3<T> pts[]) {
+	Vector3<T> const* pPts[] = {
+		&pts[0],
+		&pts[1],
+		&pts[2],
+	};
+	return ngonCentroid(numPoints, pPts);
 }
 
-double volumeUnderTriangle(Vector3d const* const pts[3], const Vector3d& axis) {
-	Vector3d centroid = triangleCentroid(pts);
-	Vector3d v0 = *pts[1] - *pts[0];
-	Vector3d v1 = *pts[2] - *pts[0];
-	Vector3d cp = v0.cross(v1);
-	double area = cp.dot(axis) * 0.5;
-	double h = centroid.dot(axis);
-	double vol = area * h;
+template<class T>
+inline Vector3<T> triangleCentroid(Vector3<T> const* const pts[3]) {
+	return ngonCentroid(3, pts);
+}
+template<class T>
+inline Vector3<T> triangleCentroid(const Vector3<T> pts[]) {
+	return ngonCentroid(3, pts);
+}
+
+template<class T>
+T volumeUnderTriangle(Vector3<T> const* const pts[3], const Vector3<T>& axis) {
+	Vector3<T> centroid = triangleCentroid(pts);
+	Vector3<T> v0 = *pts[1] - *pts[0];
+	Vector3<T> v1 = *pts[2] - *pts[0];
+	Vector3<T> cp = v0.cross(v1);
+	T area = cp.dot(axis) * (T)0.5;
+	T h = centroid.dot(axis);
+	T vol = area * h;
 	return vol;
+}
+
+template<class T>
+int triangleSplitWithPlane(Vector3<T> const triPts[3], const Plane<T>& plane, 
+	Vector3<T> triPts0[3], Vector3<T> triPts1[3], Vector3<T> triPts2[3], T tol)
+{
+	int numSplits = 0;
+	Vector3<T> splitPts[3];
+	int splitLegIndices[3];
+	bool found = false;
+	int dupPtIdx = -1;
+
+	for (int i = 0; i < 3; i++) {
+		int j = (i + 1) % 3;
+		RayHit<T> hit;
+		if (plane.intersectLine(triPts[i], triPts[j], hit, tol)) {
+			for (int k = 0; k < numSplits; k++) {
+				if (tolerantEquals(splitPts[k], hit.hitPt, tol)) {
+					dupPtIdx = k;
+					found = true;
+					break;
+				}
+			}
+
+			if (!found) {
+				splitLegIndices[numSplits] = i;
+				splitPts[numSplits] = hit.hitPt;
+				numSplits++;
+			}
+		}
+	}
+
+	// The found check will screen out a leg which lies on the plane.
+
+	if (numSplits == 1 && dupPtIdx != -1) {
+		// The plane splits the triangle and a vertex lies on the plane
+
+		triPts0[0] = triPts[dupPtIdx];
+		triPts0[1] = triPts[(dupPtIdx + 1) % 3];
+		triPts0[2] = splitPts[numSplits];
+
+		triPts1[0] = triPts[dupPtIdx];
+		triPts1[1] = splitPts[numSplits];
+		triPts1[2] = splitPts[(dupPtIdx + 2) % 3];
+		return 2;
+	} else if (numSplits == 2) {
+		// The plane splits two legs
+		int minIdx = 4;
+		for (int i = 0; i < 2; i++) {
+			if (splitLegIndices[i] < minIdx)
+				minIdx = splitLegIndices[i];
+		}
+
+		int idx0 = (splitLegIndices[minIdx] + 1) % 3;
+		int idx1 = (idx0 + 1) % 3;
+
+		Vector3<T> quadPts[4];
+		quadPts[0] = splitPts[minIdx];
+		quadPts[1] = triPts[idx0];
+		quadPts[2] = splitPts[(minIdx + 1) % 3];
+		quadPts[3] = triPts[idx1];
+
+		// Make the triangle
+		triPts0[0] = triPts[minIdx];
+		triPts0[1] = splitPts[0];
+		triPts0[2] = splitPts[1];
+
+		// make the two triangles forming the quad
+		triPts1[0] = quadPts[0];
+		triPts1[1] = quadPts[1];
+		triPts1[2] = quadPts[2];
+
+		triPts2[0] = quadPts[0];
+		triPts2[1] = quadPts[2];
+		triPts2[2] = quadPts[3];
+
+		return 3;
+	}
+	return 0;
 }
 
 template<class T>
@@ -205,14 +297,36 @@ bool intersectTriTri(const Vector3<T>* triPts0[3], const Vector3<T>* triPts1[3],
 namespace {
 	// After several attempts, textbook instantiation never linked correctly. This does.
 	template<class T>
+	bool instantiate0()
+	{
+		Vector3<T> ptsArr[] = {
+			Vector3<T>(0,0,0),
+			Vector3<T>(0,0,0),
+			Vector3<T>(0,0,0),
+		};
+		Vector3<T> tri0[3], tri1[3], tri2[3];
+		Plane<T> pl(Vector3<T>(0, 0, 0), Vector3<T>(1, 0, 0));
+		return triangleSplitWithPlane<T>(ptsArr, pl, tri0, tri1, tri2) > 0;
+	}
+
+	template<class T>
 	bool instantiate()
 	{
 		try {
+			Vector3<T> ptsArr[] = {
+				Vector3<T>(0,0,0),
+				Vector3<T>(0,0,0),
+				Vector3<T>(0,0,0),
+			};
+			triangleCentroid(ptsArr);
+
 			Vector3<T> pt;
 			Vector3<T>
 				tri0[] = { pt, pt, pt },
 				tri1[] = { pt, pt, pt };
 			intersectTriTri<T>(tri0, tri1);
+
+			instantiate0<T>();
 
 			std::vector<Vector3<T>> pts;
 			Vector3<T> tuv;
