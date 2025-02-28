@@ -144,6 +144,11 @@ template<class T>
 Vector3<T> LERP(const Vector3<T>& p0, const Vector3<T>& p1, T t);
 
 template<class T>
+inline Vector3<T> BI_LERP(const std::vector<Vector3<T>>& pts, T t, T u) {
+	return BI_LERP(pts[0], pts[1], pts[2], pts[3], t, u);
+}
+
+template<class T>
 Vector3<T> BI_LERP(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2, const Vector3<T>& p3, T t, T u);
 
 // pts must be size 8 or greater. No bounds checking is done.

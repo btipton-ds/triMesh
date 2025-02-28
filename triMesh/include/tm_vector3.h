@@ -121,24 +121,22 @@ public:
 
 	inline Vector3& operator -=(const Vector3& rhs)
 	{
-		auto d = data();
-		const auto dRhs = rhs.data();
-
-		d[0] -= dRhs[0];
-		d[1] -= dRhs[1];
-		d[2] -= dRhs[2];
+		auto pLhs = _data;
+		auto pRhs = rhs._data;
+		*pLhs++ -= *pRhs++;
+		*pLhs++ -= *pRhs++;
+		*pLhs++ -= *pRhs++;
 
 		return *this;
 	}
 
 	inline Vector3& operator +=(const Vector3& rhs)
 	{
-		auto d = data();
-		const auto dRhs = rhs.data();
-
-		d[0] += dRhs[0];
-		d[1] += dRhs[1];
-		d[2] += dRhs[2];
+		auto pLhs = _data;
+		auto pRhs = rhs._data;
+		*pLhs++ += *pRhs++;
+		*pLhs++ += *pRhs++;
+		*pLhs++ += *pRhs++;
 
 		return *this;
 	}
