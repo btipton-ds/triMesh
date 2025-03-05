@@ -296,28 +296,36 @@ template<class T>
 bool intersectTriTri(const Vector3<T>* triPts0[3], const Vector3<T>* triPts1[3], T tol)
 {
 	RayHit<T> hit;
-	Plane<T> triPlane0(*triPts0[0], *triPts0[1], *triPts0[2]);
 
 	// Check 1 against 0
+	const Vector3<T>* pts0[] = { triPts0[0], triPts0[1], triPts0[2] };
+	Vector3<T> norm0 = triangleUnitNormal(pts0);
+	Vector3<T> ctr0 = (*pts0[0] + *pts0[1] + *pts0[2]) / 3;
+	Plane<T> triPlane0(ctr0, norm0);
+
 	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
 
 		LineSegment<T> seg(*triPts1[i], *triPts1[j]);
 		if (triPlane0.intersectLineSegment(seg, hit, tol)) {
-			if (pointInTriangle<T>(triPts0, hit.hitPt, tol))
+			if (pointInTriangle<T>(triPts0, hit.hitPt, norm0, tol))
 				return true;
 		}
 	}
 
-	Plane<T> triPlane1(*triPts1[0], *triPts1[1], *triPts1[2]);
 	// Check 0 against 1
+	const Vector3<T>* pts1[] = { triPts1[0], triPts1[1], triPts1[2] };
+	Vector3<T> norm1 = triangleUnitNormal(pts1);
+	Vector3<T> ctr1 = (*pts1[0] + *pts1[1] + *pts1[2]) / 3;
+	Plane<T> triPlane1(ctr1, norm1);
+
 	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
 
 		LineSegment<T> seg(*triPts0[i], *triPts0[j]);
 
 		if (triPlane1.intersectLineSegment(seg, hit, tol)) {
-			if (pointInTriangle<T>(triPts1, hit.hitPt, tol))
+			if (pointInTriangle<T>(triPts1, hit.hitPt, norm1, tol))
 				return true;
 		}
 	}

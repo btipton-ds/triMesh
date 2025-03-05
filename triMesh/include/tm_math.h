@@ -99,6 +99,12 @@ template<class T>
 bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, T tol = sameDistTol<T>());
 
 template<class T>
+bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt, const Vector3<T>& unitNorm, T tol = sameDistTol<T>());
+
+template<class T>
+bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, const Vector3<T>& unitNorm, T tol = sameDistTol<T>());
+
+template<class T>
 bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit, T tol = sameDistTol<T>());
 
 template<class T>

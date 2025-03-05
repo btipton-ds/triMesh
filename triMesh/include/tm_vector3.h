@@ -236,21 +236,21 @@ public:
 	inline Vector3 normalized() const
 	{
 		Vector3 result(*this);
-		T l = result.norm();
+		T lInv =  1 / result.norm();
 		auto d = result.data();
-		d[0] /= l;
-		d[1] /= l;
-		d[2] /= l;
+		d[0] *= lInv;
+		d[1] *= lInv;
+		d[2] *= lInv;
 
 		return result;
 	}
 
 	void normalize()
 	{
-		auto l = norm();
-		_data[0] /= l;
-		_data[1] /= l;
-		_data[2] /= l;
+		auto lInv = 1 / norm();
+		_data[0] *= lInv;
+		_data[1] *= lInv;
+		_data[2] *= lInv;
 	}
 
 	inline operator Eigen::Matrix<T, 3, 1>() const
