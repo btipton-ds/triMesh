@@ -85,7 +85,9 @@ Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
 	auto l = v.norm();
 	if (l > minNormalizeDivisor)
 		return v / l;
-	throw "zero length vector";
+	std::string msg = std::string(__FILE__) + ":" + std::to_string(__LINE__) + std::string(" zero length vector");
+	assert(!" zero length vector");
+	throw std::runtime_error(msg);
 }
 
 template<class T>

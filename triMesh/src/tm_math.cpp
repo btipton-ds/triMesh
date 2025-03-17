@@ -359,10 +359,9 @@ namespace {
 			};
 			triangleCentroid(ptsArr);
 
-			Vector3<T> pt;
 			Vector3<T>
-				tri0[] = { pt, pt, pt },
-				tri1[] = { pt, pt, pt };
+				tri0[] = { Vector3<T>(0,0,0), Vector3<T>(1,0,0), Vector3<T>(0,1,0) },
+				tri1[] = { Vector3<T>(0,0,0), Vector3<T>(1,1,0), Vector3<T>(1,0,0) };
 			intersectTriTri<T>(tri0, tri1);
 
 			instantiate0<T>();
@@ -373,8 +372,8 @@ namespace {
 				return false;
 			auto a = TRI_LERP(pts, (T)0, (T)0, (T)0);
 			a = TRI_LERP(pts.data(), (T)0, (T)0, (T)0);
-			a = BI_LERP(pt, pt, pt, pt, (T)0, (T)0);
-			return TRI_LERP_INV(pt, pts, tuv);
+			a = BI_LERP(tri0[0], tri0[1], tri1[0], tri1[1], (T)0, (T)0);
+			return TRI_LERP_INV(Vector3<T>(1, 0, 0), pts, tuv);
 		} catch (...) {}
 		return false;
 	}

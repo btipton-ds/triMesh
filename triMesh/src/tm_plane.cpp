@@ -36,7 +36,8 @@ This file is part of the TriMesh library.
 template<class T>
 Plane<T>::Plane(const POINT_TYPE* pts[3])
 	: Plane(*pts[0], *pts[1], *pts[2])
-{}
+{
+}
 
 template<class T>
 Plane<T>::Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2)
@@ -47,6 +48,7 @@ Plane<T>::Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& 
 	_normal = v1.cross(v0);
 	_normal.normalize();
 	_xRef = (pt1 - pt0).normalized();
+	orthogonalize(_normal, _xRef);
 }
 
 template<class T>
@@ -55,6 +57,31 @@ Plane<T>::Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool already
 	, _normal(alreadyNormalzed ? normal : normal.normalized())
 	, _xRef(0, 0, 0)
 {
+	orthogonalize(_normal, _xRef);
+}
+
+template<class T>
+void Plane<T>::orthogonalize(const POINT_TYPE& v0, POINT_TYPE& v1)
+{
+	T tol = (T)1.0e-6;
+
+	T dp;
+	if (v1.squaredNorm() < tol * tol) {
+		v1 = POINT_TYPE(1, 0, 0);
+		dp = v0.dot(v1);
+		if (dp > 0.70701f) {
+			v1 = POINT_TYPE(0, 1, 0);
+			dp = v0.dot(v1);
+			if (dp > 0.70701f) {
+				v1 = POINT_TYPE(0, 0, 1);
+				dp = v0.dot(v1);
+			}
+		}
+	} else {
+		dp = v0.dot(v1);
+	}
+	v1 = v1 - dp * v0;
+	v1.normalize();
 }
 
 template<class T>
@@ -147,10 +174,15 @@ bool Plane<T>::intersectTri(const POINT_TYPE* pts[3], LineSegment<T>& iSeg, T to
 template<class T>
 bool Plane<T>::isCoincident(const Plane& other, T distTol, T cpTol) const
 {
-	if (distanceToPoint(other._origin) > distTol)
+	T dist = distanceToPoint(other._origin);
+	assert(dist >= 0);
+	if (dist > distTol)
 		return false;
-	if (_normal.cross(other._normal).norm() > cpTol)
+
+	T cpSqr = _normal.cross(other._normal).squaredNorm();
+	if (cpSqr > (cpTol * cpTol))
 		return false;
+
 	return true;
 }
 
