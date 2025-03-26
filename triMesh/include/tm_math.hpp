@@ -119,19 +119,21 @@ bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3
 template<class T>
 bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, const Vector3<T>& unitNorm, T tol)
 {
-	Vector3<T> v0 = (*pts[1]) - (*pts[0]);
-	Vector3<T> v1 = (*pts[2]) - (*pts[0]);
+#ifdef _DEBUG
+	{
+		Vector3<T> v0 = (*pts[1]) - (*pts[0]);
+		Vector3<T> v1 = (*pts[2]) - (*pts[0]);
 
-	v0 = pt - (*pts[0]);
-	T dp = v0.dot(unitNorm);
-	if (fabs(dp) > 1.0e-6) {
-		return false; // Pt not in plane
+		v0 = pt - (*pts[0]);
+		T dp = v0.dot(unitNorm);
+		assert(fabs(dp) < 1.0e-6);
 	}
+#endif
 
 	for (size_t i = 0; i < 3; i++) {
 		size_t j = (i + 1) % 3;
-		v0 = pt - (*pts[i]);
-		v1 = (*pts[j]) - (*pts[i]);
+		Vector3<T> v0 = pt - (*pts[i]);
+		Vector3<T> v1 = (*pts[j]) - (*pts[i]);
 		v1.normalize();
 		v0 = v0 - v1.dot(v0) * v1;
 		Vector3<T> v2 = v1.cross(v0);

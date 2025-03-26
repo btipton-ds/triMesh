@@ -57,7 +57,7 @@ typename LineSegment<T>::POINT_TYPE LineSegment<T>::interpolate(SCALAR_TYPE t) c
 
 template<class T>
 LineSegment<T>::SCALAR_TYPE LineSegment<T>::parameterize(const POINT_TYPE& pt) const {
-	return (pt - _pts[0]).dot(calcDir());
+	return (pt - _pts[0]).dot(calcDir()) / calLength();
 }
 
 template<class T>

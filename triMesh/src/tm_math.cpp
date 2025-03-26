@@ -300,8 +300,7 @@ bool intersectTriTri(const Vector3<T>* triPts0[3], const Vector3<T>* triPts1[3],
 	// Check 1 against 0
 	const Vector3<T>* pts0[] = { triPts0[0], triPts0[1], triPts0[2] };
 	Vector3<T> norm0 = triangleUnitNormal(pts0);
-	Vector3<T> ctr0 = (*pts0[0] + *pts0[1] + *pts0[2]) / 3;
-	Plane<T> triPlane0(ctr0, norm0);
+	Plane<T> triPlane0(*pts0[0], norm0);
 
 	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
@@ -316,8 +315,7 @@ bool intersectTriTri(const Vector3<T>* triPts0[3], const Vector3<T>* triPts1[3],
 	// Check 0 against 1
 	const Vector3<T>* pts1[] = { triPts1[0], triPts1[1], triPts1[2] };
 	Vector3<T> norm1 = triangleUnitNormal(pts1);
-	Vector3<T> ctr1 = (*pts1[0] + *pts1[1] + *pts1[2]) / 3;
-	Plane<T> triPlane1(ctr1, norm1);
+	Plane<T> triPlane1(*pts1[0], norm1);
 
 	for (int i = 0; i < 3; i++) {
 		int j = (i + 1) % 3;
