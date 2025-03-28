@@ -236,6 +236,8 @@ namespace TriMesh {
 		size_t processFoundTris(const std::vector<SearchEntry>& allHits, const BoundingBox& bbox, std::vector<SearchEntry>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
 		size_t processFoundTris(const std::vector<size_t>& allHits, const BoundingBox& bbox, std::vector<size_t>& triIndices, BoxTestType contains = BoxTestType::Intersects) const;
 
+		void clearSearchTrees();
+
 	private:
 		static bool sameTri(const Vector3i& tri0, const Vector3i& tri1);
 		static bool areTriPointsDegenerate(const Vector3i& tri);

@@ -93,7 +93,7 @@ void CSSB_DCL::clear() {
 	delete _left;
 	delete _right;
 	_left = _right = nullptr;
-	_contents.clear();
+	_pContents = nullptr;
 	_numInTree = 0;
 }
 
@@ -102,7 +102,8 @@ size_t CSSB_DCL::numBytes() const
 {
 	size_t result = sizeof(CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>);
 
-	result += _contents.capacity() + sizeof(Entry);
+	if (_pContents)
+		result += _pContents->_vals.capacity() * sizeof(Entry);
 	if (_left)
 		result += _left->numBytes();
 	if (_right)
@@ -113,10 +114,12 @@ size_t CSSB_DCL::numBytes() const
 CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
-		for (const auto& entry : _contents) {
-			const auto& bb = entry.getBBox();
-			if (boxesMatch(_bbox, bbox, testType)) {
-				result.push_back(entry);
+		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
+			for (const auto& entry : _pContents->_vals) {
+				const auto& bb = entry.getBBox();
+				if (boxesMatch(_bbox, bbox, testType)) {
+					result.push_back(entry);
+				}
 			}
 		}
 		if (_left)
@@ -130,10 +133,12 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, BoxTestType t
 CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
-		for (const auto& entry : _contents) {
-			const auto& bb = entry.getBBox();
-			if (boxesMatch(bb, bbox, testType)) {
-				result.push_back(entry.getIndex());
+		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
+			for (const auto& entry : _pContents->_vals) {
+				const auto& bb = entry.getBBox();
+				if (boxesMatch(bb, bbox, testType)) {
+					result.push_back(entry.getIndex());
+				}
 			}
 		}
 		if (_left)
@@ -164,9 +169,11 @@ typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbo
 	if (useLeft && useRight)
 		return enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>::shared_from_this();
 
-	for (const auto& entry : _contents) {
-		if (bbox.intersectsOrContains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
-			return enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>::shared_from_this();
+	if (_pContents) {
+		for (const auto& entry : _pContents->_vals) {
+			if (bbox.intersectsOrContains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
+				return enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>::shared_from_this();
+			}
 		}
 	}
 
@@ -184,10 +191,12 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 	if (!_bbox.contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
 		return false;
 
-	for (const auto& curEntry : _contents) {
-		if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
-			assert(!"duplicate");
-			return false;
+	if (_pContents) {
+		for (const auto& curEntry : _pContents->_vals) {
+			if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
+				assert(!"duplicate");
+				return false;
+			}
 		}
 	}
 
@@ -199,11 +208,11 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 		return true;
 	}
 
-	_contents.push_back(newEntry);
+	addToContents(newEntry);
 	_numInTree++;
 
 	// Split node and add to correct node
-	if (!_left && _contents.size() > ENTRY_LIMIT)
+	if (!_left && _pContents->_vals.size() > ENTRY_LIMIT)
 		split(depth);
 
 	return true;
@@ -211,14 +220,42 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 }
 
 CSSB_TMPL
+void CSSB_DCL::addToContents(const Entry& newEntry)
+{
+	if (!_pContents)
+		_pContents = make_shared<Contents>();
+
+	_pContents->_vals.push_back(newEntry);
+
+	// Need to clip the newBox to the limits of the current box or ray casting will return false positives.
+	BOX_TYPE newBox(_bbox);
+	newBox.merge(newEntry.getBBox());
+	auto& oldMin = newBox.getMin();
+	auto& oldMax = newBox.getMax();
+
+	auto minPt = oldMin;
+	auto maxPt = oldMax;
+	for (int i = 0; i < 3; i++) {
+		if (minPt[i] < oldMin[i])
+			minPt[i] = oldMin[i];
+		if (maxPt[i] > oldMax[i])
+			maxPt[i] = oldMax[i];
+	}
+	newBox = BOX_TYPE(minPt, maxPt);
+	_pContents->_bbox.merge(newBox);
+}
+
+CSSB_TMPL
 bool CSSB_DCL::remove(const Entry& newEntry) {
 	if (_bbox.contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
-		for (size_t idx = 0; idx < _contents.size(); idx++) {
-			const auto& curEntry = _contents[idx];
-			if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
-				_contents.erase(_contents.begin() + idx);
-				_numInTree--;
-				return true;
+		if (_pContents) {
+			for (size_t idx = 0; idx < _pContents->_vals.size(); idx++) {
+				const auto& curEntry = _pContents->_vals[idx];
+				if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
+					_pContents->_vals.erase(_pContents->_vals.begin() + idx);
+					_numInTree--;
+					return true;
+				}
 			}
 		}
 
@@ -248,9 +285,11 @@ bool CSSB_DCL::remove(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
 CSSB_TMPL
 void CSSB_DCL::biDirRayCastRecursive(const Ray<SCALAR_TYPE>& ray, vector<INDEX_TYPE>& hits) const {
 	if (_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
-		for (const auto& entry : _contents) {
-			if (entry.getBBox().intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
-				hits.push_back(entry.getIndex());
+		if (_pContents && _pContents->_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
+			for (const auto& entry : _pContents->_vals) {
+				if (entry.getBBox().intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
+					hits.push_back(entry.getIndex());
+				}
 			}
 		}
 		if (_left)
@@ -274,11 +313,13 @@ void CSSB_DCL::dump(wostream& out, size_t depth) const
 	out << pad << "Depth: " << depth << "\n";
 	out << pad << _bbox.getMin()[0] << " " << _bbox.getMin()[1] << " " << _bbox.getMin()[2] << "\n";
 	out << pad << _bbox.getMax()[0] << " " << _bbox.getMax()[1] << " " << _bbox.getMax()[2] << "\n";
-	out << pad << axisStr << " " << _contents.size() << "\n";
-	for (const auto& entry : _contents) {
-		out << pad << "  " << entry.getIndex() << "\n";
-		out << pad << "  " << entry.getBBox().getMin()[0] << " " << entry.getBBox().getMin()[1] << " " << entry.getBBox().getMin()[2] << "\n";
-		out << pad << "  " << entry.getBBox().getMax()[0] << " " << entry.getBBox().getMax()[1] << " " << entry.getBBox().getMax()[2] << "\n";
+	if (_pContents) {
+		out << pad << axisStr << " " << _pContents->_vals.size() << "\n";
+		for (const auto& entry : _pContents->_vals) {
+			out << pad << "  " << entry.getIndex() << "\n";
+			out << pad << "  " << entry.getBBox().getMin()[0] << " " << entry.getBBox().getMin()[1] << " " << entry.getBBox().getMin()[2] << "\n";
+			out << pad << "  " << entry.getBBox().getMax()[0] << " " << entry.getBBox().getMax()[1] << " " << entry.getBBox().getMax()[2] << "\n";
+		}
 	}
 	if (_left)
 		_left->dump(out, depth + 1);
@@ -293,17 +334,18 @@ void CSSB_DCL::split(int depth) {
 	int nextAxis = (_axis + 1) % 3;
 	_left = new CSpatialSearchBase(leftBBox, nextAxis);
 	_right = new CSpatialSearchBase(rightBBox, nextAxis);
-
-	const vector<Entry> temp(_contents);
-	_contents.clear();
+	assert(_pContents);
+	const vector<Entry> temp(_pContents->_vals);
+	_pContents = nullptr;
 
 	for (const auto& entry : temp) {
 		if (leftBBox.contains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
 			_left->add(entry, depth + 1);
 		else if (rightBBox.contains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
 			_right->add(entry, depth + 1);
-		else
-			_contents.push_back(entry);
+		else {
+			addToContents(entry);
+		}
 	}
 
 }

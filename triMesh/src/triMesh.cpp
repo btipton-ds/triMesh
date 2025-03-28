@@ -1696,6 +1696,16 @@ size_t CMesh::processFoundTris(const vector<size_t>& allHits, const BoundingBox&
 	return triIndices.size();
 }
 
+void CMesh::clearSearchTrees()
+{
+	if (_pVertTree)
+		_pVertTree->clear();
+	if (_pEdgeTree)
+		_pEdgeTree->clear();
+	if (_pTriTree)
+		_pTriTree->clear();
+}
+
 Vector3d CMesh::triCentroid(size_t triIdx) const {
 	if (_useCentroidCache && triIdx < _centroids.size())
 		return _centroids[triIdx];

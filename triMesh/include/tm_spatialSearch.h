@@ -90,7 +90,12 @@ public:
 	void dump(std::wostream& out, size_t depth = 0) const;
 
 private:
+	struct Contents {
+		BOX_TYPE _bbox;
+		std::vector<Entry> _vals;
+	};
 	bool add(const Entry& newEntry, int depth);
+	void addToContents(const Entry& newEntry);
 	void split(int depth);
 	static bool boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType);
 
@@ -98,7 +103,7 @@ private:
 	size_t _id = 0;
 	BOX_TYPE _bbox;
 	int _axis = 0;
-	std::vector<Entry> _contents;
+	std::shared_ptr<Contents> _pContents;
 	CSpatialSearchBase *_left = nullptr, *_right = nullptr;
 };
 
