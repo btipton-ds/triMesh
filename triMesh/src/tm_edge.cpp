@@ -27,6 +27,8 @@ This file is part of the TriMesh library.
 
 */
 
+#include <tm_defines.h>
+
 #include <iostream>
 #include <tm_edge.h>
 #include <tm_lineSegment.h>

@@ -30,11 +30,10 @@ This file is part of the TriMesh library.
 */
 
 #if 0
-#ifdef _HAS_ITERATOR_DEBUGGING
-#undef _HAS_ITERATOR_DEBUGGING
+#ifndef _ITERATOR_DEBUG_LEVEL
+#define _ITERATOR_DEBUG_LEVEL 0
 #endif
 
-#define _HAS_ITERATOR_DEBUGGING 0
 #endif
 
 #define FULL_TESTS 0

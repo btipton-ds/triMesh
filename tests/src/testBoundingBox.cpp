@@ -27,6 +27,7 @@ This file is part of the TriMesh library.
 
 */
 
+#include <tm_defines.h>
 #include <tests.h>
 #include <iostream>
 #include <string>

@@ -27,9 +27,9 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 
 */
 
-#include <list>
 #include <tm_defines.h>
 
+#include <list>
 #include <algorithm>
 #include <fstream>
 #include <iomanip>

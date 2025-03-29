@@ -29,6 +29,7 @@ This file is part of the TriMesh library.
 
 */
 
+#include <tm_defines.h>
 #include <triMesh.h>
 
 namespace TriMesh {

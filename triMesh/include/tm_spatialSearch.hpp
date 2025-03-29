@@ -30,6 +30,7 @@ This file is part of the TriMesh library.
 
 using namespace std;
 
+#include <tm_defines.h>
 #include <iostream>
 #include <thread>
 #include <tm_spatialSearch.h>

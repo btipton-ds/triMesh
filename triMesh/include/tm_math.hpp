@@ -29,6 +29,8 @@ This file is part of the TriMesh library.
 
 */
 
+#include <tm_defines.h>
+
 template <class SCALAR_TYPE>
 inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol) {
 	return fabs(v1 - v0) < tol;

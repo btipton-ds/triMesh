@@ -29,8 +29,8 @@ This file is part of the TriMesh library.
 
 */
 
-#include <algorithm>
 #include <tm_defines.h>
+#include <algorithm>
 #include <tm_vector3.h>
 #include <tm_math.h>
 
