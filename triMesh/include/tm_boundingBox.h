@@ -72,6 +72,7 @@ public:
 	void read(std::istream& in);
 private:
 	static const POINT_TYPE _axes[3];
+	static const POINT_TYPE _negAxes[3];
 
 	bool intersectsInner(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const;
 

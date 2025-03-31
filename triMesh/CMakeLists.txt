@@ -53,16 +53,14 @@ add_library (
     "src/tm_fixedMath.cpp"
     "src/tm_edge.cpp"
     "src/tm_plane.cpp"
+    "src/tm_plane_byref.cpp"
     "src/tm_lineSegment.cpp"
     "src/tm_boundingBox.cpp" 
     "src/tm_spatialSearch.cpp"
     
-    
-    
-    
     "../stlReader/src/readWriteStl.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
-)
+ )
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}
