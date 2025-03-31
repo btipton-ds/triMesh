@@ -69,10 +69,10 @@ void Plane<T>::orthogonalize(const POINT_TYPE& v0, POINT_TYPE& v1)
 	if (v1.squaredNorm() < tol * tol) {
 		v1 = POINT_TYPE(1, 0, 0);
 		dp = v0.dot(v1);
-		if (dp > 0.70701f) {
+		if (fabs(dp) > 0.70701f) {
 			v1 = POINT_TYPE(0, 1, 0);
 			dp = v0.dot(v1);
-			if (dp > 0.70701f) {
+			if (fabs(dp) > 0.70701f) {
 				v1 = POINT_TYPE(0, 0, 1);
 				dp = v0.dot(v1);
 			}
