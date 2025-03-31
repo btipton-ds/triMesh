@@ -32,6 +32,7 @@ This file is part of the TriMesh library.
 #include <tm_ray.h>
 #include <tm_plane_byref.h>
 #include <tm_lineSegment.h>
+#include <tm_lineSegment_byref.h>
 
 template<class T>
 Plane_byref<T>::Plane_byref(const POINT_TYPE& origin, const POINT_TYPE& normal)
@@ -42,6 +43,36 @@ Plane_byref<T>::Plane_byref(const POINT_TYPE& origin, const POINT_TYPE& normal)
 
 template<class T>
 bool Plane_byref<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const
+{
+	T d0 = distanceToPoint(seg._pt0, false);
+	T d1 = distanceToPoint(seg._pt1, false);
+
+	// This used to use ray intersect and only tested if pts[0] lies on the plane.
+	// We keep that odd behavior for compatibility with other code
+	if (fabs(d0) < tol) {
+		hitPt.hitPt = seg._pt0;
+		assert(distanceToPoint(hitPt.hitPt) < tol);
+		hitPt.dist = d0;
+		return true;
+	}
+
+	bool above0 = d0 >= 0;
+	bool above1 = d1 >= 0;
+	if (above0 != above1) {
+		d0 = fabs(d0);
+		d1 = fabs(d1);
+		T l = d0 + d1;
+		T t = d0 / l;
+		hitPt.hitPt = seg.interpolate(t);
+		assert(distanceToPoint(hitPt.hitPt) < tol);
+		hitPt.dist = d0;
+		return true;
+	}
+	return false;
+}
+
+template<class T>
+bool Plane_byref<T>::intersectLineSegment(const LineSegment_byref<T>& seg, RayHit<T>& hitPt, T tol) const
 {
 	T d0 = distanceToPoint(seg._pt0, false);
 	T d1 = distanceToPoint(seg._pt1, false);

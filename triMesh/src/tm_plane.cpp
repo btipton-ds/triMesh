@@ -124,7 +124,6 @@ void Plane<T>::setXRef(const POINT_TYPE& xRef)
 template<class T>
 bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const
 {
-#if 1
 	T d0 = distanceToPoint(seg._pt0, false);
 	T d1 = distanceToPoint(seg._pt1, false);
 
@@ -150,18 +149,6 @@ bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt,
 		return true;
 	}
 	return false;
-#else
-	if (intersectLine(seg._pt0, seg._pt1, hitPt, tol)) {
-		if (hitPt.dist < -tol)
-			return false;
-		T len = seg.calLength();
-		if (hitPt.dist > len + tol)
-			return false;
-
-		return true;
-	}
-	return false;
-#endif
 }
 
 template<class T>

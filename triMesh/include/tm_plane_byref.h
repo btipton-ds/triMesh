@@ -44,6 +44,8 @@ template<class T>
 struct RayHit;
 template<class T>
 struct LineSegment;
+template<class T>
+struct LineSegment_byref;
 
 template<class T>
 class Plane_byref {
@@ -54,6 +56,8 @@ public:
 
 	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt, T tol) const;
 	bool intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const;
+	bool intersectLineSegment(const LineSegment_byref<T>& seg, RayHit<T>& hitPt, T tol) const;
+
 	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit, T tol) const;
 	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg, T tol) const;
 	bool intersectTri(const POINT_TYPE* pts[3], LineSegment<T>& iSeg, T tol) const;

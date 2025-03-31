@@ -28,6 +28,10 @@ This file is part of the TriMesh library.
 */
 
 #include <tm_lineSegment.hpp>
+#include <tm_lineSegment_byref.hpp>
 
 template struct LineSegment<double>;
 template struct LineSegment<float>;
+
+template struct LineSegment_byref<double>;
+template struct LineSegment_byref<float>;
