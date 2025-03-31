@@ -72,7 +72,7 @@ struct LineSegment {
 	bool intersectPlane(const Plane<SCALAR_TYPE>& plane, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
 	bool intersectPlane(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
 
-	POINT_TYPE _pts[2];
+	POINT_TYPE _pt0, _pt1;
 };
 
 using LineSegmentd = LineSegment<double>;

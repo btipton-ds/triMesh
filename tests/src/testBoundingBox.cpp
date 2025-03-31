@@ -340,8 +340,8 @@ bool testSegIntersect() {
 		TEST_FALSE(a.intersectsOrContains(segs[13], SAME_DIST_TOL, -1), "seg hits edge of box?");
 
 		for (int i = 0; i < 14; i++) {
-			rotate(segs[i]._pts[0]);
-			rotate(segs[i]._pts[1]);
+			rotate(segs[i]._pt0);
+			rotate(segs[i]._pt1);
 		}
 	}
 

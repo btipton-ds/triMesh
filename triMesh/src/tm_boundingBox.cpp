@@ -227,7 +227,7 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const CBoundingBox3D& oth
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const
 {
-	if (contains(seg._pts[0], tol) || contains(seg._pts[1], tol))
+	if (contains(seg._pt0, tol) || contains(seg._pt1, tol))
 		return true;
 
 	if (seg.calLength() < tol)

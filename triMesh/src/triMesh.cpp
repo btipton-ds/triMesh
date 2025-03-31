@@ -1529,7 +1529,7 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 		return 0;
 
 	auto seg = getEdgesLineSeg(edgeIdx);
-	const Vector3d& origin = seg._pts[0];
+	const Vector3d& origin = seg._pt0;
 	Vector3d vEdge = seg.calcDir();
 
 	Vector3d norm0 = triUnitNormal(edge.getTriIdx(0));

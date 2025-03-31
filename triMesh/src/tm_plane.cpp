@@ -125,13 +125,13 @@ template<class T>
 bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const
 {
 #if 1
-	T d0 = distanceToPoint(seg._pts[0], false);
-	T d1 = distanceToPoint(seg._pts[1], false);
+	T d0 = distanceToPoint(seg._pt0, false);
+	T d1 = distanceToPoint(seg._pt1, false);
 
 	// This used to use ray intersect and only tested if pts[0] lies on the plane.
 	// We keep that odd behavior for compatibility with other code
 	if (fabs(d0) < tol) {
-		hitPt.hitPt = seg._pts[0];
+		hitPt.hitPt = seg._pt0;
 		assert(distanceToPoint(hitPt.hitPt) < tol);
 		hitPt.dist = d0;
 		return true;
@@ -151,7 +151,7 @@ bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt,
 	}
 	return false;
 #else
-	if (intersectLine(seg._pts[0], seg._pts[1], hitPt, tol)) {
+	if (intersectLine(seg._pt0, seg._pt1, hitPt, tol)) {
 		if (hitPt.dist < -tol)
 			return false;
 		T len = seg.calLength();

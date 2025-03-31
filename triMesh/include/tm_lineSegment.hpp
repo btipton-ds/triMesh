@@ -37,49 +37,49 @@ This file is part of the TriMesh library.
 template<class T>
 LineSegment<T>::LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1)
 {
-	_pts[0] = p0;
-	_pts[1] = p1;
+	_pt0 = p0;
+	_pt1 = p1;
 }
 
 template<class T>
 LineSegment<T>::SCALAR_TYPE LineSegment<T>::calLength() const {
-	return (_pts[1] - _pts[0]).norm();
+	return (_pt1 - _pt0).norm();
 }
 
 template<class T>
 typename LineSegment<T>::POINT_TYPE LineSegment<T>::calcDir() const {
-	return safeNormalize<SCALAR_TYPE>(_pts[1] - _pts[0]);
+	return safeNormalize<SCALAR_TYPE>(_pt1 - _pt0);
 }
 
 template<class T>
 typename LineSegment<T>::POINT_TYPE LineSegment<T>::interpolate(SCALAR_TYPE t) const {
-	return _pts[0] + t * (_pts[1] - _pts[0]);
+	return _pt0 + t * (_pt1 - _pt0);
 }
 
 template<class T>
 LineSegment<T>::SCALAR_TYPE LineSegment<T>::parameterize(const POINT_TYPE& pt) const {
-	return (pt - _pts[0]).dot(calcDir()) / calLength();
+	return (pt - _pt0).dot(calcDir()) / calLength();
 }
 
 template<class T>
 bool LineSegment<T>::contains(const POINT_TYPE& pt, LineSegment<T>::SCALAR_TYPE& t, SCALAR_TYPE tol) const
 {
-	if (tolerantEquals(_pts[0], pt, tol)) {
+	if (tolerantEquals(_pt0, pt, tol)) {
 		t = 0;
 		return true;
 	}
-	else if (tolerantEquals(_pts[1], pt, tol)) {
+	else if (tolerantEquals(_pt1, pt, tol)) {
 		t = 1;
 		return true;
 	}
 	else {
-		POINT_TYPE vDir = _pts[1] - _pts[0];
+		POINT_TYPE vDir = _pt1 - _pt0;
 		LineSegment<T>::SCALAR_TYPE len = vDir.norm();
 		if (len < tol) {
 			return false;
 		}
 		vDir /= len;
-		POINT_TYPE vOrth = pt - _pts[0];
+		POINT_TYPE vOrth = pt - _pt0;
 
 		SCALAR_TYPE dp = vOrth.dot(vDir);
 		vOrth = vOrth - dp * vDir; // orthogonalize v1
@@ -94,7 +94,7 @@ bool LineSegment<T>::contains(const POINT_TYPE& pt, LineSegment<T>::SCALAR_TYPE&
 
 template<class T>
 Ray<typename LineSegment<T>::SCALAR_TYPE> LineSegment<T>::getRay() const {
-	return Ray<SCALAR_TYPE>(_pts[0], calcDir());
+	return Ray<SCALAR_TYPE>(_pt0, calcDir());
 }
 
 template<class T>
@@ -105,23 +105,23 @@ typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT
 
 template<class T>
 typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const {
-	POINT_TYPE dir(_pts[1] - _pts[0]);
+	POINT_TYPE dir(_pt1 - _pt0);
 	SCALAR_TYPE len = dir.norm();
 	if (len < minNormalizeDivisor)
 		return (SCALAR_TYPE)FLT_MAX;
 	dir /= len;
-	POINT_TYPE v0 = pt - _pts[0];
+	POINT_TYPE v0 = pt - _pt0;
 	SCALAR_TYPE dp = v0.dot(dir);
 	t = dp / len;
 	v0 = v0 - dir * dp;
 	SCALAR_TYPE dist;
 	if (t < 0) {
 		t = (SCALAR_TYPE)-DBL_MAX;
-		dist = (pt - _pts[0]).norm();
+		dist = (pt - _pt0).norm();
 	}
 	else if (t > 1) {
 		t = (SCALAR_TYPE)DBL_MAX;
-		dist = (pt - _pts[1]).norm();
+		dist = (pt - _pt1).norm();
 	}
 	else
 		dist = v0.norm();
@@ -132,10 +132,10 @@ typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT
 template<class T>
 bool LineSegment<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<T>& hit, T tol) const
 {
-	POINT_TYPE unitDir = _pts[1] - _pts[0];
+	POINT_TYPE unitDir = _pt1 - _pt0;
 	auto l = unitDir.norm();
 	unitDir /= l;
-	Ray<SCALAR_TYPE> ray(_pts[0], unitDir);
+	Ray<SCALAR_TYPE> ray(_pt0, unitDir);
 	if (intersectRayTri(getRay(), pts, hit, tol)) {
 		auto d = hit.dist;
 		if (-tol < d && d < l + tol) {
@@ -159,7 +159,7 @@ template<class T>
 bool LineSegment<T>::intersectPlane(const Plane<T>& plane, RayHit<T>& hit, T tol) const
 {
 	if (plane.intersectRay(getRay(), hit, tol)) {
-		POINT_TYPE v = hit.hitPt - _pts[0];
+		POINT_TYPE v = hit.hitPt - _pt0;
 		SCALAR_TYPE t = v.dot(calcDir()) / calLength();
 		return 0 <= t && t <= 1;
 	}
