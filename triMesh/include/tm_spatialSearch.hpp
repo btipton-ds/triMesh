@@ -280,7 +280,7 @@ bool CSSB_DCL::addNode(const SpatialSearchBasePtr& pNode)
 	if (!_bbox.contains(pNode->_bbox, tol))
 		return false;
 
-	if (_bbox.equals(pNode->_bbox, tol)) {
+	if (_bbox.tolerantEquals(pNode->_bbox, tol)) {
 		_pContents = pNode->_pContents;
 		return true;
 	}
@@ -289,13 +289,13 @@ bool CSSB_DCL::addNode(const SpatialSearchBasePtr& pNode)
 	BOX_TYPE leftBBox, rightBBox;
 	_bbox.split(_axis, leftBBox, rightBBox, (SCALAR_TYPE)0.10);
 
-	if (!_pLeft && leftBBox.equals(pNode->_bbox, tol)) {
+	if (!_pLeft && leftBBox.tolerantEquals(pNode->_bbox, tol)) {
 		_pLeft = make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
 		_pLeft->_pContents = pNode->_pContents;
 		return true;
 	}
 
-	if (!_pRight && rightBBox.equals(pNode->_bbox, tol)) {
+	if (!_pRight && rightBBox.tolerantEquals(pNode->_bbox, tol)) {
 		_pRight = make_shared<CSpatialSearchBase>(rightBBox, nextAxis);
 		_pRight->_pContents = pNode->_pContents;
 		return true;

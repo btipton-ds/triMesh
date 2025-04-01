@@ -153,9 +153,9 @@ bool CBoundingBox3D<SCALAR_TYPE>::contains(const CBoundingBox3D& other, SCALAR_T
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::equals(const CBoundingBox3D& other, SCALAR_TYPE tol) const
+bool CBoundingBox3D<SCALAR_TYPE>::tolerantEquals(const CBoundingBox3D & other, SCALAR_TYPE tol) const
 {
-	return tolerantEquals(_min, other._min, tol) && tolerantEquals(_max, other._max, tol);
+	return ::tolerantEquals(_min, other._min, tol) && ::tolerantEquals(_max, other._max, tol);
 }
 
 template <class SCALAR_TYPE>
