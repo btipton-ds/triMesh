@@ -369,6 +369,44 @@ bool CSSB_DCL::add(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
 }
 
 CSSB_TMPL
+bool CSSB_DCL::addNode(const SpatialSearchBasePtr & pNode)
+{
+	const auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
+	if (!_bbox.contains(pNode->_bbox, tol))
+		return false;
+	
+		if (_bbox.tolerantEquals(pNode->_bbox, tol)) {
+		_pContents = pNode->_pContents;
+		return true;
+	}
+	
+	int nextAxis = (_axis + 1) % 3;
+	BOX_TYPE leftBBox, rightBBox;
+	_bbox.split(_axis, leftBBox, rightBBox, (SCALAR_TYPE)0.10);
+		if (!_pLeft && leftBBox.tolerantEquals(pNode->_bbox, tol)) {
+		_pLeft = make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
+		_pLeft->_pContents = pNode->_pContents;
+		return true;
+	}
+	
+		if (!_pRight && rightBBox.tolerantEquals(pNode->_bbox, tol)) {
+		_pRight = make_shared<CSpatialSearchBase>(rightBBox, nextAxis);
+		_pRight->_pContents = pNode->_pContents;
+		return true;
+	}
+	
+		if (_pLeft && _pLeft->_bbox.contains(pNode->_bbox, tol)) {
+		if (_pLeft->addNode(pNode))
+			return true;
+	}
+	if (_pRight && _pRight->_bbox.contains(pNode->_bbox, tol)) {
+		if (_pRight->addNode(pNode))
+			 return true;
+	}
+		return false;
+	}
+
+CSSB_TMPL
 bool CSSB_DCL::remove(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
 	return remove(Entry(bbox, index));
 }
