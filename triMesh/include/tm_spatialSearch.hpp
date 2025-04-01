@@ -112,7 +112,6 @@ size_t CSSB_DCL::numBytes() const
 
 CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, BoxTestType testType) const {
-	// Called recursively, don't clear result
 	if (boxesMatch(_bbox, bbox, testType)) {
 		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
 			for (const auto& entry : _pContents->_vals) {
@@ -132,7 +131,6 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, BoxTestType t
 
 CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestType testType) const {
-	// Called recursively, don't clear result
 	if (boxesMatch(_bbox, bbox, testType)) {
 		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
 			for (const auto& entry : _pContents->_vals) {
@@ -152,7 +150,6 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestT
 
 CSSB_TMPL
 size_t CSSB_DCL::findNodes(const BOX_TYPE& bbox, vector<SpatialSearchBasePtr>& result, BoxTestType testType) const {
-	// Called recursively, don't clear result
 	vector<INDEX_TYPE> indices;
 	if (find(bbox, indices)) {
 		result.push_back(CSpatialSearchBase::shared_from_this());
