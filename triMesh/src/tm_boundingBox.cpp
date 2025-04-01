@@ -153,6 +153,12 @@ bool CBoundingBox3D<SCALAR_TYPE>::contains(const CBoundingBox3D& other, SCALAR_T
 }
 
 template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::tolerantEquals(const CBoundingBox3D & other, SCALAR_TYPE tol) const
+{
+	return ::tolerantEquals(_min, other._min, tol) && ::tolerantEquals(_max, other._max, tol);
+}
+
+template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const CBoundingBox3D& otherBox, SCALAR_TYPE tol) const
 {
 	return intersectsOrContains(otherBox, tol) && !contains(otherBox, tol);

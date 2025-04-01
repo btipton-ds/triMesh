@@ -52,6 +52,7 @@ public:
 	POINT_TYPE range() const;
 	bool contains(const POINT_TYPE& pt, SCALAR_TYPE tol) const;
 	bool contains(const CBoundingBox3D& other, SCALAR_TYPE tol) const;
+	bool tolerantEquals(const CBoundingBox3D& other, SCALAR_TYPE tol) const;
 
 	bool intersects(const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const;
 	bool intersects(const Ray<SCALAR_TYPE>& ray, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const;
