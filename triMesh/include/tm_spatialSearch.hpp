@@ -149,6 +149,19 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestT
 }
 
 CSSB_TMPL
+size_t CSSB_DCL::findNodes(const BOX_TYPE& bbox, vector<SpatialSearchBasePtr>& result, BoxTestType testType) const {
+	vector<INDEX_TYPE> indices;
+	if (find(bbox, indices)) {
+		result.push_back(CSpatialSearchBase::shared_from_this());
+		if (_pLeft)
+			_pLeft->findNodes(bbox, result, testType);
+		if (_pRight)
+			_pRight->findNodes(bbox, result, testType);
+	}
+	return result.size();
+}
+
+CSSB_TMPL
 size_t CSSB_DCL::biDirRayCast(const Ray<SCALAR_TYPE>& ray, vector<INDEX_TYPE>& hits) const {
 	hits.clear();
 
@@ -275,6 +288,44 @@ CSSB_TMPL
 bool CSSB_DCL::add(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
 	return add(Entry(bbox, index), 0);
 }
+
+CSSB_TMPL
+bool CSSB_DCL::addNode(const SpatialSearchBasePtr & pNode)
+{
+	const auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
+	if (!_bbox.contains(pNode->_bbox, tol))
+		return false;
+	
+		if (_bbox.tolerantEquals(pNode->_bbox, tol)) {
+		_pContents = pNode->_pContents;
+		return true;
+	}
+	
+	int nextAxis = (_axis + 1) % 3;
+	BOX_TYPE leftBBox, rightBBox;
+	_bbox.split(_axis, leftBBox, rightBBox, (SCALAR_TYPE)0.10);
+		if (!_pLeft && leftBBox.tolerantEquals(pNode->_bbox, tol)) {
+		_pLeft = make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
+		_pLeft->_pContents = pNode->_pContents;
+		return true;
+	}
+	
+		if (!_pRight && rightBBox.tolerantEquals(pNode->_bbox, tol)) {
+		_pRight = make_shared<CSpatialSearchBase>(rightBBox, nextAxis);
+		_pRight->_pContents = pNode->_pContents;
+		return true;
+	}
+	
+		if (_pLeft && _pLeft->_bbox.contains(pNode->_bbox, tol)) {
+		if (_pLeft->addNode(pNode))
+			return true;
+	}
+	if (_pRight && _pRight->_bbox.contains(pNode->_bbox, tol)) {
+		if (_pRight->addNode(pNode))
+			 return true;
+	}
+		return false;
+	}
 
 CSSB_TMPL
 bool CSSB_DCL::remove(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
