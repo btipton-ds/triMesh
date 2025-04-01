@@ -104,7 +104,7 @@ private:
 	BOX_TYPE _bbox;
 	int _axis = 0;
 	std::shared_ptr<Contents> _pContents;
-	CSpatialSearchBase *_left = nullptr, *_right = nullptr;
+	std::shared_ptr<CSpatialSearchBase> _pLeft, _pRight;
 };
 
 template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>

@@ -91,9 +91,7 @@ CSSB_TMPL
 void CSSB_DCL::clear() {
 	_numInTree = 0;
 	_axis = 0;
-	delete _left;
-	delete _right;
-	_left = _right = nullptr;
+	_pLeft = _pRight = nullptr;
 	_pContents = nullptr;
 	_numInTree = 0;
 }
@@ -105,10 +103,10 @@ size_t CSSB_DCL::numBytes() const
 
 	if (_pContents)
 		result += _pContents->_vals.capacity() * sizeof(Entry);
-	if (_left)
-		result += _left->numBytes();
-	if (_right)
-		result += _right->numBytes();
+	if (_pLeft)
+		result += _pLeft->numBytes();
+	if (_pRight)
+		result += _pRight->numBytes();
 	return result;
 }
 
@@ -123,10 +121,10 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, BoxTestType t
 				}
 			}
 		}
-		if (_left)
-			_left->find(bbox, result, testType);
-		if (_right)
-			_right->find(bbox, result, testType);
+		if (_pLeft)
+			_pLeft->find(bbox, result, testType);
+		if (_pRight)
+			_pRight->find(bbox, result, testType);
 	}
 	return result.size();
 }
@@ -142,10 +140,10 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestT
 				}
 			}
 		}
-		if (_left)
-			_left->find(bbox, result, testType);
-		if (_right)
-			_right->find(bbox, result, testType);
+		if (_pLeft)
+			_pLeft->find(bbox, result, testType);
+		if (_pRight)
+			_pRight->find(bbox, result, testType);
 	}
 	return result.size();
 }
@@ -165,8 +163,8 @@ typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbo
 #if 0
 	return shared_from_this();
 #else
-	bool useLeft = _left && (bbox.intersectsOrContains(_left->_bbox, (SCALAR_TYPE)SAME_DIST_TOL));
-	bool useRight = _right && (bbox.intersectsOrContains(_right->_bbox, (SCALAR_TYPE)SAME_DIST_TOL));
+	bool useLeft = _pLeft && (bbox.intersectsOrContains(_pLeft->_bbox, (SCALAR_TYPE)SAME_DIST_TOL));
+	bool useRight = _pRight && (bbox.intersectsOrContains(_pRight->_bbox, (SCALAR_TYPE)SAME_DIST_TOL));
 	if (useLeft && useRight)
 		return enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>::shared_from_this();
 
@@ -179,9 +177,9 @@ typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbo
 	}
 
 	if (useLeft)
-		return _left->getSubTree(bbox);
+		return _pLeft->getSubTree(bbox);
 	else if (useRight)
-		return _right->getSubTree(bbox);
+		return _pRight->getSubTree(bbox);
 
 	return nullptr;
 #endif
@@ -201,10 +199,10 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 		}
 	}
 
-	if (_left && _left->add(newEntry, depth + 1)) {
+	if (_pLeft && _pLeft->add(newEntry, depth + 1)) {
 		_numInTree++;
 		return true;
-	} if (_right && _right->add(newEntry, depth + 1)) {
+	} if (_pRight && _pRight->add(newEntry, depth + 1)) {
 		_numInTree++;
 		return true;
 	}
@@ -213,7 +211,7 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 	_numInTree++;
 
 	// Split node and add to correct node
-	if (!_left && _pContents->_vals.size() > ENTRY_LIMIT)
+	if (!_pLeft && _pContents->_vals.size() > ENTRY_LIMIT)
 		split(depth);
 
 	return true;
@@ -260,11 +258,11 @@ bool CSSB_DCL::remove(const Entry& newEntry) {
 			}
 		}
 
-		if (_left && _left->remove(newEntry)) {
+		if (_pLeft && _pLeft->remove(newEntry)) {
 			// TODO prune dead branch
 			_numInTree--;
 			return true;
-		} if (_right && _right->remove(newEntry)) {
+		} if (_pRight && _pRight->remove(newEntry)) {
 			// TODO prune dead branch
 			_numInTree--;
 			return true;
@@ -293,10 +291,10 @@ void CSSB_DCL::biDirRayCastRecursive(const Ray<SCALAR_TYPE>& ray, vector<INDEX_T
 				}
 			}
 		}
-		if (_left)
-			_left->biDirRayCastRecursive(ray, hits);
-		if (_right)
-			_right->biDirRayCastRecursive(ray, hits);
+		if (_pLeft)
+			_pLeft->biDirRayCastRecursive(ray, hits);
+		if (_pRight)
+			_pRight->biDirRayCastRecursive(ray, hits);
 	}
 }
 
@@ -322,10 +320,10 @@ void CSSB_DCL::dump(wostream& out, size_t depth) const
 			out << pad << "  " << entry.getBBox().getMax()[0] << " " << entry.getBBox().getMax()[1] << " " << entry.getBBox().getMax()[2] << "\n";
 		}
 	}
-	if (_left)
-		_left->dump(out, depth + 1);
-	if (_right)
-		_right->dump(out, depth + 1);
+	if (_pLeft)
+		_pLeft->dump(out, depth + 1);
+	if (_pRight)
+		_pRight->dump(out, depth + 1);
 }
 
 CSSB_TMPL
@@ -333,17 +331,17 @@ void CSSB_DCL::split(int depth) {
 	BOX_TYPE leftBBox, rightBBox;
 	_bbox.split(_axis, leftBBox, rightBBox, (SCALAR_TYPE)0.10);
 	int nextAxis = (_axis + 1) % 3;
-	_left = new CSpatialSearchBase(leftBBox, nextAxis);
-	_right = new CSpatialSearchBase(rightBBox, nextAxis);
+	_pLeft = make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
+	_pRight = make_shared<CSpatialSearchBase>(rightBBox, nextAxis);
 	assert(_pContents);
 	const vector<Entry> temp(_pContents->_vals);
 	_pContents = nullptr;
 
 	for (const auto& entry : temp) {
 		if (leftBBox.contains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
-			_left->add(entry, depth + 1);
+			_pLeft->add(entry, depth + 1);
 		else if (rightBBox.contains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
-			_right->add(entry, depth + 1);
+			_pRight->add(entry, depth + 1);
 		else {
 			addToContents(entry);
 		}
