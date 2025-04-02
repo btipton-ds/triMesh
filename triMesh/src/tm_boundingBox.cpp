@@ -28,7 +28,8 @@ This file is part of the TriMesh library.
 */
 
 #include <tm_ray.h>
-#include <tm_lineSegment.h>
+#include <tm_lineSegment.hpp>
+#include <tm_lineSegment_byref.hpp>
 #include <tm_boundingBox.h>
 #include <tm_plane_byref.h>
 
@@ -178,7 +179,50 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment<SCALAR_TYPE>& seg
 }
 
 template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment_byref<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const
+{
+	vector<POINT_TYPE> pts;
+	return intersectsInner(seg, pts, tol, false, skipAxis);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const LineSegment_byref<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, int skipAxis) const
+{
+	return intersectsInner(seg, pts, tol, true, skipAxis);
+}
+
+template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const
+{
+	pts.clear();
+	if (seg.calLength() < tol)
+		return false;
+
+	for (size_t i = 0; i < 3; i++) {
+		if (skipAxis == i)
+			continue;
+
+		RayHit<SCALAR_TYPE> hit;
+		Plane_byref<SCALAR_TYPE> minPlane(_min, _axes[i]);
+		if (minPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
+			pts.push_back(hit.hitPt);
+			if (!getAll)
+				break;
+		}
+
+		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
+		if (maxPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
+			pts.push_back(hit.hitPt);
+			if (!getAll)
+				break;
+		}
+	}
+
+	return !pts.empty();
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment_byref<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const
 {
 	pts.clear();
 	if (seg.calLength() < tol)

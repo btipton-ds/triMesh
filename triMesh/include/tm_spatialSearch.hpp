@@ -182,7 +182,7 @@ typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbo
 		std::reverse(nodes.begin(), nodes.end());
 		shared_ptr<CSpatialSearchBase> result = make_shared<CSpatialSearchBase>(_bbox, _axis);
 		for (size_t i = nodes.size() -1; i != -1; i--){
-			if (result->addNode(nodes[i])) {
+			if (result->addNode(bbox, nodes[i])) {
 				nodes.pop_back();
 			} else {
 				assert(!"nodes not in expected order.");
@@ -192,49 +192,6 @@ typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbo
 	}
 	return nullptr;
 #endif
-}
-
-CSSB_TMPL
-bool CSSB_DCL::addSubTreeNode(const BOX_TYPE& testBox, const std::shared_ptr<const CSpatialSearchBase>& pSrc)
-{
-	auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
-	bool result = false;
-
-	vector<INDEX_TYPE> indices;
-	if (pSrc->find(testBox, indices)) {
-		indices.clear();
-		if (pSrc->_pContents && testBox.intersectsOrContains(pSrc->_pContents->_bbox, tol)) {
-#if 0
-			for (const auto& entry : pSrc->_pContents->_vals) {
-				if (testBox.intersectsOrContains(entry.getBBox(), tol)) {
-					_pContents = pSrc->_pContents;
-					result = true;
-					break;
-				}
-			}
-#else
-			_pContents = pSrc->_pContents;
-			result = true;
-#endif
-		}
-		
-
-		if (pSrc->_pLeft && testBox.intersectsOrContains(pSrc->_pLeft->_bbox, tol)) {
-			auto pLeft = make_shared<CSpatialSearchBase>(pSrc->_pLeft->_bbox);
-			if (pLeft->addSubTreeNode(testBox, pSrc->_pLeft)) {
-				_pLeft = pLeft;
-				result = true;
-			}
-		}
-		if (pSrc->_pRight && testBox.intersectsOrContains(pSrc->_pRight->_bbox, tol)) {
-			auto pRight = make_shared<CSpatialSearchBase>(pSrc->_pRight->_bbox);
-			if (pRight->addSubTreeNode(testBox, pSrc->_pRight)) {
-				_pRight = pRight;
-				result = true;
-			}
-		}
-	}
-	return result;
 }
 
 CSSB_TMPL
@@ -271,14 +228,15 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 }
 
 CSSB_TMPL
-bool CSSB_DCL::addNode(const SpatialSearchBasePtr& pNode)
+bool CSSB_DCL::addNode(const BOX_TYPE& smallerBbox, const SpatialSearchBasePtr& pNode)
 {
 	const auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
 	if (!_bbox.contains(pNode->_bbox, tol))
 		return false;
 
 	if (_bbox.tolerantEquals(pNode->_bbox, tol)) {
-		_pContents = pNode->_pContents;
+		if (pNode->bboxIntersectsContents(smallerBbox))
+			_pContents = pNode->_pContents;
 		return true;
 	}
 
@@ -288,23 +246,40 @@ bool CSSB_DCL::addNode(const SpatialSearchBasePtr& pNode)
 
 	if (!_pLeft && leftBBox.tolerantEquals(pNode->_bbox, tol)) {
 		_pLeft = make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
+		if (pNode->bboxIntersectsContents(smallerBbox))
+			_pLeft->_pContents = pNode->_pContents;
 		_pLeft->_pContents = pNode->_pContents;
 		return true;
 	}
 
 	if (!_pRight && rightBBox.tolerantEquals(pNode->_bbox, tol)) {
 		_pRight = make_shared<CSpatialSearchBase>(rightBBox, nextAxis);
-		_pRight->_pContents = pNode->_pContents;
+		if (pNode->bboxIntersectsContents(smallerBbox))
+			_pRight->_pContents = pNode->_pContents;
 		return true;
 	}
 
 	if (_pLeft && _pLeft->_bbox.contains(pNode->_bbox, tol)) {
-		if (_pLeft->addNode(pNode))
+		if (_pLeft->addNode(smallerBbox, pNode))
 			return true;
 	}
 	if (_pRight && _pRight->_bbox.contains(pNode->_bbox, tol)) {
-		if (_pRight->addNode(pNode))
+		if (_pRight->addNode(smallerBbox, pNode))
 			return true;
+	}
+
+	return false;
+}
+
+CSSB_TMPL
+bool CSSB_DCL::bboxIntersectsContents(const BOX_TYPE& smallerBbox) const
+{
+	const auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
+	if (_pContents && smallerBbox.intersectsOrContains(_pContents->_bbox, tol)) {
+		for (auto& entry : _pContents->_vals) {
+			if (smallerBbox.intersectsOrContains(entry.getBBox(), tol))
+				return true;
+		}
 	}
 
 	return false;

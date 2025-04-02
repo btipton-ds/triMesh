@@ -33,6 +33,8 @@ This file is part of the TriMesh library.
 #include <tm_math.h>
 #include <tm_rectangle.h>
 #include <tm_vector3.h>
+#include <tm_lineSegment.h>
+#include <tm_lineSegment_byref.h>
 
 template <class SCALAR_TYPE>
 class CBoundingBox3D {
@@ -56,8 +58,13 @@ public:
 
 	bool intersects(const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const;
 	bool intersects(const Ray<SCALAR_TYPE>& ray, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const;
+
 	bool intersects(const LineSegment<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const;
 	bool intersects(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, int skipAxis) const;
+
+	bool intersects(const LineSegment_byref<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const;
+	bool intersects(const LineSegment_byref<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, int skipAxis) const;
+
 	bool intersects(const CBoundingBox3D& otherBox, SCALAR_TYPE tol) const;
 
 	bool intersectsOrContains(const CBoundingBox3D& otherBox, SCALAR_TYPE tol) const;
@@ -76,6 +83,7 @@ private:
 	static const POINT_TYPE _negAxes[3];
 
 	bool intersectsInner(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const;
+	bool intersectsInner(const LineSegment_byref<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const;
 
 	POINT_TYPE _min, _max;
 };
