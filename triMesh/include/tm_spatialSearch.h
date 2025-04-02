@@ -99,7 +99,7 @@ private:
 	void split(int depth);
 	size_t findNodes(const BOX_TYPE& bbox, std::vector<SpatialSearchBasePtr>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	bool addNode(const BOX_TYPE& smallerBbox, const SpatialSearchBasePtr& pNode);
-	bool bboxIntersectsContents(const BOX_TYPE& smallerBbox) const;
+	std::shared_ptr<Contents> getSubContents(const BOX_TYPE& smallerBbox) const;
 	static bool boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType);
 
 	size_t _numInTree = 0;

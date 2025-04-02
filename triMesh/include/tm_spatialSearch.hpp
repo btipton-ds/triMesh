@@ -235,8 +235,7 @@ bool CSSB_DCL::addNode(const BOX_TYPE& smallerBbox, const SpatialSearchBasePtr& 
 		return false;
 
 	if (_bbox.tolerantEquals(pNode->_bbox, tol)) {
-		if (pNode->bboxIntersectsContents(smallerBbox))
-			_pContents = pNode->_pContents;
+		_pContents = pNode->getSubContents(smallerBbox);
 		return true;
 	}
 
@@ -246,16 +245,13 @@ bool CSSB_DCL::addNode(const BOX_TYPE& smallerBbox, const SpatialSearchBasePtr& 
 
 	if (!_pLeft && leftBBox.tolerantEquals(pNode->_bbox, tol)) {
 		_pLeft = make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
-		if (pNode->bboxIntersectsContents(smallerBbox))
-			_pLeft->_pContents = pNode->_pContents;
-		_pLeft->_pContents = pNode->_pContents;
+		_pLeft->_pContents = pNode->getSubContents(smallerBbox);;
 		return true;
 	}
 
 	if (!_pRight && rightBBox.tolerantEquals(pNode->_bbox, tol)) {
 		_pRight = make_shared<CSpatialSearchBase>(rightBBox, nextAxis);
-		if (pNode->bboxIntersectsContents(smallerBbox))
-			_pRight->_pContents = pNode->_pContents;
+		_pRight->_pContents = pNode->getSubContents(smallerBbox);;
 		return true;
 	}
 
@@ -272,17 +268,30 @@ bool CSSB_DCL::addNode(const BOX_TYPE& smallerBbox, const SpatialSearchBasePtr& 
 }
 
 CSSB_TMPL
-bool CSSB_DCL::bboxIntersectsContents(const BOX_TYPE& smallerBbox) const
+std::shared_ptr<typename CSSB_DCL::Contents> CSSB_DCL::getSubContents(const BOX_TYPE& smallerBbox) const
 {
 	const auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
-	if (_pContents && smallerBbox.intersectsOrContains(_pContents->_bbox, tol)) {
+
+	if (!_pContents)
+		return nullptr;
+
+	shared_ptr<Contents> result = make_shared<Contents>();
+
+	if (smallerBbox.intersectsOrContains(_pContents->_bbox, tol)) {
 		for (auto& entry : _pContents->_vals) {
-			if (smallerBbox.intersectsOrContains(entry.getBBox(), tol))
-				return true;
+			if (smallerBbox.intersectsOrContains(entry.getBBox(), tol)) {
+				result->_bbox.merge(entry.getBBox());
+				result->_vals.push_back(entry);
+			}
 		}
 	}
 
-	return false;
+	if (result->_vals.empty())
+		return nullptr;
+	else if (result->_vals.size() * 2 > _pContents->_vals.size())
+		return result;
+
+	return _pContents;
 }
 
 CSSB_TMPL
