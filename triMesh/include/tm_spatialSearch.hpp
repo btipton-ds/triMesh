@@ -115,8 +115,7 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, BoxTestType t
 	if (boxesMatch(_bbox, bbox, testType)) {
 		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
 			for (const auto& entry : _pContents->_vals) {
-				const auto& bb = entry.getBBox();
-				if (boxesMatch(_bbox, bbox, testType)) {
+				if (boxesMatch(bbox, entry.getBBox(), testType)) {
 					result.push_back(entry);
 				}
 			}
@@ -134,8 +133,7 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestT
 	if (boxesMatch(_bbox, bbox, testType)) {
 		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
 			for (const auto& entry : _pContents->_vals) {
-				const auto& bb = entry.getBBox();
-				if (boxesMatch(bb, bbox, testType)) {
+				if (boxesMatch(bbox, entry.getBBox(), testType)) {
 					result.push_back(entry.getIndex());
 				}
 			}
@@ -144,19 +142,6 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestT
 			_pLeft->find(bbox, result, testType);
 		if (_pRight)
 			_pRight->find(bbox, result, testType);
-	}
-	return result.size();
-}
-
-CSSB_TMPL
-size_t CSSB_DCL::findNodes(const BOX_TYPE& bbox, vector<SpatialSearchBasePtr>& result, BoxTestType testType) const {
-	vector<INDEX_TYPE> indices;
-	if (find(bbox, indices)) {
-		result.push_back(CSpatialSearchBase::shared_from_this());
-		if (_pLeft)
-			_pLeft->findNodes(bbox, result, testType);
-		if (_pRight)
-			_pRight->findNodes(bbox, result, testType);
 	}
 	return result.size();
 }
@@ -171,27 +156,61 @@ size_t CSSB_DCL::biDirRayCast(const Ray<SCALAR_TYPE>& ray, vector<INDEX_TYPE>& h
 }
 
 CSSB_TMPL
-typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox) const
+typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox, BoxTestType testType) const
 {
-#if 0
-	return shared_from_this();
-#else
-
-	vector<SpatialSearchBasePtr> nodes;
-	if (findNodes(bbox, nodes)) {
-		std::reverse(nodes.begin(), nodes.end());
+#define DO_VERIFICATION 0
+	vector<INDEX_TYPE> entries;
+	if (find(bbox, entries, testType)) {
+#if !(DO_VERIFICATION && defined(_DEBUG))
+		entries.clear();
+#endif
 		shared_ptr<CSpatialSearchBase> result = make_shared<CSpatialSearchBase>(_bbox, _axis);
-		for (size_t i = nodes.size() -1; i != -1; i--){
-			if (result->addNode(bbox, nodes[i])) {
-				nodes.pop_back();
+		copyTreeToReducedTree(bbox, result, testType);
+
+#if DO_VERIFICATION && defined(_DEBUG)
+		vector<INDEX_TYPE> entries1;
+		if (result) {
+			if (result->find(bbox, entries1)) {
+				if (entries.size() == entries1.size()) {
+					set<INDEX_TYPE> test;
+					test.insert(entries1.begin(), entries1.end());
+					for (const auto& entry : entries) {
+						if (!test.contains(entry)) {
+							assert(!"Subtree search contents did not match source tree search contents.");
+						}
+					}
+				} else {
+					assert(!"Subtree search size did not match source tree search size.");
+				}
 			} else {
-				assert(!"nodes not in expected order.");
+				assert(!"Subtree search result did not match source tree search result.");
 			}
 		}
+#endif // _DEBUG
+
 		return result;
 	}
 	return nullptr;
-#endif
+}
+
+CSSB_TMPL
+void CSSB_DCL::copyTreeToReducedTree(const BOX_TYPE& smallerBbox, SpatialSearchBasePtr& dst, BoxTestType testType) const
+{
+	dst->setSubContents(smallerBbox, this, testType);
+
+	vector<INDEX_TYPE> leftEntries;
+	if (_pLeft && _pLeft->find(smallerBbox, leftEntries)) {
+		leftEntries.clear();
+		dst->_pLeft = make_shared<CSpatialSearchBase>(_pLeft->_bbox, _pLeft->_axis);
+		_pLeft->copyTreeToReducedTree(smallerBbox, dst->_pLeft, testType);
+	}
+
+	vector<INDEX_TYPE> rightEntries;
+	if (_pRight && _pRight->find(smallerBbox, rightEntries)) {
+		rightEntries.clear();
+		dst->_pRight = make_shared<CSpatialSearchBase>(_pRight->_bbox, _pRight->_axis);
+		_pRight->copyTreeToReducedTree(smallerBbox, dst->_pRight, testType);
+	}
 }
 
 CSSB_TMPL
@@ -228,70 +247,29 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 }
 
 CSSB_TMPL
-bool CSSB_DCL::addNode(const BOX_TYPE& smallerBbox, const SpatialSearchBasePtr& pNode)
-{
-	const auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
-	if (!_bbox.contains(pNode->_bbox, tol))
-		return false;
-
-	if (_bbox.tolerantEquals(pNode->_bbox, tol)) {
-		_pContents = pNode->getSubContents(smallerBbox);
-		return true;
-	}
-
-	int nextAxis = (_axis + 1) % 3;
-	BOX_TYPE leftBBox, rightBBox;
-	_bbox.split(_axis, leftBBox, rightBBox, (SCALAR_TYPE)0.10);
-
-	if (!_pLeft && leftBBox.tolerantEquals(pNode->_bbox, tol)) {
-		_pLeft = make_shared<CSpatialSearchBase>(leftBBox, nextAxis);
-		_pLeft->_pContents = pNode->getSubContents(smallerBbox);;
-		return true;
-	}
-
-	if (!_pRight && rightBBox.tolerantEquals(pNode->_bbox, tol)) {
-		_pRight = make_shared<CSpatialSearchBase>(rightBBox, nextAxis);
-		_pRight->_pContents = pNode->getSubContents(smallerBbox);;
-		return true;
-	}
-
-	if (_pLeft && _pLeft->_bbox.contains(pNode->_bbox, tol)) {
-		if (_pLeft->addNode(smallerBbox, pNode))
-			return true;
-	}
-	if (_pRight && _pRight->_bbox.contains(pNode->_bbox, tol)) {
-		if (_pRight->addNode(smallerBbox, pNode))
-			return true;
-	}
-
-	return false;
-}
-
-CSSB_TMPL
-std::shared_ptr<typename CSSB_DCL::Contents> CSSB_DCL::getSubContents(const BOX_TYPE& smallerBbox) const
+void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, const CSpatialSearchBase* pSrc, BoxTestType testType)
 {
 	const auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
 
-	if (!_pContents)
-		return nullptr;
+	if (!pSrc->_pContents)
+		return;
 
-	shared_ptr<Contents> result = make_shared<Contents>();
-
-	if (smallerBbox.intersectsOrContains(_pContents->_bbox, tol)) {
-		for (auto& entry : _pContents->_vals) {
-			if (smallerBbox.intersectsOrContains(entry.getBBox(), tol)) {
-				result->_bbox.merge(entry.getBBox());
-				result->_vals.push_back(entry);
+	if (boxesMatch(pSrc->_pContents->_bbox, smallerBbox, testType)) {
+		_pContents = make_shared<Contents>();
+		for (auto& entry : pSrc->_pContents->_vals) {
+			if (boxesMatch(smallerBbox, entry.getBBox(), testType)) {
+				addToContents(entry);
 			}
+		}
+
+		if (_pContents->_vals.empty())
+			_pContents = nullptr;
+		else if (_pContents->_vals.size() * 2 >= pSrc->_pContents->_vals.size()) {
+			// The reduced contents are more than 1/2 the size of the original, it's not worth it so use the old one.
+			_pContents = pSrc->_pContents;
 		}
 	}
 
-	if (result->_vals.empty())
-		return nullptr;
-	else if (result->_vals.size() * 2 > _pContents->_vals.size())
-		return result;
-
-	return _pContents;
 }
 
 CSSB_TMPL

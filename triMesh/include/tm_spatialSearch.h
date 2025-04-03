@@ -40,13 +40,17 @@ template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
 class CSpatialSearchBase;
 
 template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
-using CSpatialSearchBasePtr = std::shared_ptr<const CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>;
+using CSpatialSearchBasePtr = std::shared_ptr<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>;
+
+template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
+using CSpatialSearchBaseConstPtr = std::shared_ptr<const CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>;
 
 template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
 class CSpatialSearchBase : public std::enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>> {
 public:
 	using BOX_TYPE = CBoundingBox3D<SCALAR_TYPE>;
 	using SpatialSearchBasePtr = CSpatialSearchBasePtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>;
+	using SpatialSearchBaseConstPtr = CSpatialSearchBaseConstPtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>;
 
 	enum class BoxTestType {
 		Contains, Intersects, IntersectsOrContains
@@ -78,7 +82,7 @@ public:
 	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
-	SpatialSearchBasePtr getSubTree(const BOX_TYPE& bbox) const;
+	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
 
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);
 
@@ -95,11 +99,10 @@ private:
 		std::vector<Entry> _vals;
 	};
 	bool add(const Entry& newEntry, int depth);
+	void copyTreeToReducedTree(const BOX_TYPE& smallerBbox, SpatialSearchBasePtr& dst, BoxTestType testType) const;
 	void addToContents(const Entry& newEntry);
 	void split(int depth);
-	size_t findNodes(const BOX_TYPE& bbox, std::vector<SpatialSearchBasePtr>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
-	bool addNode(const BOX_TYPE& smallerBbox, const SpatialSearchBasePtr& pNode);
-	std::shared_ptr<Contents> getSubContents(const BOX_TYPE& smallerBbox) const;
+	void setSubContents(const BOX_TYPE& smallerBbox, const CSpatialSearchBase* pSrc, BoxTestType testType);
 	static bool boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType);
 
 	size_t _numInTree = 0;
