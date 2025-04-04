@@ -198,18 +198,22 @@ void CSSB_DCL::copyTreeToReducedTree(const BOX_TYPE& smallerBbox, SpatialSearchB
 {
 	dst->setSubContents(smallerBbox, this, testType);
 
-	vector<INDEX_TYPE> leftEntries;
-	if (_pLeft && _pLeft->find(smallerBbox, leftEntries)) {
-		leftEntries.clear();
+	if (_pLeft) {
 		dst->_pLeft = make_shared<CSpatialSearchBase>(_pLeft->_bbox, _pLeft->_axis);
 		_pLeft->copyTreeToReducedTree(smallerBbox, dst->_pLeft, testType);
+		if (dst->_pLeft->_numInTree > 0)
+			dst->_numInTree += dst->_pLeft->_numInTree;
+		else
+			dst->_pLeft = nullptr;
 	}
 
-	vector<INDEX_TYPE> rightEntries;
-	if (_pRight && _pRight->find(smallerBbox, rightEntries)) {
-		rightEntries.clear();
+	if (_pRight) {
 		dst->_pRight = make_shared<CSpatialSearchBase>(_pRight->_bbox, _pRight->_axis);
 		_pRight->copyTreeToReducedTree(smallerBbox, dst->_pRight, testType);
+		if (dst->_pRight->_numInTree > 0)
+			dst->_numInTree += dst->_pRight->_numInTree;
+		else
+			dst->_pRight = nullptr;
 	}
 }
 
@@ -268,6 +272,9 @@ void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, const CSpatialSearchB
 			// The reduced contents are more than 1/2 the size of the original, it's not worth it so use the old one.
 			_pContents = pSrc->_pContents;
 		}
+
+		if (_pContents)
+			_numInTree += _pContents->_vals.size();
 	}
 
 }
