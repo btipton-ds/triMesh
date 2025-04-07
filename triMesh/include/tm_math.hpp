@@ -105,7 +105,7 @@ bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3
 }
 
 template<class T>
-bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, T tol)
+bool pointInTriangle(const Vector3<T>* const* pts, const Vector3<T>& pt, T tol)
 {
 	Vector3<T> norm = triangleUnitNormal(pts);
 	return pointInTriangle(pts, pt, norm, tol);
@@ -119,7 +119,7 @@ bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3
 }
 
 template<class T>
-bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, const Vector3<T>& unitNorm, T tol)
+bool pointInTriangle(const Vector3<T>* const* pts, const Vector3<T>& pt, const Vector3<T>& unitNorm, T tol)
 {
 #ifdef _DEBUG
 	{
@@ -154,7 +154,7 @@ bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>&
 }
 
 template<class T>
-bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit, T tol) {
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* const* pts, RayHit<T>& hit, T tol) {
 
 	Vector3<T> v0 = *pts[1] - *pts[0];
 	Vector3<T> v1 = *pts[2] - *pts[0];

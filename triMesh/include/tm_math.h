@@ -96,25 +96,25 @@ template<class T>
 bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt, T tol = sameDistTol<T>());
 
 template<class T>
-bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, T tol = sameDistTol<T>());
+bool pointInTriangle(const Vector3<T>* const* pts, const Vector3<T>& pt, T tol = sameDistTol<T>());
 
 template<class T>
 bool pointInTriangle(const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt, const Vector3<T>& unitNorm, T tol = sameDistTol<T>());
 
 template<class T>
-bool pointInTriangle(const Vector3<T>* pts[3], const Vector3<T>& pt, const Vector3<T>& unitNorm, T tol = sameDistTol<T>());
+bool pointInTriangle(const Vector3<T>* const* pts, const Vector3<T>& pt, const Vector3<T>& unitNorm, T tol = sameDistTol<T>());
 
 template<class T>
 bool intersectRayTri(const Ray<T>& ray, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, RayHit<T>& hit, T tol = sameDistTol<T>());
 
 template<class T>
-bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* pts[3], RayHit<T>& hit, T tol = sameDistTol<T>());
+bool intersectRayTri(const Ray<T>& ray, const Vector3<T>* const* pts, RayHit<T>& hit, T tol = sameDistTol<T>());
 
 template<class T>
 bool intersectTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T tol = sameDistTol<T>());
 
 template<class T>
-bool intersectTriTri(const Vector3<T>* triPts0[3], const Vector3<T>* triPts1[3], T tol = sameDistTol<T>());
+bool intersectTriTri(const Vector3<T>* const* triPts0, const Vector3<T>* const* triPts1, T tol = sameDistTol<T>());
 
 template<class T>
 Vector3<T> orthoganalizeVector(const Vector3<T>& v, const Vector3<T>& unitVector);
