@@ -181,7 +181,7 @@ bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const 
 }
 
 template<class T>
-bool Plane<T>::intersectTri(const POINT_TYPE* pts[3], LineSegment<T>& iSeg, T tol) const
+bool Plane<T>::intersectTri(const Vector3<T>* const* pts, LineSegment<T>& iSeg, T tol) const
 {
 	return intersectTri(*pts[0], *pts[1], *pts[2], iSeg, tol);
 }
