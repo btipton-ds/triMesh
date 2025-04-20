@@ -84,6 +84,14 @@ public:
 	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
 	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
 
+
+	template<class REFINER>
+	size_t find(const BOX_TYPE& bbox, REFINER refineFunc, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	template<class REFINER>
+	size_t find(const BOX_TYPE& bbox, REFINER refineFunc, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	template<class REFINER>
+	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, REFINER refineFunc, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
+
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);
 
 	bool remove(const Entry& newEntry);
@@ -100,9 +108,18 @@ private:
 	};
 	bool add(const Entry& newEntry, int depth);
 	void copyTreeToReducedTree(const BOX_TYPE& smallerBbox, SpatialSearchBasePtr& dst, BoxTestType testType) const;
+
+	template<class REFINER>
+	void copyTreeToReducedTree(const BOX_TYPE& smallerBbox, REFINER refineFunc, SpatialSearchBasePtr& dst, BoxTestType testType) const;
+
 	void addToContents(const Entry& newEntry);
 	void split(int depth);
+
 	void setSubContents(const BOX_TYPE& smallerBbox, const CSpatialSearchBase* pSrc, BoxTestType testType);
+
+	template<class REFINER>
+	void setSubContents(const BOX_TYPE& smallerBbox, REFINER refineFunc, const CSpatialSearchBase* pSrc, BoxTestType testType);
+
 	static bool boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType);
 
 	size_t _numInTree = 0;
