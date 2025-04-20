@@ -205,6 +205,54 @@ bool CMesh::compareDumpedTree(const wstring& filename) const
 	return true;
 }
 
+void CMesh::markCoplanarEdges(double tol, bool multiCore)
+{
+	MultiCore::runLambda([this, tol](size_t threadNum, size_t numThreads) {
+		for (size_t i = threadNum; i < _edges.size(); i += numThreads) {
+			auto& edge = _edges[i];
+			if (edge.numFaces() == 2) {
+				const Vector3d* edgePts[] = {
+					&_vertices[edge._vertIndex[0]]._pt,
+					&_vertices[edge._vertIndex[1]]._pt,
+				};
+
+				const auto& triIdx0 = _tris[edge._faceIndices[0]];
+				const auto& triIdx1 = _tris[edge._faceIndices[1]];
+
+				size_t otherIdx0, otherIdx1;
+				for (int i = 0; i < 3; i++) {
+					if (triIdx0[i] != edge._vertIndex[0] && triIdx0[i] != edge._vertIndex[1]) {
+						otherIdx0 = triIdx0[i];
+					}
+					if (triIdx1[i] != edge._vertIndex[0] && triIdx1[i] != edge._vertIndex[1]) {
+						otherIdx1 = triIdx1[i];
+					}
+				}
+
+				const auto& pt0 = _vertices[otherIdx0]._pt;
+				const auto& pt1 = _vertices[otherIdx1]._pt;
+
+				Vector3d v0 = (*edgePts[1] - *edgePts[0]);
+
+				Vector3d v1 = (pt0 - *edgePts[0]);
+				Vector3d n = v1.cross(v0).normalized();
+				Planed plane0(*edgePts[0], n, true);
+
+				v1 = (pt1 - *edgePts[0]);
+				n = v1.cross(v0).normalized();
+				Planed plane1(*edgePts[0], n, true);
+
+				auto dist0 = plane0.distanceToPoint(pt1);
+				auto dist1 = plane1.distanceToPoint(pt0);
+
+				if (dist0 < tol || dist1 < tol) {
+					edge._isCoplanar = true;
+				}
+			}
+		}
+	}, multiCore);
+}
+
 size_t CMesh::findEdge(const CEdge& edge) const
 {
 	auto iter = _edgeToIdxMap.find(edge);
@@ -1827,6 +1875,11 @@ double CMesh::edgeCurvature(size_t edgeIdx) const
 	if (edgeIdx < _edgeCurvature.size())
 		return _edgeCurvature[edgeIdx];
 	return 0;
+}
+
+bool CMesh::isEdgeCoplanar(size_t edgeIdx) const
+{
+	return _edges[edgeIdx]._isCoplanar;
 }
 
 double CMesh::triCurvature(size_t triIdx) const

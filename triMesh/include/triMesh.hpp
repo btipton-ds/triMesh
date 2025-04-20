@@ -110,8 +110,7 @@ void CMesh::getGlEdges(LAMBDA curvatureToColorFunc, bool includeSmooth, std::vec
 		if (isEdgeSharp(edgeIdx, sinSharpAngle)) {
 			sharpIndices.push_back(idx0);
 			sharpIndices.push_back(idx1);
-		}
-		else {
+		} else if (!isEdgeCoplanar(edgeIdx)) {
 			smoothIndices.push_back(idx0);
 			smoothIndices.push_back(idx1);
 		}

@@ -115,6 +115,7 @@ namespace TriMesh {
 
 		size_t addEdge(size_t vertIdx0, size_t vertIdx1);
 		size_t addTriangle(const Vector3i& tri);
+		void markCoplanarEdges(double tol = SAME_DIST_TOL, bool multiCore = true);
 		size_t findEdge(size_t vertIdx0, size_t vertIdx1) const;
 		size_t findEdge(const CEdge& edge) const;
 
@@ -193,6 +194,7 @@ namespace TriMesh {
 
 		Vector3d vertUnitNormal(size_t vertIdx) const;
 		double edgeCurvature(size_t edgeIdx) const;
+		bool isEdgeCoplanar(size_t edgeIdx) const;
 		double edgeLength(size_t edgeIdx) const;
 		double triCurvature(size_t triIdx) const;
 

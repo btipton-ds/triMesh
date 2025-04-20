@@ -80,6 +80,7 @@ public:
 
 	void dump(std::ostream& out) const;
 
+	bool _isCoplanar = false;
 	int _numFaces = 0;
 	size_t _faceIndices[TRI_MESH_MAX_EDGE_CONNECTED_FACES] = { stm1, stm1 };
 };
