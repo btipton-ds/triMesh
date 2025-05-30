@@ -373,6 +373,72 @@ bool testTriangleSplitWithPlane() {
 }
 
 template<class T>
+bool testPlanePlaneIntersection0() {
+	const auto tol = sameDistTol<T>();
+
+	Plane<T> pl0(Vector3<T>(0, 1, 0), Vector3<T>(1, 0, 0));
+	Plane<T> pl1(Vector3<T>(1, 0, 0), Vector3<T>(0, 1, 0));
+	Ray<T> result;
+	auto bVal = pl0.intersectPlane(pl1, result, tol);
+	TEST_TRUE(bVal, "testPlanePlaneIntersection0");
+
+	bVal = tolerantEquals<T>(result._origin, Vector3<T>(0, 0, 0), tol);
+	TEST_TRUE(bVal, "testPlanePlaneIntersection0 correct origin");
+
+	bVal = tolerantEquals<T>(result._dir, Vector3<T>(0, 0, 1), tol);
+	TEST_TRUE(bVal, "testPlanePlaneIntersection0 correct direction");
+	return true;
+}
+
+template<class T>
+bool testPlanePlaneIntersection1() {
+	const auto tol = sameDistTol<T>();
+
+	Plane<T> pl0(Vector3<T>(0, 1, 0), Vector3<T>(1, 0, 0));
+	Plane<T> pl1(Vector3<T>(1, 0.5, 0), Vector3<T>(0, 1, 0));
+	Ray<T> result;
+	auto bVal = pl0.intersectPlane(pl1, result, tol);
+	TEST_TRUE(bVal, "testPlanePlaneIntersection1");
+
+	bVal = tolerantEquals<T>(result._origin, Vector3<T>(0, 0.5, 0), tol);
+	TEST_TRUE(bVal, "testPlanePlaneIntersection1 correct origin");
+
+	bVal = tolerantEquals<T>(result._dir, Vector3<T>(0, 0, 1), tol);
+	TEST_TRUE(bVal, "testPlanePlaneIntersection1 correct direction");
+	return true;
+}
+
+template<class T>
+bool testPlanePlaneIntersection2() {
+	const auto tol = sameDistTol<T>();
+
+	Plane<T> pl0(Vector3<T>(1, 0, 0), Vector3<T>(0, 1, 0));
+	T cos45 = (T)cos(M_PI / 4);
+
+	Plane<T> pl1(Vector3<T>(-cos45, cos45, 0), Vector3<T>(-cos45, -cos45, 0));
+	Ray<T> result;
+	auto bVal = pl0.intersectPlane(pl1, result, tol);
+	TEST_TRUE(bVal, "testPlanePlaneIntersection2");
+
+	bVal = tolerantEquals<T>(result._origin, Vector3<T>(0, 0, 0), tol);
+	TEST_TRUE(bVal, "testPlanePlaneIntersection2 correct origin");
+
+	bVal = tolerantEquals<T>(result._dir, Vector3<T>(0, 0, 1), tol);
+	TEST_TRUE(bVal, "testPlanePlaneIntersection2 correct direction");
+	return true;
+}
+
+template<class T>
+bool testPlanePlaneIntersection() {
+	TEST_TRUE(testPlanePlaneIntersection0<T>(), "testPlanePlaneIntersection0");
+	TEST_TRUE(testPlanePlaneIntersection1<T>(), "testPlanePlaneIntersection1");
+	TEST_TRUE(testPlanePlaneIntersection2<T>(), "testPlanePlaneIntersection2");
+
+	cout << "testPlanePlaneIntersection passed\n";
+	return true;
+}
+
+template<class T>
 bool testTempl() {
 	TEST_TRUE(testVectorRotation<T>(), "testVectorRotation");
 	TEST_TRUE(testPointRotation<T>(), "testPointRotation");
@@ -383,6 +449,7 @@ bool testTempl() {
 	TEST_TRUE(testRayTriIntersect<T>(), "testRayTriIntersect");
 	TEST_TRUE(testRayTriIntersectVerts<T>(), "testRayTriIntersectVerts");
 	TEST_TRUE(testTriangleSplitWithPlane<T>(), "testTriangleSplitWithPlane");
+	TEST_TRUE(testPlanePlaneIntersection<T>(), "testPlanePlaneIntersection");
 
 	return true;
 }

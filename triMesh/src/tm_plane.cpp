@@ -187,6 +187,28 @@ bool Plane<T>::intersectTri(const Vector3<T>* const* pts, LineSegment<T>& iSeg, 
 }
 
 template<class T>
+bool Plane<T>::intersectPlane(const Plane& otherPlane, Ray<T>& iSeg, T tol) const
+{
+	Vector3<T> dir = _normal.cross(otherPlane._normal);
+	auto magSqr = dir.squaredNorm();
+	if (magSqr < tol * tol)
+		return false;
+
+	dir /= sqrt(magSqr);
+
+	// dir is perpendicular to both normals. vPerp cannot be zero.
+	auto vPerp = dir.cross(otherPlane._normal).normalized();
+	Ray<T> perpRay(otherPlane._origin, vPerp);
+	RayHit<T> hp;
+	if (intersectRay(perpRay, hp, tol)) {
+		iSeg = Ray<T>(hp.hitPt, dir);
+		return true;
+	}
+
+	return false;
+}
+
+template<class T>
 bool Plane<T>::isCoincident(const Plane& other, T distTol, T cpTol) const
 {
 	T dist = distanceToPoint(other._origin);

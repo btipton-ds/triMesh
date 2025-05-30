@@ -70,6 +70,11 @@ public:
 		BOX_TYPE _bbox = {};
 	};
 
+	class Refiner {
+	public:
+		virtual bool entryIntersects(const Entry& entry, const BOX_TYPE& bbox) const = 0;
+	};
+
 	CSpatialSearchBase(const BOX_TYPE& bbox = BOX_TYPE(), int axis = 0);
 	virtual ~CSpatialSearchBase();
 
@@ -85,12 +90,9 @@ public:
 	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
 
 
-	template<class REFINER>
-	size_t find(const BOX_TYPE& bbox, REFINER refineFunc, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
-	template<class REFINER>
-	size_t find(const BOX_TYPE& bbox, REFINER refineFunc, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
-	template<class REFINER>
-	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, REFINER refineFunc, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
+	size_t find(const BOX_TYPE& bbox, const Refiner* pRefiner, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	size_t find(const BOX_TYPE& bbox, const Refiner* pRefiner, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
 
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);
 
@@ -109,16 +111,14 @@ private:
 	bool add(const Entry& newEntry, int depth);
 	void copyTreeToReducedTree(const BOX_TYPE& smallerBbox, SpatialSearchBasePtr& dst, BoxTestType testType) const;
 
-	template<class REFINER>
-	void copyTreeToReducedTree(const BOX_TYPE& smallerBbox, REFINER refineFunc, SpatialSearchBasePtr& dst, BoxTestType testType) const;
+	void copyTreeToReducedTree(const BOX_TYPE& smallerBbox, const Refiner* pRefiner, SpatialSearchBasePtr& dst, BoxTestType testType) const;
 
 	void addToContents(const Entry& newEntry);
 	void split(int depth);
 
 	void setSubContents(const BOX_TYPE& smallerBbox, const CSpatialSearchBase* pSrc, BoxTestType testType);
 
-	template<class REFINER>
-	void setSubContents(const BOX_TYPE& smallerBbox, REFINER refineFunc, const CSpatialSearchBase* pSrc, BoxTestType testType);
+	void setSubContents(const BOX_TYPE& smallerBbox, const Refiner* pRefiner, const CSpatialSearchBase* pSrc, BoxTestType testType);
 
 	static bool boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType);
 

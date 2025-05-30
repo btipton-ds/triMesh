@@ -148,39 +148,37 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestT
 }
 
 CSSB_TMPL
-template<class REFINER>
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, REFINER refineFunc, vector<Entry>& result, BoxTestType testType) const {
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, const Refiner* pRefiner, vector<Entry>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
 		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
 			for (const auto& entry : _pContents->_vals) {
-				if (boxesMatch(bbox, entry.getBBox(), testType) && refineFunc(entry, bbox)) {
+				if (boxesMatch(bbox, entry.getBBox(), testType) && pRefiner->entryIntersects(entry, bbox)) {
 					result.push_back(entry);
 				}
 			}
 		}
 		if (_pLeft)
-			_pLeft->find(bbox, refineFunc, result, testType);
+			_pLeft->find(bbox, pRefiner, result, testType);
 		if (_pRight)
-			_pRight->find(bbox, refineFunc, result, testType);
+			_pRight->find(bbox, pRefiner, result, testType);
 	}
 	return result.size();
 }
 
 CSSB_TMPL
-template<class REFINER>
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, REFINER refineFunc, vector<INDEX_TYPE>& result, BoxTestType testType) const {
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, const Refiner* pRefiner, vector<INDEX_TYPE>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
 		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
 			for (const auto& entry : _pContents->_vals) {
-				if (boxesMatch(bbox, entry.getBBox(), testType) && refineFunc(entry, bbox)) {
+				if (boxesMatch(bbox, entry.getBBox(), testType) && pRefiner->entryIntersects(entry, bbox)) {
 					result.push_back(entry.getIndex());
 				}
 			}
 		}
 		if (_pLeft)
-			_pLeft->find(bbox, refineFunc, result, testType);
+			_pLeft->find(bbox, pRefiner, result, testType);
 		if (_pRight)
-			_pRight->find(bbox, refineFunc, result, testType);
+			_pRight->find(bbox, pRefiner, result, testType);
 	}
 	return result.size();
 }
@@ -232,16 +230,15 @@ typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE
 }
 
 CSSB_TMPL
-template<class REFINER>
-typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox, REFINER refineFunc, BoxTestType testType) const
+typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType testType) const
 {
 	vector<INDEX_TYPE> entries;
-	if (find(bbox, refineFunc, entries, testType)) {
+	if (find(bbox, pRefiner, entries, testType)) {
 #if !(DO_SPATIAL_SEARCH_TREE_VERIFICATION && defined(_DEBUG))
 		entries.clear();
 #endif
 		shared_ptr<CSpatialSearchBase> result = make_shared<CSpatialSearchBase>(_bbox, _axis);
-		copyTreeToReducedTree(bbox, refineFunc, result, testType);
+		copyTreeToReducedTree(bbox, pRefiner, result, testType);
 
 #if DO_SPATIAL_SEARCH_TREE_VERIFICATION && defined(_DEBUG)
 		vector<INDEX_TYPE> entries1;
@@ -296,14 +293,13 @@ void CSSB_DCL::copyTreeToReducedTree(const BOX_TYPE& smallerBbox, SpatialSearchB
 }
 
 CSSB_TMPL
-template <class REFINER>
-void CSSB_DCL::copyTreeToReducedTree(const BOX_TYPE& smallerBbox, REFINER refineFunc, SpatialSearchBasePtr& dst, BoxTestType testType) const
+void CSSB_DCL::copyTreeToReducedTree(const BOX_TYPE& smallerBbox, const Refiner* pRefiner, SpatialSearchBasePtr& dst, BoxTestType testType) const
 {
-	dst->setSubContents(smallerBbox, refineFunc, this, testType);
+	dst->setSubContents(smallerBbox, pRefiner, this, testType);
 
 	if (_pLeft) {
 		dst->_pLeft = make_shared<CSpatialSearchBase>(_pLeft->_bbox, _pLeft->_axis);
-		_pLeft->copyTreeToReducedTree(smallerBbox, refineFunc, dst->_pLeft, testType);
+		_pLeft->copyTreeToReducedTree(smallerBbox, pRefiner, dst->_pLeft, testType);
 		if (dst->_pLeft->_numInTree > 0)
 			dst->_numInTree += dst->_pLeft->_numInTree;
 		else
@@ -312,7 +308,7 @@ void CSSB_DCL::copyTreeToReducedTree(const BOX_TYPE& smallerBbox, REFINER refine
 
 	if (_pRight) {
 		dst->_pRight = make_shared<CSpatialSearchBase>(_pRight->_bbox, _pRight->_axis);
-		_pRight->copyTreeToReducedTree(smallerBbox, refineFunc, dst->_pRight, testType);
+		_pRight->copyTreeToReducedTree(smallerBbox, pRefiner, dst->_pRight, testType);
 		if (dst->_pRight->_numInTree > 0)
 			dst->_numInTree += dst->_pRight->_numInTree;
 		else
@@ -383,8 +379,7 @@ void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, const CSpatialSearchB
 }
 
 CSSB_TMPL
-template<class REFINER>
-void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, REFINER refineFunc, const CSpatialSearchBase* pSrc, BoxTestType testType)
+void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, const Refiner* pRefiner, const CSpatialSearchBase* pSrc, BoxTestType testType)
 {
 	const auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
 
@@ -394,7 +389,7 @@ void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, REFINER refineFunc, c
 	if (boxesMatch(pSrc->_pContents->_bbox, smallerBbox, testType)) {
 		_pContents = make_shared<Contents>();
 		for (auto& entry : pSrc->_pContents->_vals) {
-			if (boxesMatch(smallerBbox, entry.getBBox(), testType) && refineFunc(entry, smallerBbox)) {
+			if (boxesMatch(smallerBbox, entry.getBBox(), testType) && pRefiner->entryIntersects(entry, smallerBbox)) {
 				addToContents(entry);
 			}
 		}
