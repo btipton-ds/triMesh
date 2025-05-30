@@ -112,48 +112,20 @@ size_t CSSB_DCL::numBytes() const
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<Entry>& result, BoxTestType testType) const {
-	if (boxesMatch(_bbox, bbox, testType)) {
-		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
-			for (const auto& entry : _pContents->_vals) {
-				if (boxesMatch(bbox, entry.getBBox(), testType)) {
-					result.push_back(entry);
-				}
-			}
-		}
-		if (_pLeft)
-			_pLeft->find(bbox, result, testType);
-		if (_pRight)
-			_pRight->find(bbox, result, testType);
-	}
-	return result.size();
-}
-
-CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, vector<INDEX_TYPE>& result, BoxTestType testType) const {
-	if (boxesMatch(_bbox, bbox, testType)) {
-		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
-			for (const auto& entry : _pContents->_vals) {
-				if (boxesMatch(bbox, entry.getBBox(), testType)) {
-					result.push_back(entry.getIndex());
-				}
-			}
-		}
-		if (_pLeft)
-			_pLeft->find(bbox, result, testType);
-		if (_pRight)
-			_pRight->find(bbox, result, testType);
-	}
-	return result.size();
-}
-
-CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, const Refiner* pRefiner, vector<Entry>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
 		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
-			for (const auto& entry : _pContents->_vals) {
-				if (boxesMatch(bbox, entry.getBBox(), testType) && pRefiner->entryIntersects(entry, bbox)) {
-					result.push_back(entry);
+			if (pRefiner) {
+				for (const auto& entry : _pContents->_vals) {
+					if (boxesMatch(bbox, entry.getBBox(), testType) && pRefiner->entryIntersects(entry, bbox)) {
+						result.push_back(entry);
+					}
+				}
+			} else {
+				for (const auto& entry : _pContents->_vals) {
+					if (boxesMatch(bbox, entry.getBBox(), testType)) {
+						result.push_back(entry);
+					}
 				}
 			}
 		}
@@ -169,9 +141,17 @@ CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, const Refiner* pRefiner, vector<INDEX_TYPE>& result, BoxTestType testType) const {
 	if (boxesMatch(_bbox, bbox, testType)) {
 		if (_pContents && boxesMatch(_pContents->_bbox, bbox, testType)) {
-			for (const auto& entry : _pContents->_vals) {
-				if (boxesMatch(bbox, entry.getBBox(), testType) && pRefiner->entryIntersects(entry, bbox)) {
-					result.push_back(entry.getIndex());
+			if (pRefiner) {
+				for (const auto& entry : _pContents->_vals) {
+					if (boxesMatch(bbox, entry.getBBox(), testType) && pRefiner->entryIntersects(entry, bbox)) {
+						result.push_back(entry.getIndex());
+					}
+				}
+			} else {
+				for (const auto& entry : _pContents->_vals) {
+					if (boxesMatch(bbox, entry.getBBox(), testType)) {
+						result.push_back(entry.getIndex());
+					}
 				}
 			}
 		}
@@ -190,43 +170,6 @@ size_t CSSB_DCL::biDirRayCast(const Ray<SCALAR_TYPE>& ray, vector<INDEX_TYPE>& h
 	biDirRayCastRecursive(ray, hits);
 
 	return hits.size();
-}
-
-CSSB_TMPL
-typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox, BoxTestType testType) const
-{
-	vector<INDEX_TYPE> entries;
-	if (find(bbox, entries, testType)) {
-#if !(DO_SPATIAL_SEARCH_TREE_VERIFICATION && defined(_DEBUG))
-		entries.clear();
-#endif
-		shared_ptr<CSpatialSearchBase> result = make_shared<CSpatialSearchBase>(_bbox, _axis);
-		copyTreeToReducedTree(bbox, result, testType);
-
-#if DO_SPATIAL_SEARCH_TREE_VERIFICATION && defined(_DEBUG)
-		vector<INDEX_TYPE> entries1;
-		if (result) {
-			if (result->find(bbox, entries1)) {
-				if (entries.size() == entries1.size()) {
-					set<INDEX_TYPE> test;
-					test.insert(entries1.begin(), entries1.end());
-					for (const auto& entry : entries) {
-						if (!test.contains(entry)) {
-							assert(!"Subtree search contents did not match source tree search contents.");
-						}
-					}
-				} else {
-					assert(!"Subtree search size did not match source tree search size.");
-				}
-			} else {
-				assert(!"Subtree search result did not match source tree search result.");
-			}
-		}
-#endif // _DEBUG
-
-		return result;
-	}
-	return nullptr;
 }
 
 CSSB_TMPL
@@ -388,9 +331,17 @@ void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, const Refiner* pRefin
 
 	if (boxesMatch(pSrc->_pContents->_bbox, smallerBbox, testType)) {
 		_pContents = make_shared<Contents>();
-		for (auto& entry : pSrc->_pContents->_vals) {
-			if (boxesMatch(smallerBbox, entry.getBBox(), testType) && pRefiner->entryIntersects(entry, smallerBbox)) {
-				addToContents(entry);
+		if (pRefiner) {
+			for (auto& entry : pSrc->_pContents->_vals) {
+				if (boxesMatch(smallerBbox, entry.getBBox(), testType) && pRefiner->entryIntersects(entry, smallerBbox)) {
+					addToContents(entry);
+				}
+			}
+		} else {
+			for (auto& entry : pSrc->_pContents->_vals) {
+				if (boxesMatch(smallerBbox, entry.getBBox(), testType)) {
+					addToContents(entry);
+				}
 			}
 		}
 

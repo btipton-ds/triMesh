@@ -84,14 +84,9 @@ public:
 	size_t numBytes() const;
 	const BOX_TYPE& getBounds() const;
 
-	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
-	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
-	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
-	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
-
-
 	size_t find(const BOX_TYPE& bbox, const Refiner* pRefiner, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	size_t find(const BOX_TYPE& bbox, const Refiner* pRefiner, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
 	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
 
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);
