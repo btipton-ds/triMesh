@@ -72,7 +72,7 @@ public:
 
 	class Refiner {
 	public:
-		virtual bool entryIntersects(const Entry& entry, const BOX_TYPE& bbox) const = 0;
+		virtual bool entryIntersects(const BOX_TYPE& bbox, const Entry& entry) const = 0;
 	};
 
 	CSpatialSearchBase(const BOX_TYPE& bbox = BOX_TYPE(), int axis = 0);
@@ -104,18 +104,15 @@ private:
 		std::vector<Entry> _vals;
 	};
 	bool add(const Entry& newEntry, int depth);
-	void copyTreeToReducedTree(const BOX_TYPE& smallerBbox, SpatialSearchBasePtr& dst, BoxTestType testType) const;
-
 	void copyTreeToReducedTree(const BOX_TYPE& smallerBbox, const Refiner* pRefiner, SpatialSearchBasePtr& dst, BoxTestType testType) const;
 
 	void addToContents(const Entry& newEntry);
 	void split(int depth);
 
-	void setSubContents(const BOX_TYPE& smallerBbox, const CSpatialSearchBase* pSrc, BoxTestType testType);
-
 	void setSubContents(const BOX_TYPE& smallerBbox, const Refiner* pRefiner, const CSpatialSearchBase* pSrc, BoxTestType testType);
 
-	static bool boxesMatch(const BOX_TYPE& lhs, const BOX_TYPE& rhs, BoxTestType testType);
+	static bool containsBbox(const BOX_TYPE& bbox, const BOX_TYPE& otherBbox, BoxTestType testType);
+	static bool containsEntry(const BOX_TYPE& bbox, const Entry& entry, const Refiner* pRefiner, BoxTestType testType);
 
 	size_t _numInTree = 0;
 	size_t _id = 0;

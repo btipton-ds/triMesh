@@ -1157,7 +1157,7 @@ size_t CMesh::addVertex_d(const Vector3d& pt) {
 #if FULL_TESTS && defined(_DEBUG)
 	// Testing
 	std::vector<size_t> testResults;
-	_pVertTree->find(ptBBox, testResults);
+	_pVertTree->find(ptBBox, nullptr, testResults);
 	int numFound = 0;
 	for (const auto& index : testResults) {
 		if (index == result)
@@ -1165,7 +1165,7 @@ size_t CMesh::addVertex_d(const Vector3d& pt) {
 	}
 	if (numFound != 1) {
 		std::cout << "CMesh::addVertex numFound: Error. numFound: " << numFound << "\n";
-		_pVertTree->find(ptBBox, testResults);
+		_pVertTree->find(ptBBox, nullptr, testResults);
 	}
 #endif
 	return result;
@@ -1396,7 +1396,7 @@ void CMesh::merge(vector<CMeshPtr>& src, bool destructive, bool multiCore)
 					if (j < src.size() && src[j]) {
 						auto pSrc = src[j];
 #if FULL_TESTS
-						assert(src[i]->getBBox().contains(pSrc->getBBox()));
+						assert(src[i]->getBBox().contains(pSrc->getBBox(), SAME_DIST_TOL));
 #endif
 						src[j] = nullptr;
 
