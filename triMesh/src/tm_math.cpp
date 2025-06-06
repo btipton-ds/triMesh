@@ -110,7 +110,7 @@ int triangleSplitWithPlane(Vector3<T> const triPts[3], const Plane<T>& plane,
 		int j = (i + 1) % 3;
 		RayHit<T> hit;
 		LineSegment<T> seg(triPts[i], triPts[j]);
-		if (plane.intersectLineSegment(seg, hit, tol)) {
+		if (plane.intersectLineSegment_rev0(seg, hit, tol)) {
 			if (hit.dist < tol) {
 				// This vertex lies on the plane
 				intersectVertIndices[numIntersectVertIndices++] = i;
@@ -294,8 +294,43 @@ bool intersectTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T
 }
 
 template<class T>
-bool intersectTriTri(const Vector3<T>* const* triPts0, const Vector3<T>* const* triPts1, T tol)
+bool intersectTriTri(const Vector3<T>** triPts0, const Vector3<T>** triPts1, T tol)
 {
+#if 1
+	RayHit<T> hit;
+
+	Plane<T> triPlane0(triPts0, false);
+
+	LineSegment<T> iSeg0;
+	if (!triPlane0.intersectTri(triPts1, iSeg0, tol))
+		return false;
+
+	Plane<T> triPlane1(triPts1, false);
+
+	LineSegment<T> iSeg1;
+	if (!triPlane1.intersectTri(triPts0, iSeg1, tol))
+		return false;
+
+#if 0
+	Ray<T> ray0(iSeg0._pt0, iSeg0.calcDir());
+	if (ray0.distToPt(iSeg1._pt0) > tol || ray0.distToPt(iSeg1._pt1) > tol)
+		return false;
+
+	Ray<T> ray1(iSeg1._pt0, iSeg1.calcDir());
+	if (ray0.distToPt(iSeg1._pt0) > tol || ray0.distToPt(iSeg1._pt1) > tol)
+		return false;
+#endif
+
+	auto looseTol = 10 * tol;
+	T t;
+	if (iSeg0.contains(iSeg1._pt0, t, looseTol) || iSeg0.contains(iSeg1._pt1, t, looseTol))
+		return true;
+
+	if (iSeg1.contains(iSeg0._pt0, t, looseTol) || iSeg1.contains(iSeg0._pt1, t, looseTol))
+		return true;
+
+	return false;
+#else
 	RayHit<T> hit;
 
 	// Check 1 against 0
@@ -307,7 +342,7 @@ bool intersectTriTri(const Vector3<T>* const* triPts0, const Vector3<T>* const* 
 		int j = (i + 1) % 3;
 
 		LineSegment_byref<T> seg(*triPts1[i], *triPts1[j]);
-		if (triPlane0.intersectLineSegment(seg, hit, tol)) {
+		if (triPlane0.intersectLineSegment_rev0(seg, hit, tol)) {
 			if (pointInTriangle<T>(triPts0, hit.hitPt, norm0, tol))
 				return true;
 		}
@@ -323,13 +358,14 @@ bool intersectTriTri(const Vector3<T>* const* triPts0, const Vector3<T>* const* 
 
 		LineSegment_byref<T> seg(*triPts0[i], *triPts0[j]);
 
-		if (triPlane1.intersectLineSegment(seg, hit, tol)) {
+		if (triPlane1.intersectLineSegment_rev0(seg, hit, tol)) {
 			if (pointInTriangle<T>(triPts1, hit.hitPt, norm1, tol))
 				return true;
 		}
 	}
 
 	return false;
+#endif
 }
 
 namespace {

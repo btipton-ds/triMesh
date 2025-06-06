@@ -66,13 +66,14 @@ public:
 	Plane() = default;
 	Plane(const Plane& src) = default;
 	Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool alreadyNormalzed = false);
-	Plane(const POINT_TYPE* pts[3]);
-	Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2);
+	Plane(const POINT_TYPE* pts[3], bool initXRef = true);
+	Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, bool initXRef = true);
 
 	void makePrincipal();
 	void setXRef(const POINT_TYPE& xRef);
 	void reverse();
 	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt, T tol) const;
+	bool intersectLineSegment_rev0(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const;
 	bool intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const;
 	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit, T tol) const;
 	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg, T tol) const;

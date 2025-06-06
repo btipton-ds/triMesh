@@ -35,29 +35,29 @@ This file is part of the TriMesh library.
 #include <tm_lineSegment.h>
 
 template<class T>
-LineSegment<T>::LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1)
+inline LineSegment<T>::LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1)
 {
 	_pt0 = p0;
 	_pt1 = p1;
 }
 
 template<class T>
-LineSegment<T>::SCALAR_TYPE LineSegment<T>::calLength() const {
+inline LineSegment<T>::SCALAR_TYPE LineSegment<T>::calLength() const {
 	return (_pt1 - _pt0).norm();
 }
 
 template<class T>
-typename LineSegment<T>::POINT_TYPE LineSegment<T>::calcDir() const {
+inline typename LineSegment<T>::POINT_TYPE LineSegment<T>::calcDir() const {
 	return safeNormalize<SCALAR_TYPE>(_pt1 - _pt0);
 }
 
 template<class T>
-typename LineSegment<T>::POINT_TYPE LineSegment<T>::interpolate(SCALAR_TYPE t) const {
+inline typename LineSegment<T>::POINT_TYPE LineSegment<T>::interpolate(SCALAR_TYPE t) const {
 	return _pt0 + t * (_pt1 - _pt0);
 }
 
 template<class T>
-LineSegment<T>::SCALAR_TYPE LineSegment<T>::parameterize(const POINT_TYPE& pt) const {
+inline LineSegment<T>::SCALAR_TYPE LineSegment<T>::parameterize(const POINT_TYPE& pt) const {
 	return (pt - _pt0).dot(calcDir()) / calLength();
 }
 
@@ -93,12 +93,12 @@ bool LineSegment<T>::contains(const POINT_TYPE& pt, LineSegment<T>::SCALAR_TYPE&
 }
 
 template<class T>
-Ray<typename LineSegment<T>::SCALAR_TYPE> LineSegment<T>::getRay() const {
+inline Ray<typename LineSegment<T>::SCALAR_TYPE> LineSegment<T>::getRay() const {
 	return Ray<SCALAR_TYPE>(_pt0, calcDir());
 }
 
 template<class T>
-typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT_TYPE& pt) const {
+inline typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT_TYPE& pt) const {
 	SCALAR_TYPE t;
 	return distanceToPoint(pt, t);
 }
@@ -149,7 +149,7 @@ bool LineSegment<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<T>& hit, T to
 }
 
 template<class T>
-bool LineSegment<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<T>& hit, T tol) const
+inline bool LineSegment<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<T>& hit, T tol) const
 {
 	const POINT_TYPE* pts[] = { &pt0, &pt1, &pt2 };
 	return intersectTri(pts, hit, tol);
