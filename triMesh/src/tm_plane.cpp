@@ -34,7 +34,7 @@ This file is part of the TriMesh library.
 #include <tm_lineSegment.h>
 
 template<class T>
-Plane<T>::Plane(const POINT_TYPE* pts[3], bool initXRef)
+Plane<T>::Plane(const POINT_TYPE* const* pts, bool initXRef)
 	: Plane(*pts[0], *pts[1], *pts[2])
 {
 }
@@ -228,6 +228,48 @@ template<class T>
 bool Plane<T>::intersectTri(const Vector3<T>* const* pts, LineSegment<T>& iSeg, T tol) const
 {
 	return intersectTri(*pts[0], *pts[1], *pts[2], iSeg, tol);
+}
+
+template<class T>
+bool Plane<T>::intersectTri(const LineSegment<T> legs[], LineSegment<T>& iSeg, T tol) const
+{
+
+	int numHits = 0;
+
+	POINT_TYPE iPt0, iPt1;
+	RayHit<T> hit;
+
+	{
+		if (intersectLineSegment(legs[0], hit, tol)) {
+			iPt0 = hit.hitPt;
+			numHits++;
+		}
+	}
+
+	{
+		if (intersectLineSegment(legs[1], hit, tol)) {
+			if (numHits == 0)
+				iPt0 = hit.hitPt;
+			else if (numHits == 1) {
+				iPt1 = hit.hitPt;
+				iSeg = LineSegment<T>(iPt0, iPt1);
+				return true;
+			}
+			numHits++;
+		}
+	}
+
+	{
+		if (intersectLineSegment(legs[2], hit, tol)) {
+			if (numHits == 1) {
+				iPt1 = hit.hitPt;
+				iSeg = LineSegment<T>(iPt0, iPt1);
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 template<class T>

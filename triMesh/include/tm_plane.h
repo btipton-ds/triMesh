@@ -66,7 +66,7 @@ public:
 	Plane() = default;
 	Plane(const Plane& src) = default;
 	Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool alreadyNormalzed = false);
-	Plane(const POINT_TYPE* pts[3], bool initXRef = true);
+	Plane(const POINT_TYPE* const* pts, bool initXRef = true);
 	Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, bool initXRef = true);
 
 	void makePrincipal();
@@ -78,6 +78,7 @@ public:
 	bool intersectRay(const Ray<T>& ray, RayHit<T>& hit, T tol) const;
 	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg, T tol) const;
 	bool intersectTri(const Vector3<T>* const* pts, LineSegment<T>& iSeg, T tol) const;
+	bool intersectTri(const LineSegment<T> legs[], LineSegment<T>& iSeg, T tol) const;
 	bool intersectPlane(const Plane& otherPlane, Ray<T>& iSeg, T tol) const;
 	bool isCoincident(const POINT_TYPE& other, T tol) const;
 	bool isCoincident(const Plane& other, T distTol, T cpTol) const;

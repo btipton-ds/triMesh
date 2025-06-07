@@ -294,7 +294,7 @@ bool intersectTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T
 }
 
 template<class T>
-bool intersectTriTri(const Vector3<T>** triPts0, const Vector3<T>** triPts1, T tol)
+bool intersectTriTri(class Vector3<T> const* const* triPts0, class Vector3<T> const* const* triPts1, T tol)
 {
 #if 1
 	RayHit<T> hit;
