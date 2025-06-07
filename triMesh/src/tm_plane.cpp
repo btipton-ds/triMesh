@@ -32,6 +32,7 @@ This file is part of the TriMesh library.
 #include <tm_ray.h>
 #include <tm_plane.h>
 #include <tm_lineSegment.h>
+#include <tm_lineSegment_byref.h>
 
 template<class T>
 Plane<T>::Plane(const POINT_TYPE* const* pts, bool initXRef)
@@ -155,6 +156,27 @@ bool Plane<T>::intersectLineSegment_rev0(const LineSegment<T>& seg, RayHit<T>& h
 
 template<class T>
 bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const
+{
+	T d0 = (seg._pt0 - _origin).dot(_normal); // distanceToPoint(seg._pt0, false);
+	T d1 = (seg._pt1 - _origin).dot(_normal); // distanceToPoint(seg._pt1, false);
+
+	bool above0 = d0 >= 0;
+	bool above1 = d1 >= 0;
+	if (above0 != above1) {
+		d0 = fabs(d0);
+		d1 = fabs(d1);
+		T l = d0 + d1;
+		T t = d0 / l;
+		hitPt.hitPt = seg.interpolate(t);
+		assert(distanceToPoint(hitPt.hitPt) < tol);
+		hitPt.dist = d0;
+		return true;
+	}
+	return false;
+}
+
+template<class T>
+bool Plane<T>::intersectLineSegment(const LineSegment_byref<T>& seg, RayHit<T>& hitPt, T tol) const
 {
 	T d0 = (seg._pt0 - _origin).dot(_normal); // distanceToPoint(seg._pt0, false);
 	T d1 = (seg._pt1 - _origin).dot(_normal); // distanceToPoint(seg._pt1, false);

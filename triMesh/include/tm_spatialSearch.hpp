@@ -130,6 +130,25 @@ size_t CSSB_DCL::find(const BOX_TYPE& bbox, const Refiner* pRefiner, vector<Entr
 }
 
 CSSB_TMPL
+size_t CSSB_DCL::count(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType testType) const {
+	size_t result = 0;
+	if (containsBbox(_bbox, bbox, testType)) {
+		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
+			for (const auto& entry : _pContents->_vals) {
+				if (containsEntry(bbox, entry, pRefiner, testType)) {
+					result++;
+				}
+			}
+		}
+		if (_pLeft)
+			result += _pLeft->count(bbox, pRefiner, testType);
+		if (_pRight)
+			result += _pRight->count(bbox, pRefiner, testType);
+	}
+	return result;
+}
+
+CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, const Refiner* pRefiner, vector<INDEX_TYPE>& result, BoxTestType testType) const {
 	if (containsBbox(_bbox, bbox, testType)) {
 		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
