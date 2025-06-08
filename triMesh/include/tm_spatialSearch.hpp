@@ -223,21 +223,23 @@ void CSSB_DCL::copyTreeToReducedTree(const BOX_TYPE& smallerBbox, const Refiner*
 	dst->setSubContents(smallerBbox, pRefiner, this, testType);
 
 	if (_pLeft) {
-		dst->_pLeft = make_shared<CSpatialSearchBase>(_pLeft->_bbox, _pLeft->_axis);
-		_pLeft->copyTreeToReducedTree(smallerBbox, pRefiner, dst->_pLeft, testType);
-		if (dst->_pLeft->_numInTree > 0)
+		size_t n = _pLeft->count(smallerBbox, pRefiner, testType);
+		if (n > 0) {
+			dst->_pLeft = make_shared<CSpatialSearchBase>(_pLeft->_bbox, _pLeft->_axis);
+			_pLeft->copyTreeToReducedTree(smallerBbox, pRefiner, dst->_pLeft, testType);
+			assert(dst->_pLeft->count(smallerBbox, pRefiner, testType) == n);
 			dst->_numInTree += dst->_pLeft->_numInTree;
-		else
-			dst->_pLeft = nullptr;
+		}
 	}
 
 	if (_pRight) {
-		dst->_pRight = make_shared<CSpatialSearchBase>(_pRight->_bbox, _pRight->_axis);
-		_pRight->copyTreeToReducedTree(smallerBbox, pRefiner, dst->_pRight, testType);
-		if (dst->_pRight->_numInTree > 0)
+		size_t n = _pRight->count(smallerBbox, pRefiner, testType);
+		if (n > 0) {
+			dst->_pRight = make_shared<CSpatialSearchBase>(_pRight->_bbox, _pRight->_axis);
+			_pRight->copyTreeToReducedTree(smallerBbox, pRefiner, dst->_pRight, testType);
+			assert(dst->_pRight->count(smallerBbox, pRefiner, testType) == n);
 			dst->_numInTree += dst->_pRight->_numInTree;
-		else
-			dst->_pRight = nullptr;
+		}
 	}
 }
 
@@ -283,22 +285,17 @@ void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, const Refiner* pRefin
 		return;
 
 	if (containsBbox(pSrc->_pContents->_bbox, smallerBbox, testType)) {
-		_pContents = make_shared<Contents>();
+		size_t n = 0;
 		for (auto& entry : pSrc->_pContents->_vals) {
 			if (containsEntry(smallerBbox, entry, pRefiner, testType)) {
-				addToContents(entry);
+				n++;
 			}
 		}
 
-		if (_pContents->_vals.empty())
-			_pContents = nullptr;
-		else if (_pContents->_vals.size() * 2 >= pSrc->_pContents->_vals.size()) {
-			// The reduced contents are more than 1/2 the size of the original, it's not worth it so use the old one.
+		if (n != 0) {
 			_pContents = pSrc->_pContents;
-		}
-
-		if (_pContents)
 			_numInTree += _pContents->_vals.size();
+		}
 	}
 
 }
