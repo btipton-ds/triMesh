@@ -72,22 +72,22 @@ bool LineSegment_byref<T>::contains(const POINT_TYPE& pt, LineSegment_byref<T>::
 	else if (tolerantEquals(_pt1, pt, tol)) {
 		t = 1;
 		return true;
-	}
-	else {
+	} else {
+		const auto tolSqr = tol * tol;
 		POINT_TYPE vDir = _pt1 - _pt0;
-		LineSegment_byref<T>::SCALAR_TYPE len = vDir.norm();
-		if (len < tol) {
+		auto lenSqr = vDir.squaredNorm();
+		if (lenSqr < tolSqr) {
 			return false;
 		}
+		auto len = sqrt(lenSqr);
 		vDir /= len;
 		POINT_TYPE vOrth = pt - _pt0;
 
-		SCALAR_TYPE dp = vOrth.dot(vDir);
+		auto dp = vOrth.dot(vDir);
 		vOrth = vOrth - dp * vDir; // orthogonalize v1
-		SCALAR_TYPE dist = vOrth.norm();
-		if (dist > tol)
+		auto distSqr = vOrth.squaredNorm();
+		if (distSqr > tolSqr)
 			return false; // pt does not lie on the segment within tolerance.
-
 		t = dp / len;
 		return -tol < dp && dp < (len + tol); // return if the pt lies in [zero, len] within tolerance
 	}
