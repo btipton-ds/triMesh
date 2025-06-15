@@ -176,6 +176,25 @@ size_t CSSB_DCL::biDirRayCast(const Ray<SCALAR_TYPE>& ray, vector<INDEX_TYPE>& h
 }
 
 CSSB_TMPL
+template<class FUNC>
+void CSSB_DCL::traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType testType) const {
+	if (containsBbox(_bbox, bbox, testType)) {
+		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
+			for (const auto& entry : _pContents->_vals) {
+				if (containsEntry(bbox, entry, nullptr, testType)) {
+					if (!func(entry.getIndex()))
+						return;
+				}
+			}
+		}
+		if (_pLeft)
+			_pLeft->traverse(bbox, func, testType);
+		if (_pRight)
+			_pRight->traverse(bbox, func, testType);
+	}
+}
+
+CSSB_TMPL
 typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType testType) const
 {
 #if 0
