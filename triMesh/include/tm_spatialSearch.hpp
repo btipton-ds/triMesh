@@ -195,6 +195,25 @@ void CSSB_DCL::traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType test
 }
 
 CSSB_TMPL
+template<class FUNC>
+void CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func) const {
+	if (_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
+		if (_pContents && _pContents->_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
+			for (const auto& entry : _pContents->_vals) {
+				if (entry.getBBox().intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
+					if (!func(ray, entry.getIndex()))
+						return;
+				}
+			}
+		}
+		if (_pLeft)
+			_pLeft->biDirRayCastTraverse(ray, func);
+		if (_pRight)
+			_pRight->biDirRayCastTraverse(ray, func);
+	}
+}
+
+CSSB_TMPL
 typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType testType) const
 {
 #if 0
