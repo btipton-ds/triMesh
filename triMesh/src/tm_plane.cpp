@@ -157,20 +157,20 @@ bool Plane<T>::intersectLineSegment_rev0(const LineSegment<T>& seg, RayHit<T>& h
 template<class T>
 bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const
 {
-	T d0 = (seg._pt0 - _origin).dot(_normal); // distanceToPoint(seg._pt0, false);
-	T d1 = (seg._pt1 - _origin).dot(_normal); // distanceToPoint(seg._pt1, false);
+	T h0 = (seg._pt0 - _origin).dot(_normal); // distanceToPoint(seg._pt0, false);
+	T h1 = (seg._pt1 - _origin).dot(_normal); // distanceToPoint(seg._pt1, false);
 
-	bool above0 = d0 >= 0;
-	bool above1 = d1 >= 0;
-	if (above0 != above1) {
-		d0 = fabs(d0);
-		d1 = fabs(d1);
-		T l = d0 + d1;
-		T t = d0 / l;
-		hitPt.hitPt = seg.interpolate(t);
-		assert(distanceToPoint(hitPt.hitPt) < tol);
-		hitPt.dist = d0;
-		return true;
+	if (h0 * h1 <= 0) {
+		T absh0 = fabs(h0);
+		T absh1 = fabs(h1);
+		T l = absh0 + absh1;
+		if (l > 0) {
+			T t = absh0 / l;
+			hitPt.hitPt = seg.interpolate(t);
+			hitPt.dist = absh0;
+			assert(distanceToPoint(hitPt.hitPt) < tol);
+			return true;
+		}
 	}
 	return false;
 }
@@ -178,20 +178,20 @@ bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt,
 template<class T>
 bool Plane<T>::intersectLineSegment(const LineSegment_byref<T>& seg, RayHit<T>& hitPt, T tol) const
 {
-	T d0 = (seg._pt0 - _origin).dot(_normal); // distanceToPoint(seg._pt0, false);
-	T d1 = (seg._pt1 - _origin).dot(_normal); // distanceToPoint(seg._pt1, false);
+	T h0 = (seg._pt0 - _origin).dot(_normal); // distanceToPoint(seg._pt0, false);
+	T h1 = (seg._pt1 - _origin).dot(_normal); // distanceToPoint(seg._pt1, false);
 
-	bool above0 = d0 >= 0;
-	bool above1 = d1 >= 0;
-	if (above0 != above1) {
-		d0 = fabs(d0);
-		d1 = fabs(d1);
-		T l = d0 + d1;
-		T t = d0 / l;
-		hitPt.hitPt = seg.interpolate(t);
-		assert(distanceToPoint(hitPt.hitPt) < tol);
-		hitPt.dist = d0;
-		return true;
+	if (h0 * h1 <= 0) {
+		T absh0 = fabs(h0);
+		T absh1 = fabs(h1);
+		T l = absh0 + absh1;
+		if (l > 0) {
+			T t = absh0 / l;
+			hitPt.hitPt = seg.interpolate(t);
+			hitPt.dist = absh0;
+			assert(distanceToPoint(hitPt.hitPt) < tol);
+			return true;
+		}
 	}
 	return false;
 }
