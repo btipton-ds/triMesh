@@ -94,7 +94,7 @@ Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
 
 template<class T>
 double distanceFromPlane(const Vector3<T>& pt, const Plane<T>& plane) {
-	return (pt - plane.getOrgin()).dot(plane.getNormal());
+	return (pt - plane.getOrigin()).dot(plane.getNormal());
 }
 
 template<class T>

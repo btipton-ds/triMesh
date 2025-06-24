@@ -40,15 +40,15 @@ This file is part of the TriMesh library.
 #include <Eigen/Dense>
 
 template<class T>
-bool bestFitPlane(const std::vector<Vector3<T>>& c, Plane<T>& plane, T& err)
+bool bestFitPlane(const std::vector<Vector3<T>>& polyPoints, Plane<T>& plane, T& err)
 {
-	if (c.size() < 3)
+	if (polyPoints.size() < 3)
 		return false;
 	// copy coordinates to  matrix in Eigen format
-	size_t num_atoms = c.size();
+	size_t num_atoms = polyPoints.size();
 	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> coord(3, num_atoms);
 	for (size_t i = 0; i < num_atoms; ++i) {
-		const auto v = c[i];
+		const auto v = polyPoints[i];
 		coord.col(i) = Eigen::Matrix<T, 3, 1>(v[0], v[1], v[2]);
 	}
 
@@ -63,12 +63,14 @@ bool bestFitPlane(const std::vector<Vector3<T>>& c, Plane<T>& plane, T& err)
 	auto svd = coord.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
 	Eigen::Matrix<T, 3, 1> plane_normal = svd.matrixU().rightCols(1);
 	plane_normal.normalize();
+
 	plane = Plane<T>(Vector3<T>(centroid[0], centroid[1], centroid[2]), Vector3<T>(plane_normal[0], plane_normal[1], plane_normal[2]));
 	err = 0;
-	for (size_t i = 0; i < c.size(); i++) {
-		err += plane.distanceToPoint(c[i]);
+	for (size_t i = 0; i < polyPoints.size(); i++) {
+		err += plane.distanceToPoint(polyPoints[i]);
 	}
-	err /= c.size();
+	err /= polyPoints.size();
+
 	return true;
 }
 

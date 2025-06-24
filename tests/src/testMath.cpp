@@ -61,7 +61,7 @@ bool testRayPlaneIntersect() {
 	Plane<T> plane0(Vector3<T>(0, 0, 0), Vector3<T>(0, 0, 1));
 	plane0.makePrincipal();
 	Vector3<T> dir0(-1, -1, -1);
-	Ray<T> ray0(plane0.getOrgin() - dir0, dir0);
+	Ray<T> ray0(plane0.getOrigin() - dir0, dir0);
 	RayHit<T> hit;
 
 	TEST_TRUE(plane0.intersectRay(ray0, hit, tol), "Ray intersects plane?");

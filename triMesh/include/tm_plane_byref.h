@@ -67,7 +67,7 @@ public:
 	POINT_TYPE projectPoint(const POINT_TYPE& pt) const;
 	T distanceToPoint(const POINT_TYPE& pt, bool absolute = true) const;
 
-	const POINT_TYPE& getOrgin() const;
+	const POINT_TYPE& getOrigin() const;
 	const POINT_TYPE& getNormal() const;
 
 private:
@@ -91,7 +91,7 @@ inline bool Plane_byref<T>::isCoincident(const POINT_TYPE& pt, T tol) const
 }
 
 template<class T>
-inline const typename Plane_byref<T>::POINT_TYPE& Plane_byref<T>::getOrgin() const
+inline const typename Plane_byref<T>::POINT_TYPE& Plane_byref<T>::getOrigin() const
 {
 	return _origin;
 }
