@@ -132,19 +132,23 @@ bool pointInTriangle(const Vector3<T>* const* pts, const Vector3<T>& pt, const V
 	}
 #endif
 
+	size_t numPos = 0, numNeg = 0;
 	for (size_t i = 0; i < 3; i++) {
 		size_t j = (i + 1) % 3;
+
+		Vector3<T> vLeg = (*pts[j]) - (*pts[i]);
+		Vector3<T> vPerp = unitNorm.cross(vLeg);
+		vPerp.normalize();
+
 		Vector3<T> v0 = pt - (*pts[i]);
-		Vector3<T> v1 = (*pts[j]) - (*pts[i]);
-		v1.normalize();
-		v0 = v0 - v1.dot(v0) * v1;
-		Vector3<T> v2 = v1.cross(v0);
-		T cp = v2.dot(unitNorm);
-		if (cp < -tol)
-			return false;
+		T dist = v0.dot(vPerp);
+		if (dist < tol)
+			numNeg++;
+		if (dist > -tol)
+			numPos++;
 	}
 
-	return true;
+	return numNeg == 3 || numPos == 3;
 }
 
 template<class T>
