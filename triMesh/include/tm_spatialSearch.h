@@ -92,7 +92,7 @@ public:
 	template<class FUNC>
 	void traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	template<class FUNC>
-	void biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func) const;
+	void biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol = (SCALAR_TYPE) SAME_DIST_TOL) const;
 
 	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
 

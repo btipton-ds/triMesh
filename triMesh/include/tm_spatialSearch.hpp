@@ -196,20 +196,20 @@ void CSSB_DCL::traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType test
 
 CSSB_TMPL
 template<class FUNC>
-void CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func) const {
-	if (_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
-		if (_pContents && _pContents->_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
+void CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol) const {
+	if (_bbox.intersects(ray, tol)) {
+		if (_pContents && _pContents->_bbox.intersects(ray, tol)) {
 			for (const auto& entry : _pContents->_vals) {
-				if (entry.getBBox().intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
+				if (entry.getBBox().intersects(ray, tol)) {
 					if (!func(ray, entry.getIndex()))
 						return;
 				}
 			}
 		}
 		if (_pLeft)
-			_pLeft->biDirRayCastTraverse(ray, func);
+			_pLeft->biDirRayCastTraverse(ray, func, tol);
 		if (_pRight)
-			_pRight->biDirRayCastTraverse(ray, func);
+			_pRight->biDirRayCastTraverse(ray, func, tol);
 	}
 }
 
