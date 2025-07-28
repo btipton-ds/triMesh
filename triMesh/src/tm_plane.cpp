@@ -320,7 +320,6 @@ template<class T>
 bool Plane<T>::isCoincident(const Plane& other, T distTol, T cpTol) const
 {
 	T dist = distanceToPoint(other._origin);
-	assert(dist >= 0);
 	if (dist > distTol)
 		return false;
 
