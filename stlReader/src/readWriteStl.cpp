@@ -32,6 +32,9 @@ This file is part of the TriMesh library.
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#ifndef WIN32
+#include <filesystem>
+#endif
 
 #include <readWriteStl.h>
 #include <stdint.h>
@@ -231,9 +234,14 @@ bool CReadWriteSTL::write(const TriMesh::CMeshPtr& pMesh, bool binary, const std
 		return writeText(out, pts);
 }
 
-bool CReadWriteSTL::write(const TriMesh::CMeshPtr& pMesh, bool binary, const std::wstring& path, const std::wstring& filename)
+bool CReadWriteSTL::write(const TriMesh::CMeshPtr& pMesh, bool binary, const std::wstring& pathStr, const std::wstring& filenameStr)
 {
-	ofstream out(path + filename);
+#ifdef WIN32
+	ofstream out(pathStr + filenameStr);
+#else
+	filesystem::path filePath(pathStr + filenameStr);
+	ofstream out(filePath);
+#endif
 	std::vector<Vector3f> pts;
 	pMesh->getSTLPoints(pts);
 

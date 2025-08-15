@@ -41,6 +41,7 @@ Dark Sky Innovative Solutions http://darkskyinnovation.com/
 #include <tm_ray.h>
 #include <triMesh.h>
 #include <triMeshPatch.h>
+#include <filesystem>
 #include <MultiCoreUtil.h>
 #include <tm_ioUtil.h>
 
@@ -105,10 +106,11 @@ void CMesh::reset(const BoundingBox& bbox) {
 void CMesh::dumpTris(const wstring& filename) const
 {
 #ifdef WIN32
-	wofstream out(filename);
+	ofstream out(filename);
 #else
-	wofstream out(CReadSTL::fromWString(filename));
-#endif // WIND32
+	filesystem::path filePath(filename);
+	ofstream out(filePath);
+#endif
 
 	out << setprecision(15);
 	out << numVertices() << "\n";
@@ -135,8 +137,9 @@ bool CMesh::compareDumpedTris(const wstring& filename) const
 #ifdef WIN32
 	wifstream in(filename);
 #else
-	wifstream in(CReadSTL::fromWString(filename));
-#endif // WIND32
+	filesystem::path filePath(filename);
+	wifstream in(filePath);
+#endif // WIN32
 	size_t nVerts, nTris, nEdges;
 	in >> nVerts;
 	in >> nTris;
@@ -193,8 +196,10 @@ void CMesh::dumpTree(const wstring& filename) const
 #ifdef WIN32
 	wofstream out(filename);
 #else
-	wofstream out(CReadSTL::fromWString(filename));
-#endif
+	filesystem::path filePath(filename);
+	wofstream out(filePath);
+#endif // WIN32
+
 	out << setprecision(15);
 	_pTriTree->dump(out);
 

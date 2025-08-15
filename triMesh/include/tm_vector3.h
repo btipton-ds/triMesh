@@ -35,6 +35,7 @@ This file is part of the TriMesh library.
 */
 
 #include <tm_defines.h>
+#include <cmath>
 
 #undef Success
 #include <Eigen/Dense>
@@ -272,7 +273,7 @@ public:
 	inline bool isNAN() const
 	{
 		for (int i = 0; i < 3; i++) {
-			if (isnan(_data[i]))
+			if (std::isnan(_data[i]))
 				return true;
 		}
 		return false;

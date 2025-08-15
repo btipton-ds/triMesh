@@ -35,7 +35,7 @@ This file is part of the TriMesh library.
 #include <fstream>
 
 #include <triMesh.hpp>
-#include <..\..\stlReader\include\readWriteStl.h>
+#include <../../stlReader/include/readWriteStl.h>
 
 using namespace std;
 
