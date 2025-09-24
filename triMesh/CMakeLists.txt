@@ -14,23 +14,10 @@ project ("triMesh")
 add_compile_definitions(_USE_MATH_DEFINES)
 
 # Add source to this project's executable.
-if (UNIX)
-	list(APPEND CMAKE_CXX_FLAGS "-mcmodel=large")
-
+if (WIN32)
+	message(WARNING "Win")
     include_directories(
-    include 
-    "/usr/include/eigen3/"
-    "../../utilities/threads/include"
-    "../triMesh/include" 
-    "../stlReader/include"
-
-    )
-    set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
-    set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
-    set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
-else (UNIX)
-    include_directories(
-    include 
+    "include"
     "../../ThirdParty/eigen"
     "../../utilities/threads/include"
     "../triMesh/include" 
@@ -40,7 +27,21 @@ else (UNIX)
     set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/win/${CMAKE_BUILD_TYPE}")
     set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/win/${CMAKE_BUILD_TYPE}")
     set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/win/${CMAKE_BUILD_TYPE}")
-endif(UNIX)
+else (WIN32)
+	message(WARNING "Linux")
+	list(APPEND CMAKE_CXX_FLAGS "-mcmodel=large")
+
+    include_directories(
+    "include" 
+    "/usr/include/eigen3/"
+    "../../utilities/threads/include"
+    "../stlReader/include"
+
+    )
+    set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
+    set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
+    set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
+endif(WIN32)
 
 add_library (
     triMesh 

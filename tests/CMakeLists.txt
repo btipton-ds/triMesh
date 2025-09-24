@@ -11,11 +11,31 @@ endif()
 project ("testMath")
 add_compile_definitions(_USE_MATH_DEFINES)
 
-include_directories(
-include 
-../../ThirdParty/eigen
-"../triMesh/include" 
-)
+if (WIN32)
+	message(WARNING "Win")
+    include_directories(
+    "include" 
+    "../../ThirdParty/eigen"
+    "../triMesh/include" 
+    )
+
+    set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/win/${CMAKE_BUILD_TYPE}")
+    set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/win/${CMAKE_BUILD_TYPE}")
+    set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/win/${CMAKE_BUILD_TYPE}")
+else (WIN32)
+	message(WARNING "Linux")
+	list(APPEND CMAKE_CXX_FLAGS "-mcmodel=large")
+
+    include_directories(
+    "include" 
+    "/usr/include/eigen3/"
+    "../triMesh/include" 
+
+    )
+    set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
+    set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
+    set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
+endif(WIN32)
 
 if (UNIX)
     set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/linux/${CMAKE_BUILD_TYPE}")
