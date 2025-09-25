@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : CMake project for triMesh_2022, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.10)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -14,7 +14,7 @@ add_compile_definitions(_USE_MATH_DEFINES)
 
 # Add source to this project's executable.
 if (WIN32)
-	message(WARNING "Win")
+	message(STATUS "Building Win")
     include_directories(
     "include"
     "../../ThirdParty/eigen"
@@ -27,7 +27,7 @@ if (WIN32)
     set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/win/${CMAKE_BUILD_TYPE}")
     set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/win/${CMAKE_BUILD_TYPE}")
 else (WIN32)
-	message(WARNING "Linux")
+	message(STATUS "Building Linux")
 	list(APPEND CMAKE_CXX_FLAGS "-mcmodel=large")
 
     include_directories(
@@ -73,3 +73,5 @@ else(WIN32)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 target_compile_features(triMesh PRIVATE cxx_std_20)
 endif(WIN32)
+
+message(STATUS "CMAKE_COLOR_DIAGNOSTICS: ${CMAKE_COLOR_DIAGNOSTICS}")

@@ -11,7 +11,7 @@ project ("testMath")
 add_compile_definitions(_USE_MATH_DEFINES)
 
 if (WIN32)
-	message(WARNING "Win")
+	message(WARNING "Building Win")
     include_directories(
     "include" 
     "../../ThirdParty/eigen"
@@ -22,7 +22,7 @@ if (WIN32)
     set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/win/${CMAKE_BUILD_TYPE}")
     set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/x64/win/${CMAKE_BUILD_TYPE}")
 else (WIN32)
-	message(WARNING "Linux")
+	message(STATUS "Building Linux")
 	list(APPEND CMAKE_CXX_FLAGS "-mcmodel=large")
 
     include_directories(
