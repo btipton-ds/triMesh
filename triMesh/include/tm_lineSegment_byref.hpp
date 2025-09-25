@@ -43,7 +43,7 @@ LineSegment_byref<T>::LineSegment_byref(const POINT_TYPE& p0, const POINT_TYPE& 
 }
 
 template<class T>
-LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::calLength() const {
+typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::calLength() const {
 	return (_pt1 - _pt0).norm();
 }
 
@@ -58,7 +58,7 @@ typename LineSegment_byref<T>::POINT_TYPE LineSegment_byref<T>::interpolate(SCAL
 }
 
 template<class T>
-LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::parameterize(const POINT_TYPE& pt) const {
+typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::parameterize(const POINT_TYPE& pt) const {
 	return (pt - _pt0).dot(calcDir()) / calLength();
 }
 

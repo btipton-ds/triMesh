@@ -42,7 +42,7 @@ inline LineSegment<T>::LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1)
 }
 
 template<class T>
-inline LineSegment<T>::SCALAR_TYPE LineSegment<T>::calLength() const {
+inline typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::calLength() const {
 	return (_pt1 - _pt0).norm();
 }
 
@@ -57,7 +57,7 @@ inline typename LineSegment<T>::POINT_TYPE LineSegment<T>::interpolate(SCALAR_TY
 }
 
 template<class T>
-inline LineSegment<T>::SCALAR_TYPE LineSegment<T>::parameterize(const POINT_TYPE& pt) const {
+inline typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::parameterize(const POINT_TYPE& pt) const {
 	return (pt - _pt0).dot(calcDir()) / calLength();
 }
 

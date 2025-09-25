@@ -31,6 +31,9 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
+#include <tm_lineSegment.hpp>
+#include <tm_lineSegment_byref.hpp>
+
 template <class SCALAR_TYPE>
 inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol) {
 	return fabs(v1 - v0) < tol;
@@ -226,3 +229,318 @@ inline Vector3<T> TRI_LERP(const std::vector<Vector3<T>>& pts, const Vector3<T>&
 	return TRI_LERP(pts, uvw[0], uvw[1], uvw[2]);
 }
 
+template<class T>
+Vector3<T> ngonCentroid(int numPoints, Vector3<T> const* const pts[]) {
+	Vector3<T> result(0, 0, 0);
+	for (int i = 0; i < numPoints; i++)
+		result += *pts[i];
+	result /= numPoints;
+	return result;
+}
+
+template<class T>
+Vector3<T> ngonCentroid(int numPoints, const Vector3<T> pts[]) {
+	Vector3<T> const* pPts[] = {
+		&pts[0],
+		&pts[1],
+		&pts[2],
+	};
+	return ngonCentroid(numPoints, pPts);
+}
+
+template<class T>
+inline Vector3<T> triangleCentroid(Vector3<T> const* const pts[3]) {
+	return ngonCentroid(3, pts);
+}
+template<class T>
+inline Vector3<T> triangleCentroid(const Vector3<T> pts[]) {
+	return ngonCentroid(3, pts);
+}
+
+template<class T>
+T volumeUnderTriangle(Vector3<T> const* const pts[3], const Vector3<T>& axis) {
+	Vector3<T> centroid = triangleCentroid(pts);
+	Vector3<T> v0 = *pts[1] - *pts[0];
+	Vector3<T> v1 = *pts[2] - *pts[0];
+	Vector3<T> cp = v0.cross(v1);
+	T area = cp.dot(axis) * (T)0.5;
+	T h = centroid.dot(axis);
+	T vol = area * h;
+	return vol;
+}
+
+template<class T>
+int triangleSplitWithPlane(Vector3<T> const triPts[3], const Plane<T>& plane,
+	Vector3<T> triPts0[3], Vector3<T> triPts1[3], Vector3<T> triPts2[3], T tol)
+{
+	int numSplits = 0;
+	Vector3<T> splitPts[2];
+	int splitLegIndices[2];
+	int numIntersectVertIndices = 0;
+	int intersectVertIndices[3];
+
+	for (int i = 0; i < 3; i++) {
+		int j = (i + 1) % 3;
+		RayHit<T> hit;
+		LineSegment<T> seg(triPts[i], triPts[j]);
+		if (plane.intersectLineSegment_rev0(seg, hit, tol)) {
+			if (hit.dist < tol) {
+				// This vertex lies on the plane
+				intersectVertIndices[numIntersectVertIndices++] = i;
+			}
+			else {
+				for (int k = 0; k < numIntersectVertIndices; k++) {
+					if (intersectVertIndices[k] == i || intersectVertIndices[k] == j)
+						continue;
+				}
+				bool found = false;
+				for (int k = 0; k < 3; k++) {
+					if (tolerantEquals(hit.hitPt, triPts[k], tol)) {
+						found = true;
+						break;
+					}
+				}
+
+				if (!found) {
+					splitLegIndices[numSplits] = i;
+					splitPts[numSplits] = hit.hitPt;
+					numSplits++;
+				}
+			}
+		}
+	}
+
+	// The found check will screen out a leg which lies on the plane.
+
+	if (numSplits == 1 && numIntersectVertIndices == 1) {
+		// The plane splits the triangle and a vertex lies on the plane
+
+		int vertIdx = intersectVertIndices[0];
+		triPts0[0] = triPts[vertIdx];
+		triPts0[1] = triPts[(vertIdx + 1) % 3];
+		triPts0[2] = splitPts[0];
+
+		triPts1[0] = triPts[vertIdx];
+		triPts1[1] = splitPts[0];
+		triPts1[2] = triPts[(vertIdx + 2) % 3];
+		return 2;
+	}
+	else if (numSplits == 2) {
+		// The plane splits two legs
+		int triIdx0;
+		if (0 == splitLegIndices[0] && 2 == splitLegIndices[1]) {
+			triIdx0 = 0;
+		}
+		else if (0 == splitLegIndices[0] && 1 == splitLegIndices[1]) {
+			triIdx0 = 1;
+		}
+		else {
+			triIdx0 = 2;
+		}
+
+		int triIdx1, triIdx2, ptIdx0, ptIdx1;
+
+		triIdx1 = (triIdx0 + 1) % 3;
+		triIdx2 = (triIdx1 + 1) % 3;
+
+		switch (triIdx0) {
+		case 0:
+			ptIdx0 = 0;
+			ptIdx1 = 1;
+			break;
+		case 1:
+			ptIdx0 = 1;
+			ptIdx1 = 0;
+			break;
+		case 2:
+			ptIdx0 = 1;
+			ptIdx1 = 0;
+			break;
+		}
+
+		Vector3<T> quadPts[4];
+		quadPts[0] = splitPts[ptIdx0];
+		quadPts[1] = triPts[triIdx1];
+		quadPts[2] = triPts[triIdx2];
+		quadPts[3] = splitPts[ptIdx1];
+
+		// Make the triangle
+		triPts0[0] = triPts[triIdx0];
+		triPts0[1] = splitPts[ptIdx0];
+		triPts0[2] = splitPts[ptIdx1];
+
+		// make the two triangles forming the quad
+		triPts1[0] = quadPts[0];
+		triPts1[1] = quadPts[1];
+		triPts1[2] = quadPts[2];
+
+		triPts2[0] = quadPts[0];
+		triPts2[1] = quadPts[2];
+		triPts2[2] = quadPts[3];
+
+		return 3;
+	}
+	return 0;
+}
+
+template<class T>
+Vector3<T> BI_LERP(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2, const Vector3<T>& p3, T t, T u)
+{
+	auto pt0 = LERP(p0, p1, t);
+	auto pt1 = LERP(p3, p2, t);
+
+	return pt0 + u * (pt1 - pt0);
+}
+
+// pts must be size 8 or greater. No bounds checking is done.
+template<class T>
+Vector3<T> TRI_LERP(const Vector3<T> pts[8], T t, T u, T v)
+{
+	auto pt0 = BI_LERP(pts[0], pts[1], pts[2], pts[3], t, u);
+	auto pt1 = BI_LERP(pts[4], pts[5], pts[6], pts[7], t, u);
+
+	return pt0 + v * (pt1 - pt0);
+}
+
+template<class T>
+bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
+{
+	const double tolSqr = tol * tol;
+	if (pts.empty())
+		return false;
+
+	T a, b, c, l;
+	Vector3<T> x, y, z, p0, p1, dir, v;
+
+	x = pts[1] - pts[0];
+	l = x.norm();
+	x /= l * l;
+
+	y = pts[3] - pts[0];
+	l = y.norm();
+	y /= l * l;
+
+	z = pts[4] - pts[0];
+	l = z.norm();
+	z /= l * l;
+
+	v = pt - pts[0];
+	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
+	bool done = false;
+	int count = 0;
+	while (!done && count++ < 100) {
+		p0 = TRI_LERP(pts, (T)0, tuv[1], tuv[2]);
+		p1 = TRI_LERP(pts, (T)1, tuv[1], tuv[2]);
+		dir = p1 - p0;
+		l = dir.norm();
+		dir /= l;
+		v = pt - p0;
+		a = v.dot(dir) / l;
+
+		p0 = TRI_LERP(pts, tuv[0], (T)0, tuv[2]);
+		p1 = TRI_LERP(pts, tuv[0], (T)1, tuv[2]);
+		dir = p1 - p0;
+		l = dir.norm();
+		dir /= l;
+		v = pt - p0;
+		b = v.dot(dir) / l;
+
+		p0 = TRI_LERP(pts, tuv[0], tuv[1], (T)0);
+		p1 = TRI_LERP(pts, tuv[0], tuv[1], (T)1);
+		dir = p1 - p0;
+		l = dir.norm();
+		dir /= l;
+		v = pt - p0;
+		c = v.dot(dir) / l;
+
+		tuv = Vector3<T>(a, b, c);
+		Vector3<T> guess = TRI_LERP(pts, tuv);
+		T distSqr = (guess - pt).squaredNorm();
+		if (distSqr < tolSqr)
+			return true;
+	}
+	return false;
+}
+
+template<class T>
+bool intersectTriTri(const Vector3<T> triPts0[3], const Vector3<T> triPts1[3], T tol)
+{
+	const Vector3<T>* pPts0[] = { &triPts0[0], &triPts0[1], &triPts0[2] };
+	const Vector3<T>* pPts1[] = { &triPts1[0], &triPts1[1], &triPts1[2] };
+	return intersectTriTri(pPts0, pPts1, tol);
+}
+
+template<class T>
+bool intersectTriTri(class Vector3<T> const* const* triPts0, class Vector3<T> const* const* triPts1, T tol)
+{
+#if 1
+	RayHit<T> hit;
+
+	Plane<T> triPlane0(triPts0, false);
+
+	LineSegment<T> iSeg0;
+	if (!triPlane0.intersectTri(triPts1, iSeg0, tol))
+		return false;
+
+	Plane<T> triPlane1(triPts1, false);
+
+	LineSegment<T> iSeg1;
+	if (!triPlane1.intersectTri(triPts0, iSeg1, tol))
+		return false;
+
+#if 0
+	Ray<T> ray0(iSeg0._pt0, iSeg0.calcDir());
+	if (ray0.distToPt(iSeg1._pt0) > tol || ray0.distToPt(iSeg1._pt1) > tol)
+		return false;
+
+	Ray<T> ray1(iSeg1._pt0, iSeg1.calcDir());
+	if (ray0.distToPt(iSeg1._pt0) > tol || ray0.distToPt(iSeg1._pt1) > tol)
+		return false;
+#endif
+
+	auto looseTol = 10 * tol;
+	T t;
+	if (iSeg0.contains(iSeg1._pt0, t, looseTol) || iSeg0.contains(iSeg1._pt1, t, looseTol))
+		return true;
+
+	if (iSeg1.contains(iSeg0._pt0, t, looseTol) || iSeg1.contains(iSeg0._pt1, t, looseTol))
+		return true;
+
+	return false;
+#else
+	RayHit<T> hit;
+
+	// Check 1 against 0
+	const Vector3<T>* pts0[] = { triPts0[0], triPts0[1], triPts0[2] };
+	Vector3<T> norm0 = triangleUnitNormal(pts0);
+	Plane_byref<T> triPlane0(*pts0[0], norm0);
+
+	for (int i = 0; i < 3; i++) {
+		int j = (i + 1) % 3;
+
+		LineSegment_byref<T> seg(*triPts1[i], *triPts1[j]);
+		if (triPlane0.intersectLineSegment_rev0(seg, hit, tol)) {
+			if (pointInTriangle<T>(triPts0, hit.hitPt, norm0, tol))
+				return true;
+		}
+	}
+
+	// Check 0 against 1
+	const Vector3<T>* pts1[] = { triPts1[0], triPts1[1], triPts1[2] };
+	Vector3<T> norm1 = triangleUnitNormal(pts1);
+	Plane_byref<T> triPlane1(*pts1[0], norm1);
+
+	for (int i = 0; i < 3; i++) {
+		int j = (i + 1) % 3;
+
+		LineSegment_byref<T> seg(*triPts0[i], *triPts0[j]);
+
+		if (triPlane1.intersectLineSegment_rev0(seg, hit, tol)) {
+			if (pointInTriangle<T>(triPts1, hit.hitPt, norm1, tol))
+				return true;
+		}
+	}
+
+	return false;
+#endif
+}

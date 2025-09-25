@@ -39,6 +39,10 @@ This file is part of the TriMesh library.
 #define FULL_TESTS 0
 #define EIGEN_NO_DEBUG 1
 
+#ifndef assert
+#define assert(X)
+#endif
+
 const int filePrecision = 17;
 constexpr double NUMERIC_DIFF_TOL = 1.0e-5;
 constexpr double SAME_DIST_TOL = 1.0e-8; // TODO Needs to be templated
