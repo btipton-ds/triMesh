@@ -48,7 +48,7 @@ size_t CVertex::numBytes() const
 
 void CVertex::write(ostream& out) const {
 	uint8_t version = 0;
-	out.write((char*) &version, sizeof(version));
+	IoUtil::write(out, version);
 
 	writeVector3(out, _pt);
 	IoUtil::write(out, _edgeIndices);
@@ -57,7 +57,7 @@ void CVertex::write(ostream& out) const {
 
 bool CVertex::read(istream& in) {
 	uint8_t version = -1;
-	in.read((char*)&version, sizeof(version));
+	IoUtil::read(in, version);
 
 	readVector3(in, _pt);
 	IoUtil::read(in, _edgeIndices);

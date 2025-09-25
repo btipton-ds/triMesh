@@ -2472,9 +2472,8 @@ void CMesh::dumpModelSharpEdgesObj(ostream& out, double sinAngle) const {
 
 void CMesh::write(ostream& out) const {
 	uint8_t version = 0;
-	out.write((char*)&version, sizeof(version));
-
-	out.write((char*)&_enforceManifold, sizeof(_enforceManifold));
+	IoUtil::write(out, version);
+	IoUtil::write(out, _enforceManifold);
 
 	IoUtil::writeObj(out, _vertices);
 	IoUtil::writeObj(out, _edges);
@@ -2483,9 +2482,8 @@ void CMesh::write(ostream& out) const {
 
 bool CMesh::read(istream& in) {
 	uint8_t version = -1;
-	in.read((char*)&version, sizeof(version));
-
-	in.read((char*)&_enforceManifold, sizeof(_enforceManifold));
+	IoUtil::read(in, version);
+	IoUtil::read(in, _enforceManifold);
 
 	IoUtil::readObj(in, _vertices);
 	IoUtil::readObj(in, _edges);

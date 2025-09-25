@@ -33,6 +33,7 @@ This file is part of the TriMesh library.
 #include <tm_edge.h>
 #include <tm_lineSegment.h>
 #include <triMesh.h>
+#include <tm_ioUtil.h>
 
 using namespace std;
 using namespace TriMesh;
@@ -114,7 +115,7 @@ bool CEdge::isAttachedToFace(size_t faceIdx) const
 void CEdge::write(std::ostream& out) const
 {
 	uint8_t version = 0;
-	out.write((char*) &version, sizeof(version));
+	IoUtil::write(out, version);
 
 	out.write((char*)&_vertIndex[0], sizeof(size_t));
 	out.write((char*)&_vertIndex[1], sizeof(size_t));
@@ -126,7 +127,7 @@ void CEdge::write(std::ostream& out) const
 bool CEdge::read(std::istream& in)
 {
 	uint8_t version = -1;
-	in.read((char*)&version, sizeof(version));
+	IoUtil::read(in, version);
 
 	in.read((char*)&_vertIndex[0], sizeof(size_t));
 	in.read((char*)&_vertIndex[1], sizeof(size_t));

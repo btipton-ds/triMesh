@@ -42,14 +42,65 @@ namespace TriMesh
 
 namespace IoUtil
 {
+	/*
+	This creates precise write/read functions for each type, then deletes conversions which might change size
+	bool is handled separately and routed through a uint8_t in case bool's size differs
+	between compilers. 
+
+	It's not supposed to, but clang++ 19 on windows and ubuntu Linux is getting a size mismatch.
+	*/
+
+	inline void write(std::ostream& out, const bool val)
+	{
+		uint8_t iVal = val ? 1 : 0;
+		out.write((char*) &iVal, sizeof(iVal));
+	}
+
+	inline void read(std::istream& in, bool& val)
+	{
+		uint8_t iVal = val ? 1 : 0;
+		in.read((char*) &iVal, sizeof(iVal));
+		val = iVal == 1 ? true : false;
+	}
+
+#define WRITE_READ(VAL_TYPE) \
+	inline void write(std::ostream& out, const VAL_TYPE val)\
+	{\
+		out.write((char*)&val, sizeof(val));\
+	}\
+\
+	inline void read(std::istream& in, VAL_TYPE& val)\
+	{\
+		in.read((char*)&val, sizeof(val));\
+	}
+
+	WRITE_READ(uint8_t)
+	WRITE_READ(uint16_t)
+	WRITE_READ(uint32_t)
+	WRITE_READ(uint64_t)
+
+	WRITE_READ(int8_t)
+	WRITE_READ(int16_t)
+	WRITE_READ(int32_t)
+	WRITE_READ(int64_t)
+
+	WRITE_READ(float)
+	WRITE_READ(double)
+
+	template<class T>
+	void write(std::ostream& out, const T) = delete;
+
+	template<class T>
+	void read(std::istream& in, const T) = delete;
+
 	template<class T>
 	void write(std::ostream& out, const std::set<T>& vals)
 	{
 		size_t num = vals.size();
-		out.write((char*)&num, sizeof(num));
+		IoUtil::write(out, num);
 
 		for (const auto& val : vals) {
-			out.write((char*)&val, sizeof(T));
+			IoUtil::write(out, val);
 		}
 	}
 
@@ -70,7 +121,7 @@ namespace IoUtil
 	void writeObj(std::ostream& out, const std::set<T>& vals)
 	{
 		size_t num = vals.size();
-		out.write((char*)&num, sizeof(num));
+		IoUtil::write(out, num);
 		for (const auto& val : vals) {
 			val.write(out);
 		}
@@ -94,7 +145,7 @@ namespace IoUtil
 	void write(std::ostream& out, const std::vector<T>& vals)
 	{
 		size_t num = vals.size();
-		out.write((char*)&num, sizeof(num));
+		IoUtil::write(out, num);
 		if (num > 0) {
 			out.write((char*)vals.data(), num * sizeof(T));
 		}
@@ -115,7 +166,8 @@ namespace IoUtil
 	void writeObj(std::ostream& out, const std::vector<T>& vals)
 	{
 		size_t num = vals.size();
-		out.write((char*)&num, sizeof(num));
+		IoUtil::write(out, num);
+
 		for (size_t i = 0; i < vals.size(); i++) {
 			vals[i].write(out);
 		}
@@ -125,7 +177,7 @@ namespace IoUtil
 	void readObj(std::istream& in, std::vector<T>& vals)
 	{
 		size_t num;
-		in.read((char*)&num, sizeof(num));
+		IoUtil::read(in, num);
 		if (num > 0) {
 			vals.resize(num);
 			for (size_t i = 0; i < num; i++) {
@@ -138,7 +190,7 @@ namespace IoUtil
 	void writeObj(std::ostream& out, const std::vector<T>& vals, size_t meshId)
 	{
 		size_t num = vals.size();
-		out.write((char*)&num, sizeof(num));
+		IoUtil::write(out, num);
 		for (size_t i = 0; i < vals.size(); i++) {
 			vals[i].write(out, meshId);
 		}
@@ -162,7 +214,7 @@ namespace IoUtil
 	void writeVector3(std::ostream& out, const std::vector<Vector3<T>>& vals)
 	{
 		size_t num = vals.size();
-		out.write((char*)&num, sizeof(num));
+		IoUtil::write(out, num);
 		for (const auto& val : vals) {
 			::writeVector3(out, val);
 		}
@@ -185,7 +237,7 @@ namespace IoUtil
 	void write(std::ostream& out, const std::map<T, U>& val)
 	{
 		size_t num = val.size();
-		out.write((char*)&num, sizeof(num));
+		IoUtil::write(out, num);
 		for (const auto& pair : val) {
 			pair.first.write(out);
 			pair.second.write(out);
