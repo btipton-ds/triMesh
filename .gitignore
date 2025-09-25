@@ -11,6 +11,7 @@ out
 /x64/
 /build/
 /out/
+/.idea/
 *.cmake
 CMakeFiles
 Makefile
