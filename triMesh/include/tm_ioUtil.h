@@ -146,19 +146,58 @@ namespace IoUtil
 		val = iVal == 1 ? true : false;
 	}
 
-	inline void write(std::ostream& out, const std::wstring& val)
+	inline void write(std::ostream& out, const std::string& val)
 	{
 		size_t num = val.size();
 		write(out, num);
 		writeWithChecks(out, val.data(), num);
 	}
 
-	inline void read(std::istream& in, std::wstring& val)
+	inline void read(std::istream& in, std::string& val)
 	{
 		size_t num;
 		read(in, num);
 		val.resize(num);
 		readWithChecks(in, val.data(), num);
+	}
+
+
+	inline void write(std::ostream& out, const std::wstring& wval)
+	{
+		const size_t bufSize = 1024;
+		setlocale(LC_ALL, "en_US.utf8");
+
+		size_t retVal, newSize;
+		char buf[bufSize];
+		auto rtn_val = wcstombs_s(&retVal, buf, bufSize, wval.data(), wval.size());
+		if (rtn_val == 0) {
+			std::string val(buf);
+			write(out, val);
+		} else {
+			write(out, std::string("Error"));
+			std::cout << "Could not write utf8 string\n";
+		}
+	}
+
+	inline void read(std::istream& in, std::wstring& wval)
+	{
+		const size_t bufSize = 1024;
+		std::string val;
+		read(in, val);
+
+		setlocale(LC_ALL, "en_US.utf8");
+
+		size_t retVal, newSize;
+		wchar_t buf[bufSize];
+		auto pData = val.data();
+		auto dataSize = val.size() + 1;
+		auto rtn_val = mbstowcs_s(&retVal, buf, bufSize, pData, dataSize);
+		if (rtn_val == 0)
+			wval = std::wstring(buf);
+		else {
+			wval = L"Error";
+			std::cout << "Could not read utf8 string\n";
+		}
 	}
 
 	template<class T>
