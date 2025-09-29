@@ -116,24 +116,20 @@ void CEdge::write(std::ostream& out) const
 {
 	uint8_t version = 0;
 	IoUtil::write(out, version);
+	IoUtil::write(out, _vertIndex, 2);
 
-	out.write((char*)&_vertIndex[0], sizeof(size_t));
-	out.write((char*)&_vertIndex[1], sizeof(size_t));
-
-	out.write((char*)&_numFaces, sizeof(int));
-	out.write((char*)_faceIndices, _numFaces * sizeof(size_t));
+	IoUtil::write(out, _numFaces);
+	IoUtil::write(out, _faceIndices, _numFaces);
 }
 
 bool CEdge::read(std::istream& in)
 {
 	uint8_t version = -1;
 	IoUtil::read(in, version);
+	IoUtil::read(in, _vertIndex, 2);
 
-	in.read((char*)&_vertIndex[0], sizeof(size_t));
-	in.read((char*)&_vertIndex[1], sizeof(size_t));
-
-	in.read((char*)&_numFaces, sizeof(int));
-	in.read((char*)_faceIndices, _numFaces * sizeof(size_t));
+	IoUtil::read(in, _numFaces);
+	IoUtil::read(in, _faceIndices, _numFaces);
 
 	return true;
 }

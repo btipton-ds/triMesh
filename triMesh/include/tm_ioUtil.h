@@ -111,10 +111,10 @@ namespace IoUtil
 	void write(std::ostream& out, const std::set<T>& vals)
 	{
 		size_t num = vals.size();
-		IoUtil::write(out, num);
+		write(out, num);
 
 		for (const auto& val : vals) {
-			IoUtil::write(out, val);
+			write(out, val);
 		}
 	}
 
@@ -122,11 +122,11 @@ namespace IoUtil
 	void read(std::istream& in, std::set<T>& vals)
 	{
 		size_t num;
-		in.read((char*)&num, sizeof(num));
+		read(in, num);
 
 		for (size_t i = 0; i < num; i++) {
 			T val;
-			in.read((char*)&val, sizeof(T));
+			read(in, val);
 			vals.insert(val);
 		}
 	}
@@ -135,7 +135,7 @@ namespace IoUtil
 	void writeObj(std::ostream& out, const std::set<T>& vals)
 	{
 		size_t num = vals.size();
-		IoUtil::write(out, num);
+		write(out, num);
 		for (const auto& val : vals) {
 			val.write(out);
 		}
@@ -145,7 +145,7 @@ namespace IoUtil
 	void readObj(std::istream& in, std::set<T>& vals)
 	{
 		size_t num;
-		in.read((char*)&num, sizeof(num));
+		read(in, num);
 
 		for (size_t i = 0; i < num; i++) {
 			T id;
@@ -159,7 +159,7 @@ namespace IoUtil
 	void write(std::ostream& out, const std::vector<T>& vals)
 	{
 		size_t num = vals.size();
-		IoUtil::write(out, num);
+		write(out, num);
 		if (num > 0) {
 			write(out, vals.data(), num);
 		}
@@ -169,7 +169,8 @@ namespace IoUtil
 	void read(std::istream& in, std::vector<T>& vals)
 	{
 		size_t num;
-		in.read((char*)&num, sizeof(num));
+		read(in, num);
+
 		if (num > 0) {
 			vals.resize(num);
 			read(in, vals.data(), num);
@@ -180,7 +181,7 @@ namespace IoUtil
 	void writeObj(std::ostream& out, const std::vector<T>& vals)
 	{
 		size_t num = vals.size();
-		IoUtil::write(out, num);
+		write(out, num);
 
 		for (size_t i = 0; i < vals.size(); i++) {
 			vals[i].write(out);
@@ -191,7 +192,7 @@ namespace IoUtil
 	void readObj(std::istream& in, std::vector<T>& vals)
 	{
 		size_t num;
-		IoUtil::read(in, num);
+		read(in, num);
 		if (num > 0) {
 			vals.resize(num);
 			for (size_t i = 0; i < num; i++) {
@@ -204,7 +205,7 @@ namespace IoUtil
 	void writeObj(std::ostream& out, const std::vector<T>& vals, size_t meshId)
 	{
 		size_t num = vals.size();
-		IoUtil::write(out, num);
+		write(out, num);
 		for (size_t i = 0; i < vals.size(); i++) {
 			vals[i].write(out, meshId);
 		}
@@ -214,7 +215,7 @@ namespace IoUtil
 	void readObj(std::istream& in, std::vector<T>& vals, size_t meshId)
 	{
 		size_t num;
-		in.read((char*)&num, sizeof(num));
+		read(in, num);
 		if (num > 0) {
 			for (size_t i = 0; i < num; i++) {
 				vals.push_back(T());
@@ -240,7 +241,7 @@ namespace IoUtil
 	void write(std::ostream& out, const std::vector<Vector3<T>>& vals)
 	{
 		size_t num = vals.size();
-		IoUtil::write(out, num);
+		write(out, num);
 		for (const auto& val : vals) {
 			write(out, val);
 		}
@@ -250,7 +251,7 @@ namespace IoUtil
 	void read(std::istream& in, std::vector<Vector3<T>>& vals)
 	{
 		size_t num;
-		in.read((char*)&num, sizeof(num));
+		read(in, num);
 
 		vals.resize(num);
 		for (auto& val : vals) {
@@ -263,7 +264,7 @@ namespace IoUtil
 	void write(std::ostream& out, const std::map<T, U>& val)
 	{
 		size_t num = val.size();
-		IoUtil::write(out, num);
+		write(out, num);
 		for (const auto& pair : val) {
 			pair.first.write(out);
 			pair.second.write(out);
@@ -275,7 +276,8 @@ namespace IoUtil
 	void read(std::istream& in, std::map<T, U>& val)
 	{
 		size_t num = val.size();
-		in.read((char*)&num, sizeof(num));
+		read(in, num);
+
 		for (size_t i = 0; i < num; i++) {
 			T t;
 			U u;
@@ -284,7 +286,5 @@ namespace IoUtil
 			val.insert(std::make_pair(t, u));
 		}
 	}
-
-
 
 }
