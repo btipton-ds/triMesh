@@ -50,33 +50,6 @@ namespace IoUtil
 	It's not supposed to, but clang++ 19 on windows and ubuntu Linux is getting a size mismatch.
 	*/
 
-	template<class T>
-	inline void write(std::ostream& out, T const* const pData, size_t num)
-	{
-		size_t size = sizeof(T) * num;
-		out.write((const char*)pData, size);
-	}
-
-	template<class T>
-	inline void read(std::istream& in, T* pData, size_t num)
-	{
-		size_t size = sizeof(T) * num;
-		in.read((char*)pData, size);
-	}
-
-	inline void write(std::ostream& out, const bool val)
-	{
-		uint8_t iVal = val ? 1 : 0;
-		out.write((char*) &iVal, sizeof(iVal));
-	}
-
-	inline void read(std::istream& in, bool& val)
-	{
-		uint8_t iVal = val ? 1 : 0;
-		in.read((char*) &iVal, sizeof(iVal));
-		val = iVal == 1 ? true : false;
-	}
-
 #define WRITE_READ(VAL_TYPE) \
 	inline void write(std::ostream& out, const VAL_TYPE val)\
 	{\
@@ -100,6 +73,33 @@ namespace IoUtil
 
 	WRITE_READ(float)
 	WRITE_READ(double)
+
+	inline void write(std::ostream& out, const bool val)
+	{
+		uint8_t iVal = val ? 1 : 0;
+		out.write((char*)&iVal, sizeof(iVal));
+	}
+
+	inline void read(std::istream& in, bool& val)
+	{
+		uint8_t iVal = val ? 1 : 0;
+		in.read((char*)&iVal, sizeof(iVal));
+		val = iVal == 1 ? true : false;
+	}
+
+	template<class T>
+	inline void write(std::ostream& out, T const* const pData, size_t num)
+	{
+		size_t size = sizeof(T) * num;
+		out.write((const char*)pData, size);
+	}
+
+	template<class T>
+	inline void read(std::istream& in, T* pData, size_t num)
+	{
+		size_t size = sizeof(T) * num;
+		in.read((char*)pData, size);
+	}
 
 	template<class T>
 	void write(std::ostream& out, const T) = delete;
@@ -224,13 +224,31 @@ namespace IoUtil
 		}
 	}
 
+	template <typename T>
+	inline void write(std::ostream& out, const Vector3<T>& v)
+	{
+		T tv[3] = { v[0], v[1], v[2] };
+		out.write((char*)tv, 3 * sizeof(T));
+	}
+
+	template <typename T>
+	inline void read(std::istream& in, Vector3<T>& v)
+	{
+		T tv[3];
+		in.read((char*)tv, 3 * sizeof(T));
+
+		v[0] = tv[0];
+		v[1] = tv[1];
+		v[2] = tv[2];
+	}
+
 	template<class T>
 	void writeVector3(std::ostream& out, const std::vector<Vector3<T>>& vals)
 	{
 		size_t num = vals.size();
 		IoUtil::write(out, num);
 		for (const auto& val : vals) {
-			::writeVector3(out, val);
+			write(out, val);
 		}
 	}
 
@@ -242,7 +260,7 @@ namespace IoUtil
 
 		vals.resize(num);
 		for (auto& val : vals) {
-			::readVector3(in, val);
+			read(in, val);
 		}
 	}
 

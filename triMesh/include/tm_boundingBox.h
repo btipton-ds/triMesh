@@ -35,6 +35,7 @@ This file is part of the TriMesh library.
 #include <tm_vector3.h>
 #include <tm_lineSegment.h>
 #include <tm_lineSegment_byref.h>
+#include <tm_ioUtil.h>
 
 template <class SCALAR_TYPE>
 class CBoundingBox3D {
@@ -94,13 +95,13 @@ using CBoundingBox3Df = CBoundingBox3D<float>;
 template <typename SCALAR_TYPE>
 inline void CBoundingBox3D<SCALAR_TYPE>::write(std::ostream& out) const
 {
-	writeVector3(out, _min);
-	writeVector3(out, _max);
+	IoUtil::write(out, _min);
+	IoUtil::write(out, _max);
 }
 
 template <typename SCALAR_TYPE>
 inline void CBoundingBox3D<SCALAR_TYPE>::read(std::istream& in)
 {
-	readVector3(in, _min);
-	readVector3(in, _max);
+	IoUtil::read(in, _min);
+	IoUtil::read(in, _max);
 }

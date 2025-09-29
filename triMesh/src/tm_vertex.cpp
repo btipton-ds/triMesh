@@ -50,7 +50,7 @@ void CVertex::write(ostream& out) const {
 	uint8_t version = 0;
 	IoUtil::write(out, version);
 
-	writeVector3(out, _pt);
+	IoUtil::write(out, _pt);
 	IoUtil::write(out, _edgeIndices);
 	IoUtil::write(out, _faceIndices);
 }
@@ -59,7 +59,7 @@ bool CVertex::read(istream& in) {
 	uint8_t version = -1;
 	IoUtil::read(in, version);
 
-	readVector3(in, _pt);
+	IoUtil::read(in, _pt);
 	IoUtil::read(in, _edgeIndices);
 	IoUtil::read(in, _faceIndices);
 
