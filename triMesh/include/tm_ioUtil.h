@@ -50,15 +50,74 @@ namespace IoUtil
 	It's not supposed to, but clang++ 19 on windows and ubuntu Linux is getting a size mismatch.
 	*/
 
+	inline bool& writeChecksEnabled()
+	{
+		static bool enabled = false;
+		return enabled;
+	}
+
+	inline bool& readChecksEnabled()
+	{
+		static bool enabled = false;
+		return enabled;
+	}
+
+	template<class T>
+	inline void writeWithChecks(std::ostream& out, const T& val)
+	{
+		if (writeChecksEnabled()) {
+			size_t sv = sizeof(T);
+			out.write((const char*)&sv, sizeof(sv));
+		}
+		out.write((const char*)&val, sizeof(val));
+	}
+
+	template<class T>
+	inline void readWithChecks(std::istream& in, T& val)
+	{
+		if (readChecksEnabled()) {
+			size_t sv;
+			in.read((char*)&sv, sizeof(sv));
+			if (sv != sizeof(val)) {
+				std::cout << "readWithChecks size mismatch " << __FILE__ << ":" << __LINE__ << "\n";
+			}
+		}
+		in.read((char*)&val, sizeof(val));
+	}
+
+	template<class T>
+	inline void writeWithChecks(std::ostream& out, const T* pVal, size_t count)
+	{
+		size_t st = count * sizeof(T);
+		if (writeChecksEnabled()) {
+			out.write((const char*)&st, sizeof(st));
+		}
+		out.write((const char*)pVal, st);
+	}
+
+	template<class T>
+	inline void readWithChecks(std::istream& in, T* pVal, size_t count)
+	{
+		if (readChecksEnabled()) {
+			size_t st;
+			in.read((char*)&st, sizeof(st));
+			if (st / count != sizeof(T)) {
+				std::cout << "readWithChecks size mismatch " << __FILE__ << ":" << __LINE__ << "\n";
+			}
+		}
+		in.read((char*)pVal, count * sizeof(T));
+	}
+
+
 #define WRITE_READ(VAL_TYPE) \
-	inline void write(std::ostream& out, const VAL_TYPE val)\
+	inline void write(std::ostream& out, const VAL_TYPE& val)\
 	{\
-		out.write((char*)&val, sizeof(val));\
+		writeWithChecks(out, val);\
 	}\
 \
 	inline void read(std::istream& in, VAL_TYPE& val)\
 	{\
-		in.read((char*)&val, sizeof(val));\
+		readWithChecks(in, val);\
 	}
 
 	WRITE_READ(uint8_t)
@@ -77,13 +136,13 @@ namespace IoUtil
 	inline void write(std::ostream& out, const bool val)
 	{
 		uint8_t iVal = val ? 1 : 0;
-		out.write((char*)&iVal, sizeof(iVal));
+		writeWithChecks(out, iVal);
 	}
 
 	inline void read(std::istream& in, bool& val)
 	{
-		uint8_t iVal = val ? 1 : 0;
-		in.read((char*)&iVal, sizeof(iVal));
+		uint8_t iVal;
+		readWithChecks(in, iVal);
 		val = iVal == 1 ? true : false;
 	}
 
@@ -91,7 +150,7 @@ namespace IoUtil
 	{
 		size_t num = val.size();
 		write(out, num);
-		out.write((const char*)val.data(), num * sizeof(wchar_t));
+		writeWithChecks(out, val.data(), num);
 	}
 
 	inline void read(std::istream& in, std::wstring& val)
@@ -99,7 +158,7 @@ namespace IoUtil
 		size_t num;
 		read(in, num);
 		val.resize(num);
-		in.read((char*)val.data(), num * sizeof(wchar_t));
+		readWithChecks(in, val.data(), num);
 	}
 
 	template<class T>
