@@ -227,23 +227,17 @@ namespace IoUtil
 	template <typename T>
 	inline void write(std::ostream& out, const Vector3<T>& v)
 	{
-		T tv[3] = { v[0], v[1], v[2] };
-		out.write((char*)tv, 3 * sizeof(T));
+		write(out, v.data(), 3);
 	}
 
 	template <typename T>
 	inline void read(std::istream& in, Vector3<T>& v)
 	{
-		T tv[3];
-		in.read((char*)tv, 3 * sizeof(T));
-
-		v[0] = tv[0];
-		v[1] = tv[1];
-		v[2] = tv[2];
+		read(in, v.data(), 3);
 	}
 
 	template<class T>
-	void writeVector3(std::ostream& out, const std::vector<Vector3<T>>& vals)
+	void write(std::ostream& out, const std::vector<Vector3<T>>& vals)
 	{
 		size_t num = vals.size();
 		IoUtil::write(out, num);
@@ -253,7 +247,7 @@ namespace IoUtil
 	}
 
 	template<class T>
-	void readVector3(std::istream& in, std::vector<Vector3<T>>& vals)
+	void read(std::istream& in, std::vector<Vector3<T>>& vals)
 	{
 		size_t num;
 		in.read((char*)&num, sizeof(num));
