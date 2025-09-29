@@ -50,6 +50,20 @@ namespace IoUtil
 	It's not supposed to, but clang++ 19 on windows and ubuntu Linux is getting a size mismatch.
 	*/
 
+	template<class T>
+	inline void write(std::ostream& out, T const* const pData, size_t num)
+	{
+		size_t size = sizeof(T) * num;
+		out.write((const char*)pData, size);
+	}
+
+	template<class T>
+	inline void read(std::istream& in, T* pData, size_t num)
+	{
+		size_t size = sizeof(T) * num;
+		in.read((char*)pData, size);
+	}
+
 	inline void write(std::ostream& out, const bool val)
 	{
 		uint8_t iVal = val ? 1 : 0;
@@ -147,7 +161,7 @@ namespace IoUtil
 		size_t num = vals.size();
 		IoUtil::write(out, num);
 		if (num > 0) {
-			out.write((char*)vals.data(), num * sizeof(T));
+			write(out, vals.data(), num);
 		}
 	}
 
@@ -158,7 +172,7 @@ namespace IoUtil
 		in.read((char*)&num, sizeof(num));
 		if (num > 0) {
 			vals.resize(num);
-			in.read((char*)vals.data(), num * sizeof(T));
+			read(in, vals.data(), num);
 		}
 	}
 
