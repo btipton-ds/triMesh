@@ -87,6 +87,21 @@ namespace IoUtil
 		val = iVal == 1 ? true : false;
 	}
 
+	inline void write(std::ostream& out, const std::wstring& val)
+	{
+		size_t num = val.size();
+		write(out, num);
+		out.write((const char*)val.data(), num * sizeof(wchar_t));
+	}
+
+	inline void read(std::istream& in, std::wstring& val)
+	{
+		size_t num;
+		read(in, num);
+		val.resize(num);
+		in.read((char*)val.data(), num * sizeof(wchar_t));
+	}
+
 	template<class T>
 	inline void write(std::ostream& out, T const* const pData, size_t num)
 	{
