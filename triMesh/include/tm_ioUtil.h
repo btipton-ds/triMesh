@@ -165,11 +165,13 @@ namespace IoUtil
 	inline void write(std::ostream& out, const std::wstring& wval)
 	{
 		const size_t bufSize = 1024;
+		char buf[bufSize];
+
 		setlocale(LC_ALL, "en_US.utf8");
 
-		size_t retVal, newSize;
-		char buf[bufSize];
-		auto rtn_val = wcstombs_s(&retVal, buf, bufSize, wval.data(), wval.size());
+#ifdef _WIN32
+		size_t sizeRead;
+		auto rtn_val = wcstombs_s(&sizeRead, buf, bufSize, wval.data(), wval.size());
 		if (rtn_val == 0) {
 			std::string val(buf);
 			write(out, val);
@@ -177,18 +179,25 @@ namespace IoUtil
 			write(out, std::string("Error"));
 			std::cout << "Could not write utf8 string\n";
 		}
+#else
+		auto sizeRead = wcstombs(buf, wval.data(), bufSize);
+		std::string val(buf);
+		write(out, val);
+#endif
 	}
 
 	inline void read(std::istream& in, std::wstring& wval)
 	{
 		const size_t bufSize = 1024;
+		wchar_t buf[bufSize];
+
 		std::string val;
 		read(in, val);
 
 		setlocale(LC_ALL, "en_US.utf8");
 
+#ifdef _WIN32
 		size_t retVal, newSize;
-		wchar_t buf[bufSize];
 		auto pData = val.data();
 		auto dataSize = val.size() + 1;
 		auto rtn_val = mbstowcs_s(&retVal, buf, bufSize, pData, dataSize);
@@ -198,6 +207,12 @@ namespace IoUtil
 			wval = L"Error";
 			std::cout << "Could not read utf8 string\n";
 		}
+#else
+		auto pData = val.data();
+		auto dataSize = val.size() + 1;
+		size_t newSize = mbstowcs(buf, pData, bufSize);
+		wval = std::wstring(buf);
+#endif
 	}
 
 	template<class T>
