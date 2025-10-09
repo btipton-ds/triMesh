@@ -50,16 +50,139 @@ namespace IoUtil
 	It's not supposed to, but clang++ 19 on windows and ubuntu Linux is getting a size mismatch.
 	*/
 
-	inline bool& writeChecksEnabled()
-	{
-		static bool enabled = false;
-		return enabled;
+	bool& writeChecksEnabled();
+	bool& readChecksEnabled();
+
+	template<class T>
+	void writeWithChecks(std::ostream& out, const T& val);
+	template<class T>
+	void readWithChecks(std::istream& in, T& val);
+	template<class T>
+	void writeWithChecks(std::ostream& out, const T* pVal, size_t count);
+	template<class T>
+	void readWithChecks(std::istream& in, T* pVal, size_t count);
+
+#define WRITE_READ(VAL_TYPE) \
+	inline void write(std::ostream& out, const VAL_TYPE& val)\
+	{\
+		writeWithChecks(out, val);\
+	}\
+\
+	inline void read(std::istream& in, VAL_TYPE& val)\
+	{\
+		readWithChecks(in, val);\
 	}
 
-	inline bool& readChecksEnabled()
+	WRITE_READ(uint8_t)
+		WRITE_READ(uint16_t)
+		WRITE_READ(uint32_t)
+		WRITE_READ(uint64_t)
+
+		WRITE_READ(int8_t)
+		WRITE_READ(int16_t)
+		WRITE_READ(int32_t)
+		WRITE_READ(int64_t)
+
+		WRITE_READ(float)
+		WRITE_READ(double)
+
+#define WRITE_READ_ENUM(VAL_TYPE) \
+	inline void writeEnum(std::ostream& out, const VAL_TYPE& val)\
+	{\
+		int iVal = (int) val; \
+		write(out, iVal);\
+	}\
+\
+	inline void readEnum(std::istream& in, VAL_TYPE& val)\
+	{\
+		int iVal; \
+		read(in, iVal);\
+		val = (VAL_TYPE)iVal;\
+	}
+
+	void write(std::ostream& out, const bool val);
+	void read(std::istream& in, bool& val);
+	void write(std::ostream& out, const std::string& val);
+	void read(std::istream& in, std::string& val);
+	void write(std::ostream& out, const std::wstring& wval);
+	void read(std::istream& in, std::wstring& wval);
+
+	template<class T>
+	void write(std::ostream& out, T const* const pData, size_t num);
+	template<class T>
+	inline void read(std::istream& in, T* pData, size_t num);
+
+	template<class T>
+	void write(std::ostream& out, const T) = delete;
+
+	template<class T>
+	void read(std::istream& in, const T) = delete;
+
+	template<class T>
+	void write(std::ostream& out, const std::set<T>& vals);
+
+	template<class T>
+	void read(std::istream& in, std::set<T>& vals);
+
+	template<class T>
+	void writeObj(std::ostream& out, const std::set<T>& vals);
+
+	template<class T>
+	void readObj(std::istream& in, std::set<T>& vals);
+
+	/************************************************************************************/
+	template<class T>
+	void write(std::ostream& out, const std::vector<T>& vals);
+
+	template<class T>
+	void read(std::istream& in, std::vector<T>& vals);
+
+	template<class T>
+	void writeObj(std::ostream& out, const std::vector<T>& vals);
+
+	template<class T>
+	void readObj(std::istream& in, std::vector<T>& vals);
+
+	template<class T>
+	void writeObj(std::ostream& out, const std::vector<T>& vals, size_t meshId);
+
+	template<class T>
+	void readObj(std::istream& in, std::vector<T>& vals, size_t meshId);
+
+	template <typename T>
+	inline void write(std::ostream& out, const Vector3<T>& v);
+
+	template <typename T>
+	inline void read(std::istream& in, Vector3<T>& v);
+
+	template<class T>
+	void write(std::ostream& out, const std::vector<Vector3<T>>& vals);
+
+	template<class T>
+	void read(std::istream& in, std::vector<Vector3<T>>& vals);
+
+	/************************************************************************************/
+	template<class T, class U>
+	void write(std::ostream& out, const std::map<T, U>& val);
+
+	template<class T, class U>
+	void read(std::istream& in, std::map<T, U>& val);
+
+/*************************************************************************************************************************/
+/******************************************* function bodies *************************************************************/
+
+	template<class T>
+	void write(std::ostream& out, T const* const pData, size_t num)
 	{
-		static bool enabled = false;
-		return enabled;
+		size_t size = sizeof(T) * num;
+		out.write((const char*)pData, size);
+	}
+
+	template<class T>
+	inline void read(std::istream& in, T* pData, size_t num)
+	{
+		size_t size = sizeof(T) * num;
+		in.read((char*)pData, size);
 	}
 
 	template<class T>
@@ -107,133 +230,6 @@ namespace IoUtil
 		}
 		in.read((char*)pVal, count * sizeof(T));
 	}
-
-
-#define WRITE_READ(VAL_TYPE) \
-	inline void write(std::ostream& out, const VAL_TYPE& val)\
-	{\
-		writeWithChecks(out, val);\
-	}\
-\
-	inline void read(std::istream& in, VAL_TYPE& val)\
-	{\
-		readWithChecks(in, val);\
-	}
-
-	WRITE_READ(uint8_t)
-	WRITE_READ(uint16_t)
-	WRITE_READ(uint32_t)
-	WRITE_READ(uint64_t)
-
-	WRITE_READ(int8_t)
-	WRITE_READ(int16_t)
-	WRITE_READ(int32_t)
-	WRITE_READ(int64_t)
-
-	WRITE_READ(float)
-	WRITE_READ(double)
-
-	inline void write(std::ostream& out, const bool val)
-	{
-		uint8_t iVal = val ? 1 : 0;
-		writeWithChecks(out, iVal);
-	}
-
-	inline void read(std::istream& in, bool& val)
-	{
-		uint8_t iVal;
-		readWithChecks(in, iVal);
-		val = iVal == 1 ? true : false;
-	}
-
-	inline void write(std::ostream& out, const std::string& val)
-	{
-		size_t num = val.size();
-		write(out, num);
-		writeWithChecks(out, val.data(), num);
-	}
-
-	inline void read(std::istream& in, std::string& val)
-	{
-		size_t num;
-		read(in, num);
-		val.resize(num);
-		readWithChecks(in, val.data(), num);
-	}
-
-
-	inline void write(std::ostream& out, const std::wstring& wval)
-	{
-		const size_t bufSize = 1024;
-		char buf[bufSize];
-
-		setlocale(LC_ALL, "en_US.utf8");
-
-#ifdef _WIN32
-		size_t sizeRead;
-		auto rtn_val = wcstombs_s(&sizeRead, buf, bufSize, wval.data(), wval.size());
-		if (rtn_val == 0) {
-			std::string val(buf);
-			write(out, val);
-		} else {
-			write(out, std::string("Error"));
-			std::cout << "Could not write utf8 string\n";
-		}
-#else
-		auto sizeRead = wcstombs(buf, wval.data(), bufSize);
-		std::string val(buf);
-		write(out, val);
-#endif
-	}
-
-	inline void read(std::istream& in, std::wstring& wval)
-	{
-		const size_t bufSize = 1024;
-		wchar_t buf[bufSize];
-
-		std::string val;
-		read(in, val);
-
-		setlocale(LC_ALL, "en_US.utf8");
-
-#ifdef _WIN32
-		size_t retVal, newSize;
-		auto pData = val.data();
-		auto dataSize = val.size() + 1;
-		auto rtn_val = mbstowcs_s(&retVal, buf, bufSize, pData, dataSize);
-		if (rtn_val == 0)
-			wval = std::wstring(buf);
-		else {
-			wval = L"Error";
-			std::cout << "Could not read utf8 string\n";
-		}
-#else
-		auto pData = val.data();
-		auto dataSize = val.size() + 1;
-		size_t newSize = mbstowcs(buf, pData, bufSize);
-		wval = std::wstring(buf);
-#endif
-	}
-
-	template<class T>
-	inline void write(std::ostream& out, T const* const pData, size_t num)
-	{
-		size_t size = sizeof(T) * num;
-		out.write((const char*)pData, size);
-	}
-
-	template<class T>
-	inline void read(std::istream& in, T* pData, size_t num)
-	{
-		size_t size = sizeof(T) * num;
-		in.read((char*)pData, size);
-	}
-
-	template<class T>
-	void write(std::ostream& out, const T) = delete;
-
-	template<class T>
-	void read(std::istream& in, const T) = delete;
 
 	template<class T>
 	void write(std::ostream& out, const std::set<T>& vals)
@@ -414,5 +410,4 @@ namespace IoUtil
 			val.insert(std::make_pair(t, u));
 		}
 	}
-
 }

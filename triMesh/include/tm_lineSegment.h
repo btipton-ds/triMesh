@@ -64,6 +64,7 @@ struct LineSegment {
 	bool contains(const POINT_TYPE& pt, SCALAR_TYPE& t, SCALAR_TYPE tol) const;
 	Ray<SCALAR_TYPE> getRay() const;
 
+	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt, POINT_TYPE& closestPt, SCALAR_TYPE& t) const;
 	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const;
 	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt) const;
 

@@ -99,13 +99,7 @@ inline Ray<typename LineSegment<T>::SCALAR_TYPE> LineSegment<T>::getRay() const 
 }
 
 template<class T>
-inline typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT_TYPE& pt) const {
-	SCALAR_TYPE t;
-	return distanceToPoint(pt, t);
-}
-
-template<class T>
-typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const {
+typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT_TYPE& pt, POINT_TYPE& closestPt, SCALAR_TYPE& t) const {
 	POINT_TYPE dir(_pt1 - _pt0);
 	SCALAR_TYPE len = dir.norm();
 	if (len < minNormalizeDivisor)
@@ -115,19 +109,36 @@ typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT
 	SCALAR_TYPE dp = v0.dot(dir);
 	t = dp / len;
 	v0 = v0 - dir * dp;
-	SCALAR_TYPE dist;
+	SCALAR_TYPE dist = -1;
 	if (t < 0) {
 		t = (SCALAR_TYPE)-DBL_MAX;
-		dist = (pt - _pt0).norm();
-	}
-	else if (t > 1) {
+		closestPt = _pt0;
+		dist = (pt - closestPt).norm();
+	} else if (t > 1) {
 		t = (SCALAR_TYPE)DBL_MAX;
-		dist = (pt - _pt1).norm();
-	}
-	else
+		closestPt = _pt1;
+		dist = (pt - closestPt).norm();
+	} else {
 		dist = v0.norm();
-
+		if (dist > 0) {
+			v0 /= dist;
+			closestPt = pt - dist * v0;
+		}
+	}
 	return dist;
+}
+template<class T>
+typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const
+{
+	POINT_TYPE closestPt;
+	return distanceToPoint(pt, closestPt, t);
+}
+
+template<class T>
+inline typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::distanceToPoint(const POINT_TYPE& pt) const {
+	SCALAR_TYPE t;
+	POINT_TYPE closestPt;
+	return distanceToPoint(pt, closestPt, t);
 }
 
 template<class T>
