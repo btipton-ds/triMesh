@@ -392,6 +392,80 @@ Vector3<T> BI_LERP(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>&
 	return pt0 + u * (pt1 - pt0);
 }
 
+template<class T>
+bool BI_LERP_INV(const Vector3<T>& pt, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt3, T& t, T& u, T tol)
+{
+	const auto smallest_den = (T)1.0e-12;
+	Plane<T> pl(pt0, pt1, pt2);
+	if (!pl.isCoincident(pt3, tol))
+		return false;
+
+	auto tmp = pl.projectPoint(pt);
+	Vector2<T> p2(tmp[0], tmp[1]);
+
+	tmp = pl.projectPoint(pt0);
+	Vector2<T> p20(tmp[0], tmp[1]);
+
+	tmp = pl.projectPoint(pt1);
+	Vector2<T> p21(tmp[0], tmp[1]);
+
+	tmp = pl.projectPoint(pt2);
+	Vector2<T> p22(tmp[0], tmp[1]);
+
+	tmp = pl.projectPoint(pt3);
+	Vector2<T> p23(tmp[0], tmp[1]);
+
+	auto A = (p20 - p2).cross(p20 - p22);
+	auto B = ((p20 - p2).cross(p21 - p23) + (p21 - p2).cross(p20 - p22)) / 2;
+	auto C = (p21 - p2).cross(p21 - p23);
+
+	auto den = A - 2 * B + C;
+	if (fabs(den) > smallest_den) {
+		auto tPos = ((A - B) + sqrt(B ^ 2 - A * C)) / den;
+		auto tNeg = ((A - B) - sqrt(B ^ 2 - A * C)) / den;
+		if (0 <= tPos && tPos <= 1.0)
+			t = tPos;
+		else {
+			auto tNeg = ((A - B) - sqrt(B ^ 2 - A * C)) / den;
+			if (0 <= tNeg && tNeg <= 1.0)
+				t = tNeg;
+			else
+				return false;
+		} 
+	} else if (fabs(A - C) > smallest_den) {
+		t = A / (A - C);
+	} else
+		return false;
+
+	if (t < 0 || 1 < t)
+		return false;
+
+	auto x = p2[0];
+	auto x0 = p20[0];
+	auto x1 = p21[0];
+	auto x2 = p22[0];
+	auto x3 = p23[0];
+	den = ((1 - t) * (x0 - x2) + t * (x1 - x3));
+	if (fabs(den) > smallest_den) {
+		u = ((1 - t) * (x0 - x) + t * (x1 - x)) / den;
+		return 0 <= u && u <= 1;
+	}
+	return false;
+}
+
+template<class T>
+bool BI_LERP_INV(const Vector3<T>& p, const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2, T& t, T& u, T tol)
+{
+	if (pointInTriangle(p0, p1, p2, p, tol)) {
+		// make the triangle a parallelagram by creating p3.
+		auto v = p2 - p1;
+		auto p3 = p0 + v;
+
+		return BI_LERP_INV(p, p0, p1, p2, p3, t, u, tol);
+	}
+	return false;
+}
+
 // pts must be size 8 or greater. No bounds checking is done.
 template<class T>
 Vector3<T> TRI_LERP(const Vector3<T> pts[8], T t, T u, T v)

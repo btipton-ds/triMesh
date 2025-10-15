@@ -82,6 +82,8 @@ public:
 	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg, T tol) const;
 	bool intersectTri(const Vector3<T>* const* pts, LineSegment<T>& iSeg, T tol) const;
 	bool intersectTri(const LineSegment<T> legs[], LineSegment<T>& iSeg, T tol) const;
+
+	// Returns a ray which is the line of intersection between the planes
 	bool intersectPlane(const Plane& otherPlane, Ray<T>& iSeg, T tol) const;
 	bool isCoincident(const POINT_TYPE& other, T tol) const;
 	bool isCoincident(const Plane& other, T distTol, T cpTol) const;

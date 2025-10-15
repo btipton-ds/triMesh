@@ -309,6 +309,8 @@ bool Plane<T>::intersectPlane(const Plane& otherPlane, Ray<T>& iSeg, T tol) cons
 	Ray<T> perpRay(otherPlane._origin, vPerp);
 	RayHit<T> hp;
 	if (intersectRay(perpRay, hp, tol)) {
+		assert(distanceToPoint(hp.hitPt) < 1.0e-6);
+		assert(otherPlane.distanceToPoint(hp.hitPt) < 1.0e-6);
 		iSeg = Ray<T>(hp.hitPt, dir);
 		return true;
 	}

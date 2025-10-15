@@ -39,6 +39,7 @@ struct Ray {
 
 	Ray(const POINT_TYPE& origin = POINT_TYPE(0, 0, 0), const POINT_TYPE& dir = POINT_TYPE(0,0,0));
 	T distToPt(const POINT_TYPE& pt) const;
+	POINT_TYPE project(const POINT_TYPE& pt) const;
 
 	POINT_TYPE _origin, _dir;
 };
@@ -68,8 +69,18 @@ template<class T>
 T Ray<T>::distToPt(const POINT_TYPE& pt) const
 {
 	POINT_TYPE v = pt - _origin;
-	v = v - _dir.dot(v) * _dir;
+	auto dp = _dir.dot(v);
+	v = v - dp * _dir;
 	return v.norm();
+}
+
+template<class T>
+inline typename Ray<T>::POINT_TYPE Ray<T>::project(const POINT_TYPE& pt) const
+{
+	auto v = pt - _origin;
+	auto dp = _dir.dot(v);
+	auto result = _origin + dp * _dir;
+	return result;
 }
 
 template<class T>

@@ -157,6 +157,12 @@ inline Vector3<T> BI_LERP(const std::vector<Vector3<T>>& pts, T t, T u) {
 template<class T>
 Vector3<T> BI_LERP(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2, const Vector3<T>& p3, T t, T u);
 
+template<class T>
+bool BI_LERP_INV(const Vector3<T>& p, const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2, const Vector3<T>& p3, T& t, T& u, T tol = sameDistTol<T>());
+
+template<class T>
+bool BI_LERP_INV(const Vector3<T>& p, const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2, T& t, T& u, T tol = sameDistTol<T>());
+
 // pts must be size 8 or greater. No bounds checking is done.
 template<class T>
 Vector3<T> TRI_LERP(const Vector3<T> pts[8], T t, T u, T v);
