@@ -34,6 +34,7 @@ This file is part of the TriMesh library.
 #include <math.h>
 
 #include <tests.h>
+#include <tm_math.hpp>
 
 using namespace std;
 
@@ -179,8 +180,124 @@ public:
 
 
 template<typename NUM_TYPE>
+class LERPTests {
+	using v3 = Vector3<NUM_TYPE>;
+public:
+	bool testAll() {
+		TEST_TRUE(testBiLerp(), "Failed testBiLerp");
+
+		cout << "All LERP tests passed\n";
+		return true;
+	}
+
+	bool testBiLerp() {
+		{
+			Vector3<NUM_TYPE> p((NUM_TYPE)0.25, (NUM_TYPE)0.25, 0),
+				p0(0, 0, 0),
+				p1(1, 0, 0),
+				p2(1, 1, 0),
+				p3(0, 1, 0);
+
+			NUM_TYPE t, u;
+			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");;
+			TEST_TRUE(fabs(t - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
+			TEST_TRUE(fabs(u - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
+		}
+
+		{
+			Vector3<NUM_TYPE> p((NUM_TYPE)0.0, (NUM_TYPE)0.25, 0),
+				p0(0, 0, 0),
+				p1(1, 0, 0),
+				p2(1, 1, 0),
+				p3(0, 1, 0);
+
+			NUM_TYPE t, u;
+			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");;
+			TEST_TRUE(fabs(t - 0.0) < (NUM_TYPE)1.0e-8, "testBiLerp");
+			TEST_TRUE(fabs(u - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
+		}
+
+		{
+			Vector3<NUM_TYPE> p((NUM_TYPE)1.0, (NUM_TYPE)0.25, 0),
+				p0(0, 0, 0),
+				p1(1, 0, 0),
+				p2(1, 1, 0),
+				p3(0, 1, 0);
+
+			NUM_TYPE t, u;
+			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");;
+			TEST_TRUE(fabs(t - 1.0) < (NUM_TYPE)1.0e-8, "testBiLerp");
+			TEST_TRUE(fabs(u - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
+		}
+
+		{
+			Vector3<NUM_TYPE> p((NUM_TYPE)0.25, (NUM_TYPE)0., 0),
+				p0(0, 0, 0),
+				p1(1, 0, 0),
+				p2(1, 1, 0),
+				p3(0, 1, 0);
+
+			NUM_TYPE t, u;
+			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");;
+			TEST_TRUE(fabs(t - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
+			TEST_TRUE(fabs(u - 0.) < (NUM_TYPE)1.0e-8, "testBiLerp");
+		}
+
+		{
+			Vector3<NUM_TYPE> p((NUM_TYPE)0.25, (NUM_TYPE)1., 0),
+				p0(0, 0, 0),
+				p1(1, 0, 0),
+				p2(1, 1, 0),
+				p3(0, 1, 0);
+
+			NUM_TYPE t, u;
+			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");;
+			TEST_TRUE(fabs(t - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
+			TEST_TRUE(fabs(u - 1.) < (NUM_TYPE)1.0e-8, "testBiLerp");
+		}
+
+		{
+			Vector3<NUM_TYPE>
+				p0(0, 0, 0),
+				p1(1, 0, 0.25), // Non planar surface
+				p2(1, 1, 0),
+				p3(0, 1, 0);
+			Vector3<NUM_TYPE> p = BI_LERP(p0, p1, p2, p3, (NUM_TYPE)0.25, (NUM_TYPE)0.25);
+
+			NUM_TYPE t, u;
+			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");
+			TEST_TRUE(fabs(t - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
+			TEST_TRUE(fabs(u - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
+		}
+
+		{
+			Vector3<NUM_TYPE>
+				p0(-1, 0, -0.5),
+				p1(1, 0, 0.25), // Non planar surface
+				p2(1, 1, 0.777),
+				p3(0, 2, -0.12);
+			Vector3<NUM_TYPE> p = BI_LERP(p0, p1, p2, p3, (NUM_TYPE)0.25, (NUM_TYPE)0.25);
+
+			NUM_TYPE t, u;
+			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");
+			TEST_TRUE(fabs(t - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
+			TEST_TRUE(fabs(u - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
+		}
+
+		return true;
+	}
+};
+
+template<typename NUM_TYPE>
 bool testAll() {
 	VectorTests<NUM_TYPE> tests;
+
+	return tests.testAll();
+}
+
+template<typename NUM_TYPE>
+bool testAllLERP() {
+	LERPTests<NUM_TYPE> tests;
 
 	return tests.testAll();
 }
@@ -207,6 +324,13 @@ bool testVector3() {
 	TEST_TRUE(testAll<size_t>(), "failed testAll<size_t>");
 
 	TEST_TRUE(testNormsd(), "failed testNormsd");
+
+	return true;
+}
+
+bool testLERP() {
+	// Don't test LERP with float, it's not accurate enough
+	TEST_TRUE(testAllLERP<double>(), "failed testAll<double>");
 
 	return true;
 }

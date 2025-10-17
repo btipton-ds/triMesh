@@ -89,6 +89,7 @@ public:
 	bool isCoincident(const Plane& other, T distTol, T cpTol) const;
 
 	POINT_TYPE projectPoint(const POINT_TYPE& pt) const;
+	Vector2<T> projectPoint2D(const POINT_TYPE& pt) const;
 	T distanceToPoint(const POINT_TYPE& pt, bool absolute = true) const;
 
 	const POINT_TYPE& getOrigin() const;

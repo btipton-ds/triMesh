@@ -31,8 +31,10 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
+#include <cmath>
 #include <tm_lineSegment.hpp>
 #include <tm_lineSegment_byref.hpp>
+#include <tm_rootFinder.h>
 
 template <class SCALAR_TYPE>
 inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol) {
@@ -216,6 +218,16 @@ inline Vector3<T> LERP(const Vector3<T>& p0, const Vector3<T>& p1, T t)
 	return p0 + t * (p1 - p0);
 }
 
+template<class T>
+inline bool LERP_INV(const Vector3<T>& p, const Vector3<T>& p0, const Vector3<T>& p1, T& t)
+{
+	LineSegment<T> seg(p0, p1);
+	t = seg.parameterize(p);
+	if (t < 0 || 1 < t)
+		return false;
+	return true;
+}
+
 // pts must be size 8 or greater. No bounds checking is done.
 template<class T>
 inline Vector3<T> TRI_LERP(const std::vector<Vector3<T>>& pts, T t, T u, T v)
@@ -392,64 +404,78 @@ Vector3<T> BI_LERP(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>&
 	return pt0 + u * (pt1 - pt0);
 }
 
+namespace {
+	template<class T>
+	T cross2d(const Vector2<T>& v0, const Vector2<T>& v1)
+	{
+		return v0[0] * v1[1] - v1[0] * v0[1];
+	}
+}
+
+template<class T>
+inline T mag2(T a, T b)
+{
+	return sqrt(a * a + b * b);
+}
+
 template<class T>
 bool BI_LERP_INV(const Vector3<T>& pt, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt3, T& t, T& u, T tol)
 {
-	const auto smallest_den = (T)1.0e-12;
-	Plane<T> pl(pt0, pt1, pt2);
-	if (!pl.isCoincident(pt3, tol))
-		return false;
+	std::vector<T> vPt = { pt[0], pt[1], pt[2] }, params = { 0.5, 0.5 };
 
-	auto tmp = pl.projectPoint(pt);
-	Vector2<T> p2(tmp[0], tmp[1]);
+	auto errFunc = [pt, pt0, pt1, pt2, pt3](const std::vector<T>& params)->T {
+		auto testP = BI_LERP<T>(pt0, pt1, pt2, pt3, params[0], params[1]);
+		T err = (testP - pt).norm();
+		return err;
+	};
 
-	tmp = pl.projectPoint(pt0);
-	Vector2<T> p20(tmp[0], tmp[1]);
+	auto gradFunc = [pt, pt0, pt1, pt2, pt3](const std::vector<T>& params, std::vector<T>& grad) {
+		const T& t = params[0];
+		const T& u = params[1];
 
-	tmp = pl.projectPoint(pt1);
-	Vector2<T> p21(tmp[0], tmp[1]);
+		Vector3<T> v0 = pt - pt0;
+		Vector3<T> v01 = pt1 - pt0;
+		Vector3<T> v03 = pt3 - pt0;
+		Vector3<T> v32 = pt2 - pt3;
 
-	tmp = pl.projectPoint(pt2);
-	Vector2<T> p22(tmp[0], tmp[1]);
+		Vector3<T> denV = v0 - t * v01 + u * (t * (v01 - v32) - v03);
+		auto termA = u * (v01 - v32) - v01;
+		auto termB = t * (v01 - v32) - v03;
+		auto termC = u * (t * (v01 - v32) - v03);
+		auto termD = termC - v01 * t + v0;
 
-	tmp = pl.projectPoint(pt3);
-	Vector2<T> p23(tmp[0], tmp[1]);
+		auto den = denV.norm();
 
-	auto A = (p20 - p2).cross(p20 - p22);
-	auto B = ((p20 - p2).cross(p21 - p23) + (p21 - p2).cross(p20 - p22)) / 2;
-	auto C = (p21 - p2).cross(p21 - p23);
+		grad[0] = (
+			termA[2] * termD[2] +
+			termA[1] * termD[1] +
+			termA[0] * termD[0]) / den;
 
-	auto den = A - 2 * B + C;
-	if (fabs(den) > smallest_den) {
-		auto tPos = ((A - B) + sqrt(B ^ 2 - A * C)) / den;
-		auto tNeg = ((A - B) - sqrt(B ^ 2 - A * C)) / den;
-		if (0 <= tPos && tPos <= 1.0)
-			t = tPos;
-		else {
-			auto tNeg = ((A - B) - sqrt(B ^ 2 - A * C)) / den;
-			if (0 <= tNeg && tNeg <= 1.0)
-				t = tNeg;
-			else
-				return false;
-		} 
-	} else if (fabs(A - C) > smallest_den) {
-		t = A / (A - C);
-	} else
-		return false;
+		grad[1] = (
+			termB[2] * termD[2] + 
+			termB[1] * termD[1] + 
+			termB[0] * termD[0]) / den;
 
-	if (t < 0 || 1 < t)
-		return false;
+		// REQUIRED!!! 
+		// Normalize grad
+		// There is not reason why these derivatives should form a vector of length 1 and they DO NOT during testin.
+		T avgSqr = 0;
+		for (size_t i = 0; i < grad.size(); i++)
+			avgSqr += grad[i] * grad[i];
+		avgSqr = sqrt(avgSqr);
+		for (size_t i = 0; i < grad.size(); i++)
+			grad[i] /= avgSqr;
+	};
 
-	auto x = p2[0];
-	auto x0 = p20[0];
-	auto x1 = p21[0];
-	auto x2 = p22[0];
-	auto x3 = p23[0];
-	den = ((1 - t) * (x0 - x2) + t * (x1 - x3));
-	if (fabs(den) > smallest_den) {
-		u = ((1 - t) * (x0 - x) + t * (x1 - x)) / den;
-		return 0 <= u && u <= 1;
+	bool result = RootFinder::findMin(vPt, params, errFunc, gradFunc, tol, 1.0e-6);
+
+	if (result) {
+		t = params[0];
+		u = params[1];
+		if (clamp<T>(t, 0, 1, tol) && clamp<T>(u, 0, 1, tol))
+			return true;
 	}
+	// u and t are now at machine precision.
 	return false;
 }
 
@@ -487,16 +513,8 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 	Vector3<T> x, y, z, p0, p1, dir, v;
 
 	x = pts[1] - pts[0];
-	l = x.norm();
-	x /= l * l;
-
 	y = pts[3] - pts[0];
-	l = y.norm();
-	y /= l * l;
-
 	z = pts[4] - pts[0];
-	l = z.norm();
-	z /= l * l;
 
 	v = pt - pts[0];
 	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));

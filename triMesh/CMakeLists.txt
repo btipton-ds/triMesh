@@ -60,7 +60,7 @@ add_library (
     
     "../stlReader/src/readWriteStl.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
-  "src/tm_ioUtil.cpp")
+  "src/tm_ioUtil.cpp" "include/tm_rootFinder.h" "include/tm_util.h")
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

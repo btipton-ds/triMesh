@@ -59,6 +59,21 @@ inline float sameDistTol()
 }
 
 template<class T>
+T ascentStepSize();
+
+template<>
+inline double ascentStepSize()
+{
+	return 1.0e-8;
+}
+
+template<>
+inline float ascentStepSize()
+{
+	return 1.0e-5f;
+}
+
+template<class T>
 struct LineSegment;
 
 template <class SCALAR_TYPE>
@@ -86,6 +101,21 @@ public:
 };
 
 using Vector3dSet = Vector3Set<Vector3d>;
+
+template<class T>
+bool clamp(T& val, T min, T max, T tol)
+{
+	if (val < min) {
+		if (val < min - tol)
+			return false;
+		val = min;
+	} if (val > max) {
+		if (val > max + tol)
+			return false;
+		val = max;
+	}
+	return true;
+}
 
 template<typename SCALAR_TYPE>
 Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v);
@@ -150,6 +180,9 @@ template<class T>
 Vector3<T> LERP(const Vector3<T>& p0, const Vector3<T>& p1, T t);
 
 template<class T>
+bool LERP_INV(const Vector3<T>& p, const Vector3<T>& p0, const Vector3<T>& p1, T& t);
+
+template<class T>
 inline Vector3<T> BI_LERP(const std::vector<Vector3<T>>& pts, T t, T u) {
 	return BI_LERP(pts[0], pts[1], pts[2], pts[3], t, u);
 }
@@ -174,6 +207,10 @@ Vector3<T> TRI_LERP(const std::vector<Vector3<T>>& pts, T t, T u, T v);
 template<class T>
 Vector3<T> TRI_LERP(const std::vector<Vector3<T>>& pts, const Vector3<T>& uvw);
 
+// This assumes all faces of the brick are planar.
+// It does a secant root finder to find the z value of the plane passing throught the point
+// then uses the direct solution in BI_LERP_INV.
+// If the plane is not coplanar, it resorts to a 3 axis root finder in TRI_LERP_INV_SLOW
 template<class T>
 bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol = (T)1.0e-12);
 

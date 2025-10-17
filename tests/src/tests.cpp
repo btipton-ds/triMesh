@@ -457,6 +457,7 @@ bool runTests() {
 	TEST_TRUE(testBoundingBox(), "Failed testBoundingBox");
 	TEST_TRUE(testMesh(), "Failed testMesh");
 	TEST_TRUE(testMesh2(), "Failed testMesh2");
+	TEST_TRUE(testLERP(), "Failed testVector3");
 
 	cout << "All tests passed\n";
 	return true;

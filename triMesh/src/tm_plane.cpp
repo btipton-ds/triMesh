@@ -344,5 +344,16 @@ typename Plane<T>::POINT_TYPE Plane<T>::projectPoint(const POINT_TYPE& pt) const
 	return result;
 }
 
+template<class T>
+Vector2<T> Plane<T>::projectPoint2D(const POINT_TYPE& pt) const
+{
+	POINT_TYPE v = pt - _origin;
+	Vector3<T> yAxis = _normal.cross(_xRef);
+	yAxis.normalize();
+	auto x = _xRef.dot(v);
+	auto y = yAxis.dot(v);
+	return Vector2<T>(x, y);
+}
+
 template class Plane<double>;
 template class Plane<float>;

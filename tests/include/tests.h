@@ -56,3 +56,4 @@ bool testVector3();
 bool testMesh();
 bool testMath();
 bool testBoundingBox();
+bool testLERP();
