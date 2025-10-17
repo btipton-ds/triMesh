@@ -409,6 +409,9 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 	if (pts.empty())
 		return false;
 
+	/*
+	Current method is relaxation. Not the best but it works.
+	*/
 	T a, b, c, l;
 	Vector3<T> x, y, z, p0, p1, dir, v;
 
