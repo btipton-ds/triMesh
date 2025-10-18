@@ -34,6 +34,7 @@ This file is part of the TriMesh library.
 #include <vector>
 #include <tm_lineSegment.hpp>
 #include <tm_lineSegment_byref.hpp>
+#include <tm_rootFinder.h>
 
 template <class SCALAR_TYPE>
 inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol) {
@@ -403,76 +404,6 @@ Vector3<T> TRI_LERP(const Vector3<T> pts[8], T t, T u, T v)
 	return pt0 + v * (pt1 - pt0);
 }
 
-namespace RootFinder {
-
-template<class T, class ERR_FUNC, class GRAD_FUNC>
-T findMin(const Vector3<T>& pt, std::vector<T>& params, const ERR_FUNC& errFunc, const GRAD_FUNC& gradFunc, T stepsize, T tol) 
-{
-	const T DIV_ZERO_VAL = (T)1.0e-12;
-	const T MIN_PARAM_DELTA = (T)1.0e-14;
-	std::vector<T> gradient, tmpParams;
-	gradient.resize(params.size());
-	tmpParams.resize(params.size());
-
-	auto err = errFunc(params, gradient, 0);
-
-	int numConvergences = 0;
-	while (fabs(err) > tol) {
-		gradFunc(params, gradient);
-
-		auto err0 = errFunc(params, gradient, -stepsize);
-		auto err1 = errFunc(params, gradient, stepsize);
-
-		auto a = ((err0 - err) + (err1 - err)) / (2 * stepsize * stepsize);
-		auto b = (err1 - err0) / (2 * stepsize);
-
-		T deltaX = 0;
-		if (fabs(a) > DIV_ZERO_VAL) {
-			deltaX = -b / (2 * a);
-			if (fabs(b) > DIV_ZERO_VAL) {
-				T deltaXLin = -err / b;
-
-				// The best way to determine which delta reduces error the most is
-				// to test both ways and choose one
-				err0 = errFunc(params, gradient, deltaX);
-				err1 = errFunc(params, gradient, deltaXLin);
-
-				// since we have both, update the params and continue from here
-				if (err0 < err1) {
-					err = err0;
-					for (size_t i = 0; i < params.size(); i++) {
-						params[i] += gradient[i] * deltaX;
-					}
-				} else {
-					err = err1;
-					for (size_t i = 0; i < params.size(); i++) {
-						params[i] += gradient[i] * deltaXLin;
-					}
-				}
-				continue;
-			}
-		} else if (fabs(b) > DIV_ZERO_VAL) {
-			deltaX = -err / b;
-		} else {
-			return err; // We've got the best answer we're going to get
-		}
-
-		if (fabs(deltaX) < MIN_PARAM_DELTA) {
-			numConvergences++;
-			if (numConvergences > 100)
-				return err;
-		}
-
-		for (size_t i = 0; i < params.size(); i++) {
-			params[i] += gradient[i] * deltaX;
-		}
-		err = errFunc(params, gradient, 0);
-	}
-
-	return err;
-}
-
-}
 template<class T>
 bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
 {
