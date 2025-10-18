@@ -405,9 +405,98 @@ Vector3<T> TRI_LERP(const Vector3<T> pts[8], T t, T u, T v)
 }
 
 template<class T>
+bool BI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, T& t, T& u, T tol)
+{
+	if (pts.empty())
+		return false;
+
+	/*
+	Current method is relaxation. Not the best but it works.
+	*/
+	T a, b, c, l;
+	Vector3<T> x, y, z, p0, p1, dir, v;
+
+	x = pts[1] - pts[0];
+	l = x.norm();
+	x /= l * l;
+
+	y = pts[3] - pts[0];
+	l = y.norm();
+	y /= l * l;
+
+	v = pt - pts[0];
+
+	auto errFunc = [&pt, &pts](const std::vector<T>& params, const std::vector<T>& gradient, T stepsize)->T {
+
+		const auto& testPt = BI_LERP(pts,
+			params[0] + gradient[0] * stepsize,
+			params[1] + gradient[1] * stepsize);
+		Vector3<T> v = testPt - pt;
+		return v.norm();
+	};
+
+	Vector3<T> v0(pt - pts[0]);
+	Vector3<T> v01(pts[1] - pts[0]);
+	Vector3<T> v03(pts[3] - pts[0]);
+	Vector3<T> v32(pts[2] - pts[3]);
+	auto gradFunc = [&](const std::vector<T>& params, std::vector<T>& gradient) {
+		const auto t = params[0];
+		const auto u = params[1];
+		
+		Vector3<T> termA = (-((-pts[3] + pts[2] - v01) * u) - v01);
+		Vector3<T> termB = (-((v32 * t - v01 * t + v03) * u) - v01 * t + v0);
+
+		gradient[0] =
+			termA[0] * termB[0] +
+			termA[1] * termB[1] +
+			termA[2] * termB[2];// / den;
+
+		termA = ((v01 - v32) * t - v03);
+		termB = (-(((v32 - v01) * t + v03) * u) - v01 * t + v0);
+
+		gradient[1] =
+			termA[0] * termB[0] +
+			termA[1] * termB[1] +
+			termA[2] * termB[2]; // den;
+
+		T sum = 0;
+		for (const auto& v : gradient)
+			sum += v * v;
+		sum = sqrt(sum);
+		for (auto& v : gradient)
+			v /= sum;
+	};
+
+	std::vector<T> params = { v.dot(x), v.dot(y) };
+	T err = RootFinder::findMin(pt, params, errFunc, gradFunc, (T)1.0e-8, tol);
+	if (err < tol) {
+		for (int i = 0; i < 2; i++) {
+			T& val = params[i];
+			if (val < 0) {
+				if (val > -tol)
+					val = 0;
+				else
+					return false;
+			}
+			else if (val > 1) {
+				if (val < 1 + tol)
+					val = 1;
+				else
+					return false;
+			}
+		}
+
+		t = params[0];
+		u = params[1];
+		return true;
+	}
+
+	return false;
+}
+
+template<class T>
 bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
 {
-	const double tolSqr = tol * tol;
 	if (pts.empty())
 		return false;
 
@@ -440,29 +529,25 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 			params[2] + gradient[2] * stepsize);
 		Vector3<T> v = testPt - pt;
 		return v.norm();
-		};
+	};
 
-	auto gradFunc = [&pt, &pts, &errFunc](const std::vector<T>& params, std::vector<T>& gradient) {
+	const Vector3<T> v0(pt - pts[0]);
+	const Vector3<T> v01(pts[1] - pts[0]);
+	const Vector3<T> v03(pts[3] - pts[0]);
+	const Vector3<T> v04(pts[4] - pts[0]);
+	const Vector3<T> v32(pts[2] - pts[3]);
+	const Vector3<T> v45(pts[5] - pts[4]);
+	const Vector3<T> v47(pts[7] - pts[4]);
+	const Vector3<T> v76(pts[6] - pts[7]);
+
+	const Vector3<T> v32_01(v32 - v01);
+	const Vector3<T> v45_01(v45 - v01);
+	const Vector3<T> v76_45(v76 - v45);
+
+	auto gradFunc = [&](const std::vector<T>& params, std::vector<T>& gradient) {
 		const auto t = params[0];
 		const auto u = params[1];
 		const auto v = params[2];
-
-		const Vector3<T> v0(pt - pts[0]);
-		const Vector3<T> v01(pts[1] - pts[0]);
-		const Vector3<T> v03(pts[3] - pts[0]);
-		const Vector3<T> v04(pts[4] - pts[0]);
-		const Vector3<T> v32(pts[2] - pts[3]);
-		const Vector3<T> v45(pts[5] - pts[4]);
-		const Vector3<T> v47(pts[7] - pts[4]);
-		const Vector3<T> v76(pts[6] - pts[7]);
-
-		const Vector3<T> v32_01(v32 - v01);
-		const Vector3<T> v45_01(v45 - v01);
-		const Vector3<T> v76_45(v76 - v45);
-
-		// Since it's going to be normalized anyway, we don't need the denominator
-//		Vector3<T> vDen = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45 * t - v01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
-//		T den = vDen.norm();
 
 		Vector3<T> termA = (-(((v76_45 - v32_01) * u + v45_01) * v) - v32_01 * u - v01);
 		Vector3<T> termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
@@ -520,6 +605,7 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 
 	return false;
 #else
+	const double tolSqr = tol * tol;
 	bool done = false;
 	int count = 0;
 	while (!done && count++ < 100) {

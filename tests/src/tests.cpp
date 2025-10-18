@@ -450,6 +450,98 @@ bool testMesh2() {
 	return true;
 }
 
+bool testBiLERP(const std::vector<Vector3d>& corners, double t, double u)
+{
+	auto tol = sameDistTol<double>();
+	Eigen::Vector2d tu(t, u);
+	Vector3d testPt = BI_LERP(corners, tu[0], tu[1]);
+	stringstream ss;
+	ss << "testTriLERP tuv: [" << t << " " << u << "]";
+
+	Eigen::Vector2d tuTest;
+	TEST_TRUE(BI_LERP_INV(testPt, corners, tuTest[0], tuTest[1], 0.1 * tol), ss.str());
+	TEST_TRUE((tuTest - tu).norm() < tol, ss.str());
+
+	Vector3d checkPt = BI_LERP(corners, tuTest[0], tuTest[1]);
+	TEST_TRUE((testPt - checkPt).norm() < tol, ss.str());
+
+	return true;
+}
+
+bool testBiLERP(const std::vector<Vector3d>& corners)
+{
+	int steps = 37;
+
+	for (int i = 0; i < steps; i++) {
+		double t = i / (steps - 1.0);
+		stringstream ss;
+		ss << "testTriLERP(corners) t: " << t;
+
+		TEST_TRUE(testBiLERP(corners, t, 0), ss.str());
+		TEST_TRUE(testBiLERP(corners, t, 1), ss.str());
+		TEST_TRUE(testBiLERP(corners, t, 0), ss.str());
+		TEST_TRUE(testBiLERP(corners, t, 1), ss.str());
+
+		ss.clear();
+		ss << "testTriLERP(corners) u: " << t;
+		TEST_TRUE(testBiLERP(corners, 0, t), ss.str());
+		TEST_TRUE(testBiLERP(corners, 1, t), ss.str());
+		TEST_TRUE(testBiLERP(corners, 0, t), ss.str());
+		TEST_TRUE(testBiLERP(corners, 1, t), ss.str());
+	}
+
+	steps = 10;
+	for (int i = 0; i < steps; i++) {
+		double t = i / (steps - 1.0);
+		for (int j = 0; j < steps; j++) {
+			double u = j / (steps - 1.0);
+			TEST_TRUE(testBiLERP(corners, t, u), "");
+		}
+	}
+
+	return true;
+}
+
+bool testBiLERP()
+{
+	{
+		std::vector<Vector3d> corners = {
+			Vector3d(0, 0, 0),
+			Vector3d(1, 0, 0),
+			Vector3d(1, 1, 0),
+			Vector3d(0, 1, 0),
+		};
+
+		TEST_TRUE(testBiLERP(corners), "testTriLERP Square");
+	}
+
+	{
+		std::vector<Vector3d> corners = {
+			Vector3d(0, 0, 0),
+			Vector3d(1, 0, 0),
+			Vector3d(2, 2, 0),
+			Vector3d(0, 1, 0),
+		};
+
+		TEST_TRUE(testBiLERP(corners), "testTriLERP Quad");
+	}
+
+	{
+		std::vector<Vector3d> corners = {
+			Vector3d(0, 0, -0.5),
+			Vector3d(1, 0, 0),
+			Vector3d(2, 2, 1),
+			Vector3d(0, 1, 0),
+		};
+
+		TEST_TRUE(testBiLERP(corners), "testTriLERP Warped");
+	}
+
+	cout << "Passed BiLERP tests\n";
+	return true;
+}
+
+
 bool testTriLERP(const std::vector<Vector3d>& corners, const Vector3d& tuv)
 {
 	auto tol = sameDistTol<double>();
@@ -466,7 +558,6 @@ bool testTriLERP(const std::vector<Vector3d>& corners, const Vector3d& tuv)
 
 	return true;
 }
-
 
 bool testTriLERP(const std::vector<Vector3d>& corners) 
 {
@@ -565,8 +656,8 @@ bool testTriLERP()
 }
 
 bool runTests() {
-
-	TEST_TRUE(testTriLERP(), "Failed tesTriLERP");
+	TEST_TRUE(testBiLERP(), "Failed testBiLERP");
+	TEST_TRUE(testTriLERP(), "Failed testTriLERP");
 	TEST_TRUE(testVector3(), "Failed testVector3");
 	TEST_TRUE(testMath(), "Failed testMath");
 	TEST_TRUE(testBoundingBox(), "Failed testBoundingBox");
