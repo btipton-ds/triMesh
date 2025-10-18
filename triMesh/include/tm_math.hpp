@@ -31,6 +31,7 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
+#include <vector>
 #include <tm_lineSegment.hpp>
 #include <tm_lineSegment_byref.hpp>
 
@@ -402,6 +403,61 @@ Vector3<T> TRI_LERP(const Vector3<T> pts[8], T t, T u, T v)
 	return pt0 + v * (pt1 - pt0);
 }
 
+namespace RootFinder {
+
+template<class T, class ERR_FUNC, class GRAD_FUNC>
+T findMin(const Vector3<T>& pt, std::vector<T>& params, const ERR_FUNC& errFunc, const GRAD_FUNC& gradFunc, T stepsize, T tol) 
+{
+	const T DIV_ZERO_VAL = (T)1.0e-12;
+	const T MIN_PARAM_DELTA = (T)1.0e-14;
+	std::vector<T> gradient, tmpParams;
+	gradient.resize(params.size());
+	tmpParams.resize(params.size());
+
+	auto err = errFunc(params, gradient, 0);
+
+	int numConvergences = 0;
+	while (fabs(err) > tol) {
+		gradFunc(params, gradient);
+
+		auto err0 = errFunc(params, gradient, -stepsize);
+		auto err1 = errFunc(params, gradient, stepsize);
+
+		auto a = ((err0 - err) + (err1 - err)) / (2 * stepsize * stepsize);
+		auto b = (err1 - err0) / (2 * stepsize);
+
+		T deltaX = 0;
+		if (fabs(a) > DIV_ZERO_VAL) {
+			deltaX = -b / (2 * a);
+			if (fabs(b) > DIV_ZERO_VAL) {
+				T deltaXLin = -err / b;
+				err0 = errFunc(params, gradient, deltaX);
+				err1 = errFunc(params, gradient, deltaXLin);
+				if (err1 < err0)
+					deltaX = deltaXLin;
+			}
+		} else if (fabs(b) > DIV_ZERO_VAL) {
+			deltaX = -err / b;
+		} else {
+			return err; // We've got the best answer we're going to get
+		}
+
+		if (fabs(deltaX) < MIN_PARAM_DELTA) {
+			numConvergences++;
+			if (numConvergences > 100)
+				return err;
+		}
+
+		for (size_t i = 0; i < params.size(); i++) {
+			params[i] += gradient[i] * deltaX;
+		}
+		err = errFunc(params, gradient, 0);
+	}
+
+	return err;
+}
+
+}
 template<class T>
 bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
 {
@@ -429,6 +485,109 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 
 	v = pt - pts[0];
 	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
+#if 1
+	auto errFunc = [&pt, &pts](const std::vector<T>& params, const std::vector<T>& gradient, T stepsize)->T {
+
+		const auto& testPt = TRI_LERP(pts, 
+			params[0] + gradient[0] * stepsize, 
+			params[1] + gradient[1] * stepsize, 
+			params[2] + gradient[2] * stepsize);
+		Vector3<T> v = testPt - pt;
+		return v.norm();
+		};
+
+	auto gradFunc = [&pt, &pts, &errFunc](const std::vector<T>& params, std::vector<T>& gradient) {
+		const auto t = params[0];
+		const auto u = params[1];
+		const auto v = params[2];
+#if 0
+		std::vector<T> tmpParams(params);
+		T err = errFunc(tmpParams);
+		const T dp = (T)1.0e-6;
+		for (int i = 0; i < gradient.size(); i++) {
+			T curParam = tmpParams[i];
+
+			tmpParams[i] = curParam - dp;
+			T err0 = errFunc(tmpParams);
+
+			tmpParams[i] = curParam + dp;
+			T err1 = errFunc(tmpParams);
+
+			gradient[i] = (err1 - err0) / (2 * dp);
+			tmpParams[i] = curParam;
+		}
+#else
+		Vector3<T> vDen = (-((((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t + pts[7] - pts[4]) * u - ((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u + (pts[5] - pts[4]) * t - (pts[1] - pts[0]) * t + pts[4] - pts[0]) * v) - ((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u - (pts[1] - pts[0]) * t + pt - pts[0]);
+		T den = 2 * vDen.norm();
+
+		Vector3<T> termA = (-(((-pts[7] + pts[6] - pts[5] + pts[4]) * u - (-pts[3] + pts[2] - pts[1] + pts[0]) * u + pts[5] - pts[4] - pts[1] + pts[0]) * v)
+			- (-pts[3] + pts[2] - pts[1] + pts[0]) * u - pts[1] + pts[0]);
+		Vector3<T> termB = (-((((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t + pts[7] - pts[4]) * u -
+			((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u + (pts[5] - pts[4]) * t - (pts[1] - pts[0]) * t + pts[4] - pts[0]) * v) - 
+			((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u - (pts[1] - pts[0]) * t + pt - pts[0]);
+
+		gradient[0] = 2 * (
+			termA[0] * termB[0] + 
+			termA[1] * termB[1] +
+			termA[2] * termB[2] 
+			) / den;
+
+		termA = (-(((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t - (pts[2] - pts[3]) * t + (pts[1] - pts[0]) * t + pts[7] - pts[4] - pts[3] + pts[0]) * v) -
+			(pts[2] - pts[3]) * t + (pts[1] - pts[0]) * t - pts[3] + pts[0]);
+		termB = (-((((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t + pts[7] - pts[4]) * u -
+			((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u + (pts[5] - pts[4]) * t - (pts[1] - pts[0]) * t + pts[4] - pts[0]) * v) -
+			((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u - (pts[1] - pts[0]) * t + pt - pts[0]);
+
+		gradient[1] = 2 * (
+			termA[0] * termB[0] +
+			termA[1] * termB[1] +
+			termA[2] * termB[2]
+			) / den;
+
+		termA = (-(((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t + pts[7] - pts[4]) * u) + ((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u - 
+			(pts[5] - pts[4]) * t + (pts[1] - pts[0]) * t - pts[4] + pts[0]);
+		termB = (-((((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t + pts[7] - pts[4]) * u - ((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u + 
+			(pts[5] - pts[4]) * t - (pts[1] - pts[0]) * t + pts[4] - pts[0]) * v) - ((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u - (pts[1] - pts[0]) * t + pt - pts[0]);
+
+		gradient[2] = 2 * (
+			termA[0] * termB[0] +
+			termA[1] * termB[1] +
+			termA[2] * termB[2]
+			) / den;
+#endif
+
+		T sum = 0;
+		for (const auto& v : gradient)
+			sum += v * v;
+		sum = sqrt(sum);
+		for (auto& v : gradient)
+			v /= sum;
+	};
+
+	std::vector<T> params = { tuv[0], tuv[1], tuv[2] };
+	T err = RootFinder::findMin(pt, params, errFunc, gradFunc, (T)1.0e-8, tol);
+	if (err < tol) {
+		for (int i = 0; i < 3; i++) {
+			T& val = params[i];
+			if (val < 0) {
+				if (val > -tol)
+					val = 0;
+				else
+					return false;
+			} else if (val > 1) {
+				if (val < 1 + tol)
+					val = 1;
+				else
+					return false;
+			}
+
+			tuv[i] = val;
+		}
+		return true;
+	}
+
+	return false;
+#else
 	bool done = false;
 	int count = 0;
 	while (!done && count++ < 100) {
@@ -463,6 +622,7 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 			return true;
 	}
 	return false;
+#endif
 }
 
 template<class T>

@@ -450,8 +450,123 @@ bool testMesh2() {
 	return true;
 }
 
+bool testTriLERP(const std::vector<Vector3d>& corners, const Vector3d& tuv)
+{
+	auto tol = sameDistTol<double>();
+	Vector3d testPt = TRI_LERP(corners, tuv);
+	stringstream ss;
+	ss << "testTriLERP tuv: [" << tuv[0] << " " << tuv[1] << " " << tuv[2] << "]";
+
+	Vector3d tuvTest;
+	TEST_TRUE(TRI_LERP_INV(testPt, corners, tuvTest, 0.1 * tol), ss.str());
+	TEST_TRUE((tuvTest- tuv).norm() < tol, ss.str());
+
+	Vector3d checkPt = TRI_LERP(corners, tuvTest);
+	TEST_TRUE((testPt - checkPt).norm() < tol, ss.str());
+
+	return true;
+}
+
+
+bool testTriLERP(const std::vector<Vector3d>& corners) 
+{
+	int steps = 37;
+
+	for (int i = 0; i < steps; i++) {
+		double t = i / (steps - 1.0);
+		stringstream ss;
+		ss << "testTriLERP(corners) t: " << t;
+
+		TEST_TRUE(testTriLERP(corners, Vector3d(t, 0, 0)), ss.str());
+		TEST_TRUE(testTriLERP(corners, Vector3d(t, 1, 0)), ss.str());
+		TEST_TRUE(testTriLERP(corners, Vector3d(t, 0, 1)), ss.str());
+		TEST_TRUE(testTriLERP(corners, Vector3d(t, 1, 1)), ss.str());
+
+		ss.clear();
+		ss << "testTriLERP(corners) u: " << t;
+		TEST_TRUE(testTriLERP(corners, Vector3d(0, t, 0)), ss.str());
+		TEST_TRUE(testTriLERP(corners, Vector3d(1, t, 0)), ss.str());
+		TEST_TRUE(testTriLERP(corners, Vector3d(0, t, 1)), ss.str());
+		TEST_TRUE(testTriLERP(corners, Vector3d(1, t, 1)), ss.str());
+
+		ss.clear();
+		ss << "testTriLERP(corners) v: " << t;
+		TEST_TRUE(testTriLERP(corners, Vector3d(0, 0, t)), ss.str());
+		TEST_TRUE(testTriLERP(corners, Vector3d(1, 0, t)), ss.str());
+		TEST_TRUE(testTriLERP(corners, Vector3d(0, 1, t)), ss.str());
+		TEST_TRUE(testTriLERP(corners, Vector3d(1, 1, t)), ss.str());
+	}
+
+	steps = 10;
+	for (int i = 0; i < steps; i++) {
+		double t = i / (steps - 1.0);
+		for (int j = 0; j < steps; j++) {
+			double u = j / (steps - 1.0);
+			for (int k = 0; k < steps; k++) {
+				double v = k / (steps - 1.0);
+				TEST_TRUE(testTriLERP(corners, Vector3d(t, u, v)), "");
+			}
+		}
+	}
+
+	return true;
+}
+
+bool testTriLERP()
+{
+	{
+		// Cube
+		std::vector<Vector3d> corners = {
+			Vector3d(0, 0, 0),
+			Vector3d(1, 0, 0),
+			Vector3d(1, 1, 0),
+			Vector3d(0, 1, 0),
+			Vector3d(0, 0, 1),
+			Vector3d(1, 0, 1),
+			Vector3d(1, 1, 1),
+			Vector3d(0, 1, 1),
+		};
+
+		TEST_TRUE(testTriLERP(corners), "testTriLERP Cube");
+	}
+
+	{
+		std::vector<Vector3d> corners = {
+			Vector3d(0, 0, 0),
+			Vector3d(1, 0, 0),
+			Vector3d(1, 1, 0),
+			Vector3d(0, 1, 0),
+			Vector3d(0, 0, 2),
+			Vector3d(1, 0, 1),
+			Vector3d(1, 1, 1),
+			Vector3d(0, 1, 2),
+		};
+
+		TEST_TRUE(testTriLERP(corners), "testTriLERP Z Wedge");
+	}
+
+	{
+		std::vector<Vector3d> corners = {
+			Vector3d(0, 0, 0),
+			Vector3d(1, 0, 0),
+			Vector3d(1, 1, 0),
+			Vector3d(0, 1, 0),
+			Vector3d(0, 0, 1),
+			Vector3d(1, 0, 1),
+			Vector3d(1.25, 1.5, 1.75),
+			Vector3d(0, 1, 1),
+		};
+
+		TEST_TRUE(testTriLERP(corners), "testTriLERP Warped");
+	}
+
+	cout << "Passed TriLERP tests\n";
+	return true;
+}
+
 bool runTests() {
 
+	TEST_TRUE(testTriLERP(), "Failed tesTriLERP");
 	TEST_TRUE(testVector3(), "Failed testVector3");
 	TEST_TRUE(testMath(), "Failed testMath");
 	TEST_TRUE(testBoundingBox(), "Failed testBoundingBox");

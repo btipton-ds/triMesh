@@ -31,13 +31,23 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
+#include <string>
+#include <iostream>
+
+inline bool testTrue(bool pass) 
+{ 
+	if (!pass) {
+		return false;
+	} 
+	return true;
+}
+
 #define TEST_TRUE(FUNC, MESSAGE) \
-{ \
-	bool result = (FUNC); \
-	if (!result) { \
-		cout << MESSAGE << " fail\n"; \
-		return false; \
-	} \
+{\
+	if (!testTrue((FUNC))) {\
+		std::cout << MESSAGE << " fail\n";\
+		return false;\
+	}\
 }
 
 #define TEST_FALSE(FUNC, MESSAGE) TEST_TRUE(!(FUNC), MESSAGE)
