@@ -500,68 +500,47 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 		const auto t = params[0];
 		const auto u = params[1];
 		const auto v = params[2];
-#if 0
-		std::vector<T> tmpParams(params);
-		T err = errFunc(tmpParams);
-		const T dp = (T)1.0e-6;
-		for (int i = 0; i < gradient.size(); i++) {
-			T curParam = tmpParams[i];
 
-			tmpParams[i] = curParam - dp;
-			T err0 = errFunc(tmpParams);
+		const Vector3<T> v0(pt - pts[0]);
+		const Vector3<T> v01(pts[1] - pts[0]);
+		const Vector3<T> v03(pts[3] - pts[0]);
+		const Vector3<T> v04(pts[4] - pts[0]);
+		const Vector3<T> v32(pts[2] - pts[3]);
+		const Vector3<T> v45(pts[5] - pts[4]);
+		const Vector3<T> v47(pts[7] - pts[4]);
+		const Vector3<T> v76(pts[6] - pts[7]);
 
-			tmpParams[i] = curParam + dp;
-			T err1 = errFunc(tmpParams);
+		const Vector3<T> v32_01(v32 - v01);
+		const Vector3<T> v45_01(v45 - v01);
+		const Vector3<T> v76_45(v76 - v45);
 
-			gradient[i] = (err1 - err0) / (2 * dp);
-			tmpParams[i] = curParam;
-		}
-#else
-		Vector3<T> v01(pts[1] - pts[0]);
-		Vector3<T> v03(pts[3] - pts[0]);
-		Vector3<T> v04(pts[4] - pts[0]);
-		Vector3<T> v32(pts[2] - pts[3]);
-		Vector3<T> v45(pts[5] - pts[4]);
-		Vector3<T> v47(pts[7] - pts[4]);
-		Vector3<T> v76(pts[6] - pts[7]);
-		Vector3<T> vDen = (-(((v76 * t - v45 * t + v47) * u - (v32 * t - v01 * t + v03) * u + v45 * t - v01 * t + v04) * v) - (v32 * t - v01 * t + v03) * u - v01 * t + pt - pts[0]);
-		T den = 2 * vDen.norm();
+		// Since it's going to be normalized anyway, we don't need the denominator
+//		Vector3<T> vDen = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45 * t - v01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
+//		T den = vDen.norm();
 
-		Vector3<T> termA = (-(((-pts[7] + pts[6] - v45) * u - (-pts[3] + pts[2] - pts[1] + pts[0]) * u + v45 - pts[1] + pts[0]) * v)
-			- (-pts[3] + pts[2] - pts[1] + pts[0]) * u - pts[1] + pts[0]);
-		Vector3<T> termB = (-(((v76 * t - v45 * t + v47) * u -
-			(v32 * t - v01 * t + v03) * u + v45 * t - v01 * t + v04) * v) - 
-			(v32 * t - v01 * t + v03) * u - v01 * t + pt - pts[0]);
+		Vector3<T> termA = (-(((v76_45 - v32_01) * u + v45_01) * v) - v32_01 * u - v01);
+		Vector3<T> termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
 
-		gradient[0] = 2 * (
-			termA[0] * termB[0] + 
-			termA[1] * termB[1] +
-			termA[2] * termB[2] 
-			) / den;
-
-		termA = (-((v76 * t - v45 * t - v32 * t + v01 * t + v47 - pts[3] + pts[0]) * v) -
-			v32 * t + v01 * t - pts[3] + pts[0]);
-		termB = (-(((v76 * t - v45 * t + v47) * u -
-			(v32 * t - v01 * t + v03) * u + v45 * t - v01 * t + v04) * v) -
-			(v32 * t - v01 * t + v03) * u - v01 * t + pt - pts[0]);
-
-		gradient[1] = 2 * (
+		gradient[0] = 
 			termA[0] * termB[0] +
 			termA[1] * termB[1] +
-			termA[2] * termB[2]
-			) / den;
+			termA[2] * termB[2];// / den;
 
-		termA = (-((v76 * t - v45 * t + v47) * u) + (v32 * t - v01 * t + v03) * u - 
-			v45 * t + v01 * t - pts[4] + pts[0]);
-		termB = (-(((v76 * t - v45 * t + v47) * u - (v32 * t - v01 * t + v03) * u + 
-			v45 * t - v01 * t + v04) * v) - (v32 * t - v01 * t + v03) * u - v01 * t + pt - pts[0]);
+		termA = (-(((v76_45 - v32_01 * t) + v47 - v03) * v) - v32_01 * t - v03);
+		termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
 
-		gradient[2] = 2 * (
+		gradient[1] =  
 			termA[0] * termB[0] +
 			termA[1] * termB[1] +
-			termA[2] * termB[2]
-			) / den;
-#endif
+			termA[2] * termB[2]; // den;
+
+		termA = (-((v76_45 * t + v47) * u) + (v32_01 * t + v03) * u - v45_01 * t - v04);
+		termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
+
+		gradient[2] =
+			termA[0] * termB[0] +
+			termA[1] * termB[1] +
+			termA[2] * termB[2]; // den;
 
 		T sum = 0;
 		for (const auto& v : gradient)
