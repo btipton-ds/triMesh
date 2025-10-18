@@ -517,14 +517,18 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 			tmpParams[i] = curParam;
 		}
 #else
-		Vector3<T> vDen = (-((((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t + pts[7] - pts[4]) * u - ((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u + (pts[5] - pts[4]) * t - (pts[1] - pts[0]) * t + pts[4] - pts[0]) * v) - ((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u - (pts[1] - pts[0]) * t + pt - pts[0]);
+		Vector3<T> v01(pts[1] - pts[0]);
+		Vector3<T> v03(pts[3] - pts[0]);
+		Vector3<T> v04(pts[4] - pts[0]);
+		Vector3<T> v45(pts[5] - pts[4]);
+		Vector3<T> vDen = (-((((pts[6] - pts[7]) * t - (v45) * t + pts[7] - pts[4]) * u - ((pts[2] - pts[3]) * t - v01 * t + v03) * u + (v45) * t - v01 * t + v04) * v) - ((pts[2] - pts[3]) * t - v01 * t + v03) * u - v01 * t + pt - pts[0]);
 		T den = 2 * vDen.norm();
 
-		Vector3<T> termA = (-(((-pts[7] + pts[6] - pts[5] + pts[4]) * u - (-pts[3] + pts[2] - pts[1] + pts[0]) * u + pts[5] - pts[4] - pts[1] + pts[0]) * v)
+		Vector3<T> termA = (-(((-pts[7] + pts[6] - pts[5] + pts[4]) * u - (-pts[3] + pts[2] - pts[1] + pts[0]) * u + v45 - pts[1] + pts[0]) * v)
 			- (-pts[3] + pts[2] - pts[1] + pts[0]) * u - pts[1] + pts[0]);
-		Vector3<T> termB = (-((((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t + pts[7] - pts[4]) * u -
-			((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u + (pts[5] - pts[4]) * t - (pts[1] - pts[0]) * t + pts[4] - pts[0]) * v) - 
-			((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u - (pts[1] - pts[0]) * t + pt - pts[0]);
+		Vector3<T> termB = (-((((pts[6] - pts[7]) * t - (v45) * t + pts[7] - pts[4]) * u -
+			((pts[2] - pts[3]) * t - v01 * t + v03) * u + (v45) * t - v01 * t + v04) * v) - 
+			((pts[2] - pts[3]) * t - v01 * t + v03) * u - v01 * t + pt - pts[0]);
 
 		gradient[0] = 2 * (
 			termA[0] * termB[0] + 
@@ -532,11 +536,11 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 			termA[2] * termB[2] 
 			) / den;
 
-		termA = (-(((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t - (pts[2] - pts[3]) * t + (pts[1] - pts[0]) * t + pts[7] - pts[4] - pts[3] + pts[0]) * v) -
-			(pts[2] - pts[3]) * t + (pts[1] - pts[0]) * t - pts[3] + pts[0]);
-		termB = (-((((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t + pts[7] - pts[4]) * u -
-			((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u + (pts[5] - pts[4]) * t - (pts[1] - pts[0]) * t + pts[4] - pts[0]) * v) -
-			((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u - (pts[1] - pts[0]) * t + pt - pts[0]);
+		termA = (-(((pts[6] - pts[7]) * t - (v45) * t - (pts[2] - pts[3]) * t + v01 * t + pts[7] - pts[4] - pts[3] + pts[0]) * v) -
+			(pts[2] - pts[3]) * t + v01 * t - pts[3] + pts[0]);
+		termB = (-((((pts[6] - pts[7]) * t - (v45) * t + pts[7] - pts[4]) * u -
+			((pts[2] - pts[3]) * t - v01 * t + v03) * u + (v45) * t - v01 * t + v04) * v) -
+			((pts[2] - pts[3]) * t - v01 * t + v03) * u - v01 * t + pt - pts[0]);
 
 		gradient[1] = 2 * (
 			termA[0] * termB[0] +
@@ -544,10 +548,10 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 			termA[2] * termB[2]
 			) / den;
 
-		termA = (-(((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t + pts[7] - pts[4]) * u) + ((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u - 
-			(pts[5] - pts[4]) * t + (pts[1] - pts[0]) * t - pts[4] + pts[0]);
-		termB = (-((((pts[6] - pts[7]) * t - (pts[5] - pts[4]) * t + pts[7] - pts[4]) * u - ((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u + 
-			(pts[5] - pts[4]) * t - (pts[1] - pts[0]) * t + pts[4] - pts[0]) * v) - ((pts[2] - pts[3]) * t - (pts[1] - pts[0]) * t + pts[3] - pts[0]) * u - (pts[1] - pts[0]) * t + pt - pts[0]);
+		termA = (-(((pts[6] - pts[7]) * t - (v45) * t + pts[7] - pts[4]) * u) + ((pts[2] - pts[3]) * t - v01 * t + v03) * u - 
+			(v45) * t + v01 * t - pts[4] + pts[0]);
+		termB = (-((((pts[6] - pts[7]) * t - (v45) * t + pts[7] - pts[4]) * u - ((pts[2] - pts[3]) * t - v01 * t + v03) * u + 
+			(v45) * t - v01 * t + v04) * v) - ((pts[2] - pts[3]) * t - v01 * t + v03) * u - v01 * t + pt - pts[0]);
 
 		gradient[2] = 2 * (
 			termA[0] * termB[0] +
