@@ -431,10 +431,25 @@ T findMin(const Vector3<T>& pt, std::vector<T>& params, const ERR_FUNC& errFunc,
 			deltaX = -b / (2 * a);
 			if (fabs(b) > DIV_ZERO_VAL) {
 				T deltaXLin = -err / b;
+
+				// The best way to determine which delta reduces error the most is
+				// to test both ways and choose one
 				err0 = errFunc(params, gradient, deltaX);
 				err1 = errFunc(params, gradient, deltaXLin);
-				if (err1 < err0)
-					deltaX = deltaXLin;
+
+				// since we have both, update the params and continue from here
+				if (err0 < err1) {
+					err = err0;
+					for (size_t i = 0; i < params.size(); i++) {
+						params[i] += gradient[i] * deltaX;
+					}
+				} else {
+					err = err1;
+					for (size_t i = 0; i < params.size(); i++) {
+						params[i] += gradient[i] * deltaXLin;
+					}
+				}
+				continue;
 			}
 		} else if (fabs(b) > DIV_ZERO_VAL) {
 			deltaX = -err / b;
