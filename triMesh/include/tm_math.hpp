@@ -439,20 +439,25 @@ bool BI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, T& t,
 	Vector3<T> v01(pts[1] - pts[0]);
 	Vector3<T> v03(pts[3] - pts[0]);
 	Vector3<T> v32(pts[2] - pts[3]);
+	Vector3<T> v01_32(v01 - v32);
+
 	auto gradFunc = [&](const std::vector<T>& params, std::vector<T>& gradient) {
 		const auto t = params[0];
 		const auto u = params[1];
 		
-		Vector3<T> termA = (-((-pts[3] + pts[2] - v01) * u) - v01);
-		Vector3<T> termB = (-((v32 * t - v01 * t + v03) * u) - v01 * t + v0);
+		Vector3<T> v01_32_t = v01_32 * t;
+		Vector3<T> v01_32_t_03 = v01_32_t - v03;
+
+		Vector3<T> termA = v01_32 * u - v01;
+		Vector3<T> termB = (v01_32_t_03) * u - v01 * t + v0;
 
 		gradient[0] =
 			termA[0] * termB[0] +
 			termA[1] * termB[1] +
 			termA[2] * termB[2];// / den;
 
-		termA = ((v01 - v32) * t - v03);
-		termB = (-(((v32 - v01) * t + v03) * u) - v01 * t + v0);
+		termA = v01_32_t_03;
+		termB = v01_32_t_03 * u - v01 * t + v0;
 
 		gradient[1] =
 			termA[0] * termB[0] +
