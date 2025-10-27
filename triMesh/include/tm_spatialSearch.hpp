@@ -113,10 +113,13 @@ CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, const Refiner* pRefiner, std::vector<Entry>& result, BoxTestType testType) const {
 	if (containsBbox(_bbox, bbox, testType)) {
 		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
-			for (const auto& entry : _pContents->_vals) {
-				if (containsEntry(bbox, entry, pRefiner, testType)) {
-					result.push_back(entry);
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				if (containsEntry(bbox, *pData, pRefiner, testType)) {
+					result.push_back(*pData);
 				}
+				pData++;
 			}
 		}
 		if (_pLeft)
@@ -132,10 +135,13 @@ size_t CSSB_DCL::count(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestTyp
 	size_t result = 0;
 	if (containsBbox(_bbox, bbox, testType)) {
 		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
-			for (const auto& entry : _pContents->_vals) {
-				if (containsEntry(bbox, entry, pRefiner, testType)) {
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				if (containsEntry(bbox, *pData, pRefiner, testType)) {
 					result++;
 				}
+				pData++;
 			}
 		}
 		if (_pLeft)
@@ -150,10 +156,13 @@ CSSB_TMPL
 size_t CSSB_DCL::find(const BOX_TYPE& bbox, const Refiner* pRefiner, std::vector<INDEX_TYPE>& result, BoxTestType testType) const {
 	if (containsBbox(_bbox, bbox, testType)) {
 		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
-			for (const auto& entry : _pContents->_vals) {
-				if (containsEntry(bbox, entry, pRefiner, testType)) {
-					result.push_back(entry.getIndex());
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				if (containsEntry(bbox, *pData, pRefiner, testType)) {
+					result.push_back(pData->getIndex());
 				}
+				pData++;
 			}
 		}
 		if (_pLeft)
@@ -178,11 +187,14 @@ template<class FUNC>
 void CSSB_DCL::traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType testType) const {
 	if (containsBbox(_bbox, bbox, testType)) {
 		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
-			for (const auto& entry : _pContents->_vals) {
-				if (containsEntry(bbox, entry, nullptr, testType)) {
-					if (!func(entry.getIndex()))
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				if (containsEntry(bbox, *pData, nullptr, testType)) {
+					if (!func(pData->getIndex()))
 						return;
 				}
+				pData++;
 			}
 		}
 		if (_pLeft)
@@ -197,11 +209,14 @@ template<class FUNC>
 void CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol) const {
 	if (_bbox.intersects(ray, tol)) {
 		if (_pContents && _pContents->_bbox.intersects(ray, tol)) {
-			for (const auto& entry : _pContents->_vals) {
-				if (entry.getBBox().intersects(ray, tol)) {
-					if (!func(ray, entry.getIndex()))
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				if (pData->getBBox().intersects(ray, tol)) {
+					if (!func(ray, pData->getIndex()))
 						return;
 				}
+				pData++;
 			}
 		}
 		if (_pLeft)
@@ -285,11 +300,14 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 		return false;
 
 	if (_pContents) {
-		for (const auto& curEntry : _pContents->_vals) {
-			if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
+		size_t num = _pContents->_vals.size();
+		auto pData = _pContents->_vals.data();
+		for (size_t i = 0; i < num; i++) {
+			if (pData->getIndex() == newEntry.getIndex() && pData->getBBox().contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
 				assert(!"duplicate");
 				return false;
 			}
+			pData++;
 		}
 	}
 
