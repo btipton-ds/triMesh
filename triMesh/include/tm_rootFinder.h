@@ -39,14 +39,14 @@ This file is part of the TriMesh library.
 namespace RootFinder {
 
 template<class T, class ERR_FUNC, class GRAD_FUNC>
-T findMin(const Vector3<T>& pt, std::vector<T>& params, const ERR_FUNC& errFunc, const GRAD_FUNC& gradFunc, T stepsize, T tol)
+T findMin(const Vector3<T>& pt, size_t numParams, T* params, const ERR_FUNC& errFunc, const GRAD_FUNC& gradFunc, T stepsize, T tol)
 {
 	const T DIV_ZERO_VAL = (T)1.0e-12;
 	const T MIN_PARAM_DELTA = (T)1.0e-14;
-	std::vector<T> gradient, tmpParams;
-	gradient.resize(params.size());
-	tmpParams.resize(params.size());
+	std::vector<T> gradientVec;
+	gradientVec.resize(numParams);
 
+	T* gradient = gradientVec.data();
 	auto err = errFunc(params, gradient, 0);
 
 	int numConvergences = 0;
@@ -73,13 +73,13 @@ T findMin(const Vector3<T>& pt, std::vector<T>& params, const ERR_FUNC& errFunc,
 				// since we have both, update the params and continue from here
 				if (err0 < err1) {
 					err = err0;
-					for (size_t i = 0; i < params.size(); i++) {
+					for (size_t i = 0; i < numParams; i++) {
 						params[i] += gradient[i] * deltaX;
 					}
 				}
 				else {
 					err = err1;
-					for (size_t i = 0; i < params.size(); i++) {
+					for (size_t i = 0; i < numParams; i++) {
 						params[i] += gradient[i] * deltaXLin;
 					}
 				}
@@ -99,7 +99,7 @@ T findMin(const Vector3<T>& pt, std::vector<T>& params, const ERR_FUNC& errFunc,
 				return err;
 		}
 
-		for (size_t i = 0; i < params.size(); i++) {
+		for (size_t i = 0; i < numParams; i++) {
 			params[i] += gradient[i] * deltaX;
 		}
 		err = errFunc(params, gradient, 0);

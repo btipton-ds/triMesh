@@ -426,7 +426,7 @@ bool BI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, T& t,
 
 	v = pt - pts[0];
 
-	auto errFunc = [&pt, &pts](const std::vector<T>& params, const std::vector<T>& gradient, T stepsize)->T {
+	auto errFunc = [&pt, &pts](const T* params, const T* gradient, T stepsize)->T {
 
 		const auto& testPt = BI_LERP(pts,
 			params[0] + gradient[0] * stepsize,
@@ -441,7 +441,7 @@ bool BI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, T& t,
 	Vector3<T> v32(pts[2] - pts[3]);
 	Vector3<T> v01_32(v01 - v32);
 
-	auto gradFunc = [&](const std::vector<T>& params, std::vector<T>& gradient) {
+	auto gradFunc = [&](const T* params, T* gradient) {
 		const auto t = params[0];
 		const auto u = params[1];
 		
@@ -465,15 +465,18 @@ bool BI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, T& t,
 			termA[2] * termB[2]; // den;
 
 		T sum = 0;
-		for (const auto& v : gradient)
+		for (size_t i = 0; i < 2; i++) {
+			const auto& v = gradient[i];
 			sum += v * v;
+		}
 		sum = sqrt(sum);
-		for (auto& v : gradient)
-			v /= sum;
+		for (size_t i = 0; i < 2; i++) {
+			gradient[i] /= sum;
+		}
 	};
 
-	std::vector<T> params = { v.dot(x), v.dot(y) };
-	T err = RootFinder::findMin(pt, params, errFunc, gradFunc, (T)1.0e-8, tol);
+	T params[] = {v.dot(x), v.dot(y)};
+	T err = RootFinder::findMin(pt, 2, params, errFunc, gradFunc, (T)1.0e-8, tol);
 	if (err < tol) {
 		for (int i = 0; i < 2; i++) {
 			T& val = params[i];
@@ -511,24 +514,25 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 	T a, b, c, l;
 	Vector3<T> x, y, z, p0, p1, dir, v;
 
-	x = pts[1] - pts[0];
+	auto pPts = pts.data();
+	x = pPts[1] - pPts[0];
 	l = x.norm();
 	x /= l * l;
 
-	y = pts[3] - pts[0];
+	y = pPts[3] - pPts[0];
 	l = y.norm();
 	y /= l * l;
 
-	z = pts[4] - pts[0];
+	z = pPts[4] - pPts[0];
 	l = z.norm();
 	z /= l * l;
 
-	v = pt - pts[0];
+	v = pt - pPts[0];
 	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
 #if 1
-	auto errFunc = [&pt, &pts](const std::vector<T>& params, const std::vector<T>& gradient, T stepsize)->T {
+	auto errFunc = [&pt, &pPts](const T* params, const T* gradient, T stepsize)->T {
 
-		const auto& testPt = TRI_LERP(pts, 
+		const auto& testPt = TRI_LERP(pPts, 
 			params[0] + gradient[0] * stepsize, 
 			params[1] + gradient[1] * stepsize, 
 			params[2] + gradient[2] * stepsize);
@@ -536,20 +540,20 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 		return v.norm();
 	};
 
-	const Vector3<T> v0(pt - pts[0]);
-	const Vector3<T> v01(pts[1] - pts[0]);
-	const Vector3<T> v03(pts[3] - pts[0]);
-	const Vector3<T> v04(pts[4] - pts[0]);
-	const Vector3<T> v32(pts[2] - pts[3]);
-	const Vector3<T> v45(pts[5] - pts[4]);
-	const Vector3<T> v47(pts[7] - pts[4]);
-	const Vector3<T> v76(pts[6] - pts[7]);
+	const Vector3<T> v0(pt - pPts[0]);
+	const Vector3<T> v01(pPts[1] - pPts[0]);
+	const Vector3<T> v03(pPts[3] - pPts[0]);
+	const Vector3<T> v04(pPts[4] - pPts[0]);
+	const Vector3<T> v32(pPts[2] - pPts[3]);
+	const Vector3<T> v45(pPts[5] - pPts[4]);
+	const Vector3<T> v47(pPts[7] - pPts[4]);
+	const Vector3<T> v76(pPts[6] - pPts[7]);
 
 	const Vector3<T> v32_01(v32 - v01);
 	const Vector3<T> v45_01(v45 - v01);
 	const Vector3<T> v76_45(v76 - v45);
 
-	auto gradFunc = [&](const std::vector<T>& params, std::vector<T>& gradient) {
+	auto gradFunc = [&](const T* params, T* gradient) {
 		const auto t = params[0];
 		const auto u = params[1];
 		const auto v = params[2];
@@ -557,7 +561,7 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 		Vector3<T> termA = (-(((v76_45 - v32_01) * u + v45_01) * v) - v32_01 * u - v01);
 		Vector3<T> termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
 
-		gradient[0] = 
+		gradient[0] =
 			termA[0] * termB[0] +
 			termA[1] * termB[1] +
 			termA[2] * termB[2];// / den;
@@ -565,7 +569,7 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 		termA = (-(((v76_45 - v32_01 * t) + v47 - v03) * v) - v32_01 * t - v03);
 		termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
 
-		gradient[1] =  
+		gradient[1] =
 			termA[0] * termB[0] +
 			termA[1] * termB[1] +
 			termA[2] * termB[2]; // den;
@@ -579,15 +583,18 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 			termA[2] * termB[2]; // den;
 
 		T sum = 0;
-		for (const auto& v : gradient)
+		for (size_t i = 0; i < 3; i++) {
+			const auto& v = gradient[i];
 			sum += v * v;
+		}
 		sum = sqrt(sum);
-		for (auto& v : gradient)
-			v /= sum;
+		for (size_t i = 0; i < 3; i++) {
+			gradient[i] /= sum;
+		}
 	};
 
-	std::vector<T> params = { tuv[0], tuv[1], tuv[2] };
-	T err = RootFinder::findMin(pt, params, errFunc, gradFunc, (T)1.0e-8, tol);
+	T params[3] = {tuv[0], tuv[1], tuv[2]};
+	T err = RootFinder::findMin(pt, 3, params, errFunc, gradFunc, (T)1.0e-8, tol);
 	if (err < tol) {
 		for (int i = 0; i < 3; i++) {
 			T& val = params[i];
