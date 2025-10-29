@@ -336,8 +336,12 @@ typename Plane<T>::POINT_TYPE Plane<T>::projectPoint(const POINT_TYPE& pt, T tol
 	POINT_TYPE v = pt - _origin;
 	auto dp = v.dot(_normal);
 	POINT_TYPE result = pt - dp * _normal;
+	// This refinement is required to assure that future isCoincident tests pass.
+	// Without this, testing for insideTriangle after a project can fail because the projected
+	// point is not within tolerance of the triangle's plane.
 	auto err = (result - _origin).dot(_normal);
-	while (fabs(err) > tol) {
+	int count = 0;
+	while (fabs(err) > tol && count++ < 3) { // On refinement was always enough in testing. 3 Should be overkill.
 		v = result - _origin;
 		dp = v.dot(_normal);
 		result = result - dp * _normal;
