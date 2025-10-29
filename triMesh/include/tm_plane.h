@@ -37,6 +37,7 @@ This file is part of the TriMesh library.
 #include <cfloat>
 
 #include <tm_vector3.h>
+#include <tm_tolerance.h>
 
 template<class T>
 inline const T& ptOf3(int idx, const T& pt0, const T& pt1, const T& pt2) {
@@ -86,7 +87,7 @@ public:
 	bool isCoincident(const POINT_TYPE& other, T tol) const;
 	bool isCoincident(const Plane& other, T distTol, T cpTol) const;
 
-	POINT_TYPE projectPoint(const POINT_TYPE& pt) const;
+	POINT_TYPE projectPoint(const POINT_TYPE& pt, T tol = sameDistTol<T>()) const;
 	T distanceToPoint(const POINT_TYPE& pt, bool absolute = true) const;
 
 	const POINT_TYPE& getOrigin() const;

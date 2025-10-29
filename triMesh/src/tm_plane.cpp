@@ -331,11 +331,18 @@ bool Plane<T>::isCoincident(const Plane& other, T distTol, T cpTol) const
 }
 
 template<class T>
-typename Plane<T>::POINT_TYPE Plane<T>::projectPoint(const POINT_TYPE& pt) const
+typename Plane<T>::POINT_TYPE Plane<T>::projectPoint(const POINT_TYPE& pt, T tol) const
 {
 	POINT_TYPE v = pt - _origin;
-	v = v - _normal.dot(v) * _normal;
-	POINT_TYPE result = _origin + v;
+	auto dp = v.dot(_normal);
+	POINT_TYPE result = pt - dp * _normal;
+	auto err = (result - _origin).dot(_normal);
+	while (fabs(err) > tol) {
+		v = result - _origin;
+		dp = v.dot(_normal);
+		result = result - dp * _normal;
+		err = (result - _origin).dot(_normal);
+	}
 #if FULL_TESTS
 	assert(distanceToPoint(result) < 1.0e-8);
 #endif

@@ -44,21 +44,6 @@ This file is part of the TriMesh library.
 using lint = long long;
 
 template<class T>
-T sameDistTol();
-
-template<>
-inline double sameDistTol()
-{
-	return SAME_DIST_TOL;
-}
-
-template<>
-inline float sameDistTol()
-{
-	return 1.0e-5f;
-}
-
-template<class T>
 struct LineSegment;
 
 template <class SCALAR_TYPE>
