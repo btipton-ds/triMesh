@@ -253,22 +253,11 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment_byref<SCALAR
 
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const CBoundingBox3D& otherBox, SCALAR_TYPE tol) const {
-	int i = 0;
-	if (otherBox._min[i] > _max[i] + tol)
+	const auto& otherMin = otherBox._min;
+	const auto& otherMax = otherBox._max;
+	if ((otherMin[0] > _max[0] + tol) || (otherMin[1] > _max[1] + tol) || (otherMin[2] > _max[2] + tol))
 		return false;
-	else if (otherBox._max[i] < _min[i] - tol)
-		return false;
-
-	i = 1;
-	if (otherBox._min[i] > _max[i] + tol)
-		return false;
-	else if (otherBox._max[i] < _min[i] - tol)
-		return false;
-
-	i = 2;
-	if (otherBox._min[i] > _max[i] + tol)
-		return false;
-	else if (otherBox._max[i] < _min[i] - tol)
+	else if ((otherMax[0] < _min[0] - tol) || (otherMax[1] < _min[1] - tol) || (otherMax[2] < _min[2] - tol))
 		return false;
 
 	return true;
