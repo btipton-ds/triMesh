@@ -70,11 +70,6 @@ public:
 		BOX_TYPE _bbox = {};
 	};
 
-	class Refiner {
-	public:
-		virtual bool entryIntersects(const BOX_TYPE& bbox, const Entry& entry) const = 0;
-	};
-
 	CSpatialSearchBase(const BOX_TYPE& bbox = BOX_TYPE(), int axis = 0);
 	virtual ~CSpatialSearchBase();
 
@@ -84,9 +79,9 @@ public:
 	size_t numBytes() const;
 	const BOX_TYPE& getBounds() const;
 
-	size_t count(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
-	size_t find(const BOX_TYPE& bbox, const Refiner* pRefiner, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
-	size_t find(const BOX_TYPE& bbox, const Refiner* pRefiner, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	size_t count(const BOX_TYPE& bbox, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
 
 	template<class FUNC>
@@ -94,7 +89,7 @@ public:
 	template<class FUNC>
 	void biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol = (SCALAR_TYPE) SAME_DIST_TOL) const;
 
-	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
+	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
 
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);
 
@@ -111,15 +106,15 @@ private:
 		std::vector<Entry> _vals;
 	};
 	bool add(const Entry& newEntry, int depth);
-	void copyTreeToReducedTree(const BOX_TYPE& smallerBbox, const Refiner* pRefiner, SpatialSearchBasePtr& dst, BoxTestType testType) const;
+	void copyTreeToReducedTree(const BOX_TYPE& smallerBbox, SpatialSearchBasePtr& dst, BoxTestType testType) const;
 
 	void addToContents(const Entry& newEntry);
 	void split(int depth);
 
-	void setSubContents(const BOX_TYPE& smallerBbox, const Refiner* pRefiner, const CSpatialSearchBase* pSrc, BoxTestType testType);
+	void setSubContents(const BOX_TYPE& smallerBbox, const CSpatialSearchBase* pSrc, BoxTestType testType);
 
 	static bool containsBbox(const BOX_TYPE& bbox, const BOX_TYPE& otherBbox, BoxTestType testType);
-	static bool containsEntry(const BOX_TYPE& bbox, const Entry& entry, const Refiner* pRefiner, BoxTestType testType);
+	static bool containsEntry(const BOX_TYPE& bbox, const Entry& entry, BoxTestType testType);
 
 	size_t _numInTree = 0;
 	size_t _id = 0;

@@ -110,65 +110,65 @@ size_t CSSB_DCL::numBytes() const
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, const Refiner* pRefiner, std::vector<Entry>& result, BoxTestType testType) const {
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType testType) const {
 	if (containsBbox(_bbox, bbox, testType)) {
 		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
 			size_t num = _pContents->_vals.size();
 			auto pData = _pContents->_vals.data();
 			for (size_t i = 0; i < num; i++) {
-				if (containsEntry(bbox, *pData, pRefiner, testType)) {
+				if (containsEntry(bbox, *pData, testType)) {
 					result.push_back(*pData);
 				}
 				pData++;
 			}
 		}
 		if (_pLeft)
-			_pLeft->find(bbox, pRefiner, result, testType);
+			_pLeft->find(bbox, result, testType);
 		if (_pRight)
-			_pRight->find(bbox, pRefiner, result, testType);
+			_pRight->find(bbox, result, testType);
 	}
 	return result.size();
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::count(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType testType) const {
+size_t CSSB_DCL::count(const BOX_TYPE& bbox, BoxTestType testType) const {
 	size_t result = 0;
 	if (containsBbox(_bbox, bbox, testType)) {
 		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
 			size_t num = _pContents->_vals.size();
 			auto pData = _pContents->_vals.data();
 			for (size_t i = 0; i < num; i++) {
-				if (containsEntry(bbox, *pData, pRefiner, testType)) {
+				if (containsEntry(bbox, *pData, testType)) {
 					result++;
 				}
 				pData++;
 			}
 		}
 		if (_pLeft)
-			result += _pLeft->count(bbox, pRefiner, testType);
+			result += _pLeft->count(bbox, testType);
 		if (_pRight)
-			result += _pRight->count(bbox, pRefiner, testType);
+			result += _pRight->count(bbox, testType);
 	}
 	return result;
 }
 
 CSSB_TMPL
-size_t CSSB_DCL::find(const BOX_TYPE& bbox, const Refiner* pRefiner, std::vector<INDEX_TYPE>& result, BoxTestType testType) const {
+size_t CSSB_DCL::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType testType) const {
 	if (containsBbox(_bbox, bbox, testType)) {
 		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
 			size_t num = _pContents->_vals.size();
 			auto pData = _pContents->_vals.data();
 			for (size_t i = 0; i < num; i++) {
-				if (containsEntry(bbox, *pData, pRefiner, testType)) {
+				if (containsEntry(bbox, *pData, testType)) {
 					result.push_back(pData->getIndex());
 				}
 				pData++;
 			}
 		}
 		if (_pLeft)
-			_pLeft->find(bbox, pRefiner, result, testType);
+			_pLeft->find(bbox, result, testType);
 		if (_pRight)
-			_pRight->find(bbox, pRefiner, result, testType);
+			_pRight->find(bbox, result, testType);
 	}
 	return result.size();
 }
@@ -190,7 +190,7 @@ void CSSB_DCL::traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType test
 			size_t num = _pContents->_vals.size();
 			auto pData = _pContents->_vals.data();
 			for (size_t i = 0; i < num; i++) {
-				if (containsEntry(bbox, *pData, nullptr, testType)) {
+				if (containsEntry(bbox, *pData, testType)) {
 					if (!func(pData->getIndex()))
 						return;
 				}
@@ -227,18 +227,18 @@ void CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& fun
 }
 
 CSSB_TMPL
-typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox, const Refiner* pRefiner, BoxTestType testType) const
+typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox, BoxTestType testType) const
 {
 #if 0
 	return this->shared_from_this();
 #else
 	std::vector<INDEX_TYPE> entries;
-	if (find(bbox, pRefiner, entries, testType)) {
+	if (find(bbox, entries, testType)) {
 #if !(DO_SPATIAL_SEARCH_TREE_VERIFICATION && defined(_DEBUG))
 		entries.clear();
 #endif
 		std::shared_ptr<CSpatialSearchBase> result = std::make_shared<CSpatialSearchBase>(_bbox, _axis);
-		copyTreeToReducedTree(bbox, pRefiner, result, testType);
+		copyTreeToReducedTree(bbox, result, testType);
 
 #if DO_SPATIAL_SEARCH_TREE_VERIFICATION && defined(_DEBUG)
 		std::vector<INDEX_TYPE> entries1;
@@ -269,26 +269,26 @@ typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE
 }
 
 CSSB_TMPL
-void CSSB_DCL::copyTreeToReducedTree(const BOX_TYPE& smallerBbox, const Refiner* pRefiner, SpatialSearchBasePtr& dst, BoxTestType testType) const
+void CSSB_DCL::copyTreeToReducedTree(const BOX_TYPE& smallerBbox, SpatialSearchBasePtr& dst, BoxTestType testType) const
 {
-	dst->setSubContents(smallerBbox, pRefiner, this, testType);
+	dst->setSubContents(smallerBbox, this, testType);
 
 	if (_pLeft) {
-		size_t n = _pLeft->count(smallerBbox, pRefiner, testType);
+		size_t n = _pLeft->count(smallerBbox, testType);
 		if (n > 0) {
 			dst->_pLeft = std::make_shared<CSpatialSearchBase>(_pLeft->_bbox, _pLeft->_axis);
-			_pLeft->copyTreeToReducedTree(smallerBbox, pRefiner, dst->_pLeft, testType);
-			assert(dst->_pLeft->count(smallerBbox, pRefiner, testType) == n);
+			_pLeft->copyTreeToReducedTree(smallerBbox, dst->_pLeft, testType);
+			assert(dst->_pLeft->count(smallerBbox, testType) == n);
 			dst->_numInTree += dst->_pLeft->_numInTree;
 		}
 	}
 
 	if (_pRight) {
-		size_t n = _pRight->count(smallerBbox, pRefiner, testType);
+		size_t n = _pRight->count(smallerBbox, testType);
 		if (n > 0) {
 			dst->_pRight = std::make_shared<CSpatialSearchBase>(_pRight->_bbox, _pRight->_axis);
-			_pRight->copyTreeToReducedTree(smallerBbox, pRefiner, dst->_pRight, testType);
-			assert(dst->_pRight->count(smallerBbox, pRefiner, testType) == n);
+			_pRight->copyTreeToReducedTree(smallerBbox, dst->_pRight, testType);
+			assert(dst->_pRight->count(smallerBbox, testType) == n);
 			dst->_numInTree += dst->_pRight->_numInTree;
 		}
 	}
@@ -331,7 +331,7 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 }
 
 CSSB_TMPL
-void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, const Refiner* pRefiner, const CSpatialSearchBase* pSrc, BoxTestType testType)
+void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, const CSpatialSearchBase* pSrc, BoxTestType testType)
 {
 	const auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
 
@@ -341,7 +341,7 @@ void CSSB_DCL::setSubContents(const BOX_TYPE& smallerBbox, const Refiner* pRefin
 	if (containsBbox(pSrc->_pContents->_bbox, smallerBbox, testType)) {
 		size_t n = 0;
 		for (auto& entry : pSrc->_pContents->_vals) {
-			if (containsEntry(smallerBbox, entry, pRefiner, testType)) {
+			if (containsEntry(smallerBbox, entry, testType)) {
 				n++;
 			}
 		}
@@ -506,7 +506,7 @@ inline bool CSSB_DCL::containsBbox(const BOX_TYPE& bbox, const BOX_TYPE& otherBb
 }
 
 CSSB_TMPL
-inline bool CSSB_DCL::containsEntry(const BOX_TYPE& bbox, const Entry& entry, const Refiner* pRefiner, BoxTestType testType)
+inline bool CSSB_DCL::containsEntry(const BOX_TYPE& bbox, const Entry& entry, BoxTestType testType)
 {
 	const auto& otherBbox = entry.getBBox();
 
@@ -524,6 +524,6 @@ inline bool CSSB_DCL::containsEntry(const BOX_TYPE& bbox, const Entry& entry, co
 		break;
 	}
 
-	return result && (!pRefiner || pRefiner->entryIntersects(bbox, entry));
+	return result;
 }
 
