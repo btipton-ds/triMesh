@@ -46,6 +46,11 @@ inline bool tolerantEquals(const Vector3< SCALAR_TYPE>& pt0, const Vector3< SCAL
 	return (pt1 - pt0).squaredNorm() < tol * tol;
 }
 
+template <class SCALAR_TYPE>
+inline bool tolerantEquals(const Vector2<SCALAR_TYPE>& pt0, const Vector2<SCALAR_TYPE>& pt1, SCALAR_TYPE tol) {
+	return (pt1 - pt0).squaredNorm() < tol * tol;
+}
+
 #define CHECK_NAN 1
 
 template <class SCALAR_TYPE>

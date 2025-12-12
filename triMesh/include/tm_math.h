@@ -36,6 +36,7 @@ This file is part of the TriMesh library.
 #include <climits>
 #include <cfloat>
 
+#include <tm_vector2.h>
 #include <tm_vector3.h>
 #include <tm_plane.h>
 
@@ -52,6 +53,8 @@ bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol);
 template <class SCALAR_TYPE>
 bool tolerantEquals(const Vector3< SCALAR_TYPE>& pt0, const Vector3< SCALAR_TYPE>& pt1, SCALAR_TYPE tol);
 
+template <class SCALAR_TYPE>
+bool tolerantEquals(const Vector2< SCALAR_TYPE>& pt0, const Vector2< SCALAR_TYPE>& pt1, SCALAR_TYPE tol);
 
 template <class SCALAR_TYPE>
 void checkNAN(SCALAR_TYPE val);

@@ -44,12 +44,6 @@ This file is part of the TriMesh library.
 #include <iostream>
 #include <tm_defaultTolerances.h>
 
-// NOTE CRITICAL - Eigen has an intermittent error SOMEWHERE that was causing nondeterministic errors in intersections!
-// Vector3 had beend defined the same as Vector2, using Vector3 = Eigen::Matrix<T, 3, 1>, switching between our own and Eigen got rid
-// of the nondeterminism. That cost almost 2 months and the error was never found.
-//
-// If we switch back to Eigen, this must be identified and fixed.
-
 template <typename T>
 class Vector3
 {
