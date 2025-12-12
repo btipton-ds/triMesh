@@ -33,32 +33,6 @@ This file is part of the TriMesh library.
 #include <cfloat>
 
 template<>
-size_t defaultVal<size_t>() {
-	return 0xffffffffffffffff;
-}
-template<>
-float defaultVal<float>() {
-	return FLT_MAX;
-}
-
-template<>
-double defaultVal<double>() {
-	return DBL_MAX;
-}
-
-template<>
-float defaultDistTol()
-{
-	return 1.0e-7f;
-}
-
-template<>
-double defaultDistTol()
-{
-	return SAME_DIST_TOL;
-}
-
-template<>
 bool equalTol(const Vector3<float>& val0, const Vector3<float>& val1, float tol)
 {
 	Vector3<float> delta = val1 - val0;

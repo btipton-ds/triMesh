@@ -44,23 +44,27 @@ endif(WIN32)
 
 add_library (
     triMesh 
+    "src/tm_boundingBox.cpp" 
+    "src/tm_defaultTolerances.cpp"
+    "src/tm_edge.cpp"
+    "src/tm_fixedMath.cpp"
+    "src/tm_ioUtil.cpp" 
     "src/tm_math.cpp" 
     "src/tm_polyLine.cpp" 
-    "src/triMesh.cpp" 
-    "src/triMeshPatch.cpp"
-    "src/tm_vertex.cpp" 
-    "src/tm_vector3.cpp"
-    "src/tm_fixedMath.cpp"
-    "src/tm_edge.cpp"
     "src/tm_plane.cpp"
     "src/tm_plane_byref.cpp"
     "src/tm_lineSegment.cpp"
-    "src/tm_boundingBox.cpp" 
     "src/tm_spatialSearch.cpp"
+    "src/tm_vertex.cpp"
+    "src/tm_vector2.cpp"
+    "src/tm_vector3.cpp"
     
+    "src/triMesh.cpp" 
+    "src/triMeshPatch.cpp"
+
     "../stlReader/src/readWriteStl.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
-  "src/tm_ioUtil.cpp")
+  )
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}
