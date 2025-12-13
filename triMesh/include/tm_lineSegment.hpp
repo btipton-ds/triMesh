@@ -48,7 +48,7 @@ inline typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::calLength() const {
 
 template<class T>
 inline typename LineSegment<T>::POINT_TYPE LineSegment<T>::calcDir() const {
-	return safeNormalize<SCALAR_TYPE>(_pt1 - _pt0);
+	return safeNormalize(_pt1 - _pt0);
 }
 
 template<class T>

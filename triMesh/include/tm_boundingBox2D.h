@@ -57,19 +57,17 @@ public:
 	bool contains(const CBoundingBox2D& other, SCALAR_TYPE tol) const;
 	bool tolerantEquals(const CBoundingBox2D& other, SCALAR_TYPE tol) const;
 
-	bool intersects(const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const;
-	bool intersects(const Ray<SCALAR_TYPE>& ray, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const;
+	bool intersects(const LineSegment2D<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const;
+	bool intersects(const LineSegment2D<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const;
 
-	bool intersects(const LineSegment2D<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const;
-	bool intersects(const LineSegment2D<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, int skipAxis) const;
-
-	bool intersects(const LineSegment2D_byref<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const;
-	bool intersects(const LineSegment2D_byref<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, int skipAxis) const;
+	bool intersects(const LineSegment2D_byref<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const;
+	bool intersects(const LineSegment2D_byref<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const;
 
 	bool intersects(const CBoundingBox2D& otherBox, SCALAR_TYPE tol) const;
 
 	bool intersectsOrContains(const CBoundingBox2D& otherBox, SCALAR_TYPE tol) const;
-	bool intersectsOrContains(const LineSegment2D<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const;
+	bool intersectsOrContains(const LineSegment2D<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const;
+	bool intersectsOrContains(const LineSegment2D_byref<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const;
 	bool intersectsOrContains(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, SCALAR_TYPE tol) const;
 
 	void split(int axis, CBoundingBox2D& left, CBoundingBox2D& right, Scalar overlap = 0) const;
@@ -83,8 +81,8 @@ private:
 	static const POINT_TYPE _axes[2];
 	static const POINT_TYPE _negAxes[2];
 
-	bool intersectsInner(const LineSegment2D<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const;
-	bool intersectsInner(const LineSegment2D_byref<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const;
+	bool intersectsInner(const LineSegment2D<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll) const;
+	bool intersectsInner(const LineSegment2D_byref<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll) const;
 
 	POINT_TYPE _min, _max;
 };

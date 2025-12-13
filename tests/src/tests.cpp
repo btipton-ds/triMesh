@@ -661,7 +661,8 @@ bool runTests() {
 	TEST_TRUE(testVector2(), "Failed testVector2");
 	TEST_TRUE(testVector3(), "Failed testVector3");
 	TEST_TRUE(testMath(), "Failed testMath");
-	TEST_TRUE(testBoundingBox(), "Failed testBoundingBox");
+	TEST_TRUE(testBoundingBox3D(), "Failed testBoundingBox");
+	TEST_TRUE(testBoundingBox2D(), "Failed testBoundingBox2D");
 	TEST_TRUE(testMesh(), "Failed testMesh");
 	TEST_TRUE(testMesh2(), "Failed testMesh2");
 

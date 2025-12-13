@@ -52,10 +52,10 @@ add_executable (testMath
 "src/tests.cpp" 
 "src/testMesh.cpp" 
 "src/testMath.cpp" 
+"src/testBoundingBox2D.cpp"
 "src/testBoundingBox.cpp" 
 "src/testVector3.cpp"
-"src/testVector2.cpp"
-)
+"src/testVector2.cpp")
 
 target_link_libraries("testMath" 
 PUBLIC triMesh

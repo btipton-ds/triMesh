@@ -75,8 +75,9 @@ public:
 
 using Vector3dSet = Vector3Set<Vector3d>;
 
-template<typename SCALAR_TYPE>
-Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v);
+template<class VECTOR_TYPE>
+VECTOR_TYPE safeNormalize(const VECTOR_TYPE& v);
+
 template<class T>
 double distanceFromPlane(const Vector3<T>& pt, const Plane<T>& plane);
 

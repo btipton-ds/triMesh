@@ -33,37 +33,38 @@ This file is part of the TriMesh library.
 #include <tm_math.h>
 #include <tm_ray.h>
 #include <tm_plane_byref.h>
-#include <tm_lineSegment_byref.h>
+#include <tm_lineSegment2D_byref.h>
+#include <tm_codeTemplates.h>
 
 template<class T>
-LineSegment_byref<T>::LineSegment_byref(const POINT_TYPE& p0, const POINT_TYPE& p1)
+LineSegment2D_byref<T>::LineSegment2D_byref(const POINT_TYPE& p0, const POINT_TYPE& p1)
 	: _pt0(p0)
 	, _pt1(p1)
 {
 }
 
 template<class T>
-typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::calLength() const {
+typename LineSegment2D_byref<T>::SCALAR_TYPE LineSegment2D_byref<T>::calLength() const {
 	return (_pt1 - _pt0).norm();
 }
 
 template<class T>
-typename LineSegment_byref<T>::POINT_TYPE LineSegment_byref<T>::calcDir() const {
+typename LineSegment2D_byref<T>::POINT_TYPE LineSegment2D_byref<T>::calcDir() const {
 	return safeNormalize(_pt1 - _pt0);
 }
 
 template<class T>
-typename LineSegment_byref<T>::POINT_TYPE LineSegment_byref<T>::interpolate(SCALAR_TYPE t) const {
+typename LineSegment2D_byref<T>::POINT_TYPE LineSegment2D_byref<T>::interpolate(SCALAR_TYPE t) const {
 	return _pt0 + t * (_pt1 - _pt0);
 }
 
 template<class T>
-typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::parameterize(const POINT_TYPE& pt) const {
+typename LineSegment2D_byref<T>::SCALAR_TYPE LineSegment2D_byref<T>::parameterize(const POINT_TYPE& pt) const {
 	return (pt - _pt0).dot(calcDir()) / calLength();
 }
 
 template<class T>
-bool LineSegment_byref<T>::contains(const POINT_TYPE& pt, LineSegment_byref<T>::SCALAR_TYPE& t, SCALAR_TYPE tol) const
+bool LineSegment2D_byref<T>::contains(const POINT_TYPE& pt, LineSegment2D_byref::SCALAR_TYPE& t, SCALAR_TYPE tol) const
 {
 	if (tolerantEquals(_pt0, pt, tol)) {
 		t = 0;
@@ -94,13 +95,25 @@ bool LineSegment_byref<T>::contains(const POINT_TYPE& pt, LineSegment_byref<T>::
 }
 
 template<class T>
-typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::distanceToPoint(const POINT_TYPE& pt) const {
+bool LineSegment2D_byref<T>::intersects(const LineSegment2D<T>& other, POINT_TYPE& iPt, SCALAR_TYPE tol) const
+{
+LINE_SEG_2D_INTERSECT_TEMP
+}
+
+template<class T>
+bool LineSegment2D_byref<T>::intersects(const LineSegment2D_byref<T>& other, POINT_TYPE& iPt, SCALAR_TYPE tol) const
+{
+LINE_SEG_2D_INTERSECT_TEMP
+}
+
+template<class T>
+typename LineSegment2D_byref<T>::SCALAR_TYPE LineSegment2D_byref<T>::distanceToPoint(const POINT_TYPE& pt) const {
 	SCALAR_TYPE t;
 	return distanceToPoint(pt, t);
 }
 
 template<class T>
-typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const {
+typename LineSegment2D_byref<T>::SCALAR_TYPE LineSegment2D_byref<T>::distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const {
 	POINT_TYPE dir(_pt1 - _pt0);
 	SCALAR_TYPE len = dir.norm();
 	if (len < minNormalizeDivisor)

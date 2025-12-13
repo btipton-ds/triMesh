@@ -32,38 +32,38 @@ This file is part of the TriMesh library.
 #include <tm_defines.h>
 #include <tm_math.h>
 #include <tm_ray.h>
-#include <tm_plane_byref.h>
-#include <tm_lineSegment_byref.h>
+#include <tm_lineSegment2D.h>
+#include <tm_codeTemplates.h>
 
 template<class T>
-LineSegment_byref<T>::LineSegment_byref(const POINT_TYPE& p0, const POINT_TYPE& p1)
-	: _pt0(p0)
-	, _pt1(p1)
+inline LineSegment2D<T>::LineSegment2D(const POINT_TYPE& p0, const POINT_TYPE& p1)
 {
+	_pt0 = p0;
+	_pt1 = p1;
 }
 
 template<class T>
-typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::calLength() const {
+inline typename LineSegment2D<T>::SCALAR_TYPE LineSegment2D<T>::calLength() const {
 	return (_pt1 - _pt0).norm();
 }
 
 template<class T>
-typename LineSegment_byref<T>::POINT_TYPE LineSegment_byref<T>::calcDir() const {
+inline typename LineSegment2D<T>::POINT_TYPE LineSegment2D<T>::calcDir() const {
 	return safeNormalize(_pt1 - _pt0);
 }
 
 template<class T>
-typename LineSegment_byref<T>::POINT_TYPE LineSegment_byref<T>::interpolate(SCALAR_TYPE t) const {
+inline typename LineSegment2D<T>::POINT_TYPE LineSegment2D<T>::interpolate(SCALAR_TYPE t) const {
 	return _pt0 + t * (_pt1 - _pt0);
 }
 
 template<class T>
-typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::parameterize(const POINT_TYPE& pt) const {
+inline typename LineSegment2D<T>::SCALAR_TYPE LineSegment2D<T>::parameterize(const POINT_TYPE& pt) const {
 	return (pt - _pt0).dot(calcDir()) / calLength();
 }
 
 template<class T>
-bool LineSegment_byref<T>::contains(const POINT_TYPE& pt, LineSegment_byref<T>::SCALAR_TYPE& t, SCALAR_TYPE tol) const
+bool LineSegment2D<T>::contains(const POINT_TYPE& pt, LineSegment2D<T>::SCALAR_TYPE& t, SCALAR_TYPE tol) const
 {
 	if (tolerantEquals(_pt0, pt, tol)) {
 		t = 0;
@@ -88,19 +88,26 @@ bool LineSegment_byref<T>::contains(const POINT_TYPE& pt, LineSegment_byref<T>::
 		auto distSqr = vOrth.squaredNorm();
 		if (distSqr > tolSqr)
 			return false; // pt does not lie on the segment within tolerance.
+
 		t = dp / len;
 		return -tol < dp && dp < (len + tol); // return if the pt lies in [zero, len] within tolerance
 	}
 }
 
 template<class T>
-typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::distanceToPoint(const POINT_TYPE& pt) const {
-	SCALAR_TYPE t;
-	return distanceToPoint(pt, t);
+bool LineSegment2D<T>::intersects(const LineSegment2D& other, POINT_TYPE& iPt, SCALAR_TYPE tol) const
+{
+	LINE_SEG_2D_INTERSECT_TEMP
 }
 
 template<class T>
-typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const {
+bool LineSegment2D<T>::intersects(const LineSegment2D_byref<T>& other, POINT_TYPE& iPt, SCALAR_TYPE tol) const
+{
+	LINE_SEG_2D_INTERSECT_TEMP
+}
+
+template<class T>
+typename LineSegment2D<T>::SCALAR_TYPE LineSegment2D<T>::distanceToPoint(const POINT_TYPE& pt, POINT_TYPE& closestPt, SCALAR_TYPE& t) const {
 	POINT_TYPE dir(_pt1 - _pt0);
 	SCALAR_TYPE len = dir.norm();
 	if (len < minNormalizeDivisor)
@@ -110,17 +117,34 @@ typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::distanceToPoint
 	SCALAR_TYPE dp = v0.dot(dir);
 	t = dp / len;
 	v0 = v0 - dir * dp;
-	SCALAR_TYPE dist;
+	SCALAR_TYPE dist = -1;
 	if (t < 0) {
 		t = (SCALAR_TYPE)-DBL_MAX;
-		dist = (pt - _pt0).norm();
-	}
-	else if (t > 1) {
+		closestPt = _pt0;
+		dist = (pt - closestPt).norm();
+	} else if (t > 1) {
 		t = (SCALAR_TYPE)DBL_MAX;
-		dist = (pt - _pt1).norm();
-	}
-	else
+		closestPt = _pt1;
+		dist = (pt - closestPt).norm();
+	} else {
 		dist = v0.norm();
-
+		if (dist > 0) {
+			v0 /= dist;
+			closestPt = pt - dist * v0;
+		}
+	}
 	return dist;
+}
+template<class T>
+typename LineSegment2D<T>::SCALAR_TYPE LineSegment2D<T>::distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const
+{
+	POINT_TYPE closestPt;
+	return distanceToPoint(pt, closestPt, t);
+}
+
+template<class T>
+inline typename LineSegment2D<T>::SCALAR_TYPE LineSegment2D<T>::distanceToPoint(const POINT_TYPE& pt) const {
+	SCALAR_TYPE t;
+	POINT_TYPE closestPt;
+	return distanceToPoint(pt, closestPt, t);
 }

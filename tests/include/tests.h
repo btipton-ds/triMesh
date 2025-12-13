@@ -66,4 +66,5 @@ bool testVector2();
 bool testVector3();
 bool testMesh();
 bool testMath();
-bool testBoundingBox();
+bool testBoundingBox2D();
+bool testBoundingBox3D();

@@ -156,92 +156,84 @@ bool CBoundingBox2D<SCALAR_TYPE>::intersects(const CBoundingBox2D& otherBox, SCA
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const
+bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const
 {
 	vector<POINT_TYPE> pts;
-	return intersectsInner(seg, pts, tol, false, skipAxis);
+	return intersectsInner(seg, pts, tol, false);
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, int skipAxis) const
+bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const
 {
-	return intersectsInner(seg, pts, tol, true, skipAxis);
+	return intersectsInner(seg, pts, tol, true);
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D_byref<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const
+bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D_byref<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const
 {
 	vector<POINT_TYPE> pts;
-	return intersectsInner(seg, pts, tol, false, skipAxis);
+	return intersectsInner(seg, pts, tol, false);
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D_byref<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, int skipAxis) const
+bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D_byref<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const
 {
-	return intersectsInner(seg, pts, tol, true, skipAxis);
+	return intersectsInner(seg, pts, tol, true);
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox2D<SCALAR_TYPE>::intersectsInner(const LineSegment2D<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const
+bool CBoundingBox2D<SCALAR_TYPE>::intersectsInner(const LineSegment2D<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll) const
 {
 	pts.clear();
 
-#if 0
 	if (seg.calLength() < tol)
 		return false;
 
-	for (size_t i = 0; i < 2; i++) {
-		if (skipAxis == i)
-			continue;
+	Vector2<SCALAR_TYPE> r = _max - _min;
+	Vector2<SCALAR_TYPE> boxPts[] = {
+		_min,
+		_min + Vector2<SCALAR_TYPE>(r[0], 0),
+		_max,
+		_min + Vector2<SCALAR_TYPE>(0, r[1]),
+	};
 
-		RayHit<SCALAR_TYPE> hit;
-		Plane_byref<SCALAR_TYPE> minPlane(_min, _axes[i]);
-		if (minPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
-			pts.push_back(hit.hitPt);
-			if (!getAll)
-				break;
-		}
-
-		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
-		if (maxPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
-			pts.push_back(hit.hitPt);
-			if (!getAll)
-				break;
+	bool result = true;
+	for (size_t i = 0; i < 4; i++) {
+		LineSegment2D_byref leg(boxPts[i], boxPts[(i + 1) % 4]);
+		Vector2<SCALAR_TYPE> iPt;
+		if (seg.intersects(leg, iPt, tol)) {
+			result = true;
+			pts.push_back(iPt);
 		}
 	}
-#endif
 
 	return !pts.empty();
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox2D<SCALAR_TYPE>::intersectsInner(const LineSegment2D_byref<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const
+bool CBoundingBox2D<SCALAR_TYPE>::intersectsInner(const LineSegment2D_byref<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll) const
 {
 	pts.clear();
 	if (seg.calLength() < tol)
 		return false;
 
-#if 0
-	for (size_t i = 0; i < 2; i++) {
-		if (skipAxis == i)
-			continue;
+	Vector2<SCALAR_TYPE> r = _max - _min;
+	Vector2<SCALAR_TYPE> boxPts[] = {
+		_min,
+		_min + Vector2<SCALAR_TYPE>(r[0], 0),
+		_max,
+		_min + Vector2<SCALAR_TYPE>(0, r[1]),
+	};
 
-		RayHit<SCALAR_TYPE> hit;
-		Plane_byref<SCALAR_TYPE> minPlane(_min, _axes[i]);
-		if (minPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
-			pts.push_back(hit.hitPt);
-			if (!getAll)
-				break;
-		}
-
-		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
-		if (maxPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
-			pts.push_back(hit.hitPt);
-			if (!getAll)
-				break;
+	bool result = true;
+	for (size_t i = 0; i < 4; i++) {
+		LineSegment2D_byref leg(boxPts[i], boxPts[(i + 1) % 4]);
+		Vector2<SCALAR_TYPE> iPt;
+		if (seg.intersects(leg, iPt, tol)) {
+			result = true;
+			pts.push_back(iPt);
 		}
 	}
-#endif
 
 	return !pts.empty();
 }
@@ -259,73 +251,55 @@ bool CBoundingBox2D<SCALAR_TYPE>::intersectsOrContains(const CBoundingBox2D& oth
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox2D<SCALAR_TYPE>::intersectsOrContains(const LineSegment2D<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const
+bool CBoundingBox2D<SCALAR_TYPE>::intersectsOrContains(const LineSegment2D<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const
 {
 	if (contains(seg._pt0, tol) || contains(seg._pt1, tol))
 		return true;
 
 	if (seg.calLength() < tol)
 		return false;
-#if 0
-	for (size_t i = 0; i < 2; i++) {
-		if (skipAxis == i)
-			continue;
 
-		RayHit<SCALAR_TYPE> hitPt;
-		Plane_byref<SCALAR_TYPE> minPlane(_min, _axes[i]);
-		if (minPlane.intersectLineSegment(seg, hitPt, tol) && contains(hitPt.hitPt, tol))
-			return true;
+	Vector2<SCALAR_TYPE> r = _max - _min;
+	Vector2<SCALAR_TYPE> pts[] = {
+		_min,
+		_min + Vector2<SCALAR_TYPE>(r[0], 0),
+		_max,
+		_min + Vector2<SCALAR_TYPE>(0, r[1]),
+	};
 
-		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
-		if (maxPlane.intersectLineSegment(seg, hitPt, tol) && contains(hitPt.hitPt, tol))
+	for (int i = 0; i < 4; i++) {
+		LineSegment2D_byref<SCALAR_TYPE> leg(pts[i], pts[(i + 1) % 4]);
+		Vector2<SCALAR_TYPE> iPt;
+		if (seg.intersects(leg, iPt, tol))
 			return true;
 	}
-#endif
-
 	return false;
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox2D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const {
-#if 0
-	for (int i = 0; i < 2; i++) {
-		RayHit<SCALAR_TYPE> hit;
+bool CBoundingBox2D<SCALAR_TYPE>::intersectsOrContains(const LineSegment2D_byref<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const
+{
+	if (contains(seg._pt0, tol) || contains(seg._pt1, tol))
+		return true;
 
-		Plane_byref<SCALAR_TYPE> minPlane(_min, _axes[i]);
-		if (minPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
-			return true;
-		}
+	if (seg.calLength() < tol)
+		return false;
 
-		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
-		if (maxPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
+	Vector2<SCALAR_TYPE> r = _max - _min;
+	Vector2<SCALAR_TYPE> pts[] = {
+		_min,
+		_min + Vector2<SCALAR_TYPE>(r[0], 0),
+		_max,
+		_min + Vector2<SCALAR_TYPE>(0, r[1]),
+	};
+
+	for (int i = 0; i < 4; i++) {
+		LineSegment2D_byref<SCALAR_TYPE> leg(pts[i], pts[(i + 1) % 4]);
+		Vector2<SCALAR_TYPE> iPt;
+		if (seg.intersects(leg, iPt, tol))
 			return true;
-		}
 	}
-#endif
 	return false;
-}
-
-template <class SCALAR_TYPE>
-bool CBoundingBox2D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const {
-	pts.clear();
-
-#if 0
-	for (int i = 0; i < 2; i++) {
-		RayHit<SCALAR_TYPE> hit;
-
-		Plane_byref<SCALAR_TYPE> minPlane(_min, _negAxes[i]);
-		if (minPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
-			pts.push_back(hit.hitPt);
-		}
-
-		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
-		if (maxPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
-			pts.push_back(hit.hitPt);
-		}
-	}
-#endif
-
-	return !pts.empty();
 }
 
 template <class SCALAR_TYPE>
@@ -333,21 +307,30 @@ bool CBoundingBox2D<SCALAR_TYPE>::intersectsOrContains(const POINT_TYPE& pt0, co
 {
 	if (contains(pt0, tol) || contains(pt1, tol) || contains(pt2, tol))
 		return true;
-#if 0
-	LineSegment<SCALAR_TYPE> seg;
-	for (int i = 0; i < 2; i++) {
-		Plane_byref<SCALAR_TYPE> minPlane(_min, _axes[i]);
-		if (minPlane.intersectTri(pt0, pt1, pt2, seg, tol) && intersectsOrContains(seg, tol, i /*Skip testing this axis*/)) {
-			return true;
-		}
 
-		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
-		if (maxPlane.intersectTri(pt0, pt1, pt2, seg, tol) && intersectsOrContains(seg, tol, i)) {
-			return true;
+	LineSegment2D_byref<SCALAR_TYPE> triSegs[] = { 
+		LineSegment2D_byref<SCALAR_TYPE>(pt0, pt1), 
+		LineSegment2D_byref<SCALAR_TYPE>(pt1, pt2),
+		LineSegment2D_byref<SCALAR_TYPE>(pt2, pt0),
+	};
+
+	Vector2<SCALAR_TYPE> r = _max - _min;
+	Vector2<SCALAR_TYPE> boxPts[] = {
+		_min,
+		_min + Vector2<SCALAR_TYPE>(r[0], 0),
+		_max,
+		_min + Vector2<SCALAR_TYPE>(0, r[1]),
+	};
+
+	for (int i = 0; i < 4; i++) {
+		LineSegment2D_byref<SCALAR_TYPE> leg(boxPts[i], boxPts[(i + 1) % 4]);
+		Vector2<SCALAR_TYPE> iPt;
+		for (int j = 0; j < 3; j++) {
+			const auto& seg = triSegs[j];
+			if (seg.intersects(leg, iPt, tol))
+				return true;
 		}
 	}
-#endif
-
 	return false;
 }
 

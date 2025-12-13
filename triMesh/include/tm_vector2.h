@@ -58,210 +58,275 @@ public:
 
 	Vector2() = default;
 	Vector2(const Vector2& src) = default;
-	inline Vector2(const Eigen::Matrix<T, 2, 1>& src)
-	{
-	}
-	inline Vector2(T x, T y)
-	{
-		_data[0] = x;
-		_data[1] = y;
-	}
-
-	inline Vector2(const T* data)
-	{
-		_data[0] = data[0];
-		_data[1] = data[1];
-	}
-
+	Vector2(const Eigen::Matrix<T, 2, 1>& src);
+	Vector2(T x, T y);
+	Vector2(const T* data);
 	template<class I>
-	inline const T& operator[](I i) const
-	{
-		return _data[i];
-	}
-
+	const T& operator[](I i) const;
 	template<class I>
-	inline T& operator[](I i)
-	{
-		return _data[i];
-	}
-
-	
-	inline bool operator == (const Vector2& rhs) {
-		return _data[0] == rhs._data[0] && _data[1] == rhs._data[1];
-	}
-
-	inline bool operator != (const Vector2& rhs) {
-		return _data[0] != rhs._data[0] || _data[1] != rhs._data[1];
-	}
-
-	inline bool operator < (const Vector2 & rhs) const {
-		int i = 0;
-		if (_data[i] < rhs._data[i])
-			return true;
-		else if (_data[i] > rhs._data[i])
-			return false;
-
-		i = 1;
-		if (_data[i] < rhs._data[i])
-			return true;
-		else if (_data[i] > rhs._data[i])
-			return false;
-
-
-		return false;
-	}
-
-	inline Vector2& operator -=(const Vector2& rhs)
-	{
-		auto pLhs = _data;
-		auto pRhs = rhs._data;
-		*pLhs++ -= *pRhs++;
-		*pLhs++ -= *pRhs++;
-
-		return *this;
-	}
-
-	inline Vector2& operator +=(const Vector2& rhs)
-	{
-		auto pLhs = _data;
-		auto pRhs = rhs._data;
-		*pLhs++ += *pRhs++;
-		*pLhs++ += *pRhs++;
-
-		return *this;
-	}
-
-	inline Vector2 operator -()  const
-	{
-		Vector2 result(*this);
-		auto d = result.data();
-		d[0] = -d[0];
-		d[1] = -d[1];
-		return result;
-	}
-
-	inline Vector2 operator -(const Vector2& rhs)  const
-	{
-		Vector2 result(*this);
-		result -= rhs;
-		return result;
-	}
-
-	inline Vector2 operator +(const Vector2& rhs)  const
-	{
-		Vector2 result(*this);
-		result += rhs;
-		return result;
-	}
-
-	inline T cross(const Vector2& rhs) const
-	{
-		T result = _data[0] * rhs._data[1] - _data[1] * rhs._data[0];
-
-		return result;
-	}
-
-	inline T dot(const Vector2& rhs) const
-	{
-		const auto d = data();
-		const auto dr = rhs.data();
-		return d[0] * dr[0] + d[1] * dr[1];
-	}
-
-	inline T squaredNorm() const
-	{
-		const auto d = data();
-		return d[0] * d[0] + d[1] * d[1];
-	}
-
-	inline T norm() const
-	{
-		return ::sqrt(squaredNorm());
-	}
-
+	T& operator[](I i);
+	bool operator == (const Vector2& rhs);
+	bool operator != (const Vector2& rhs);
+	bool operator < (const Vector2& rhs) const;
+	Vector2& operator -=(const Vector2& rhs);
+	Vector2& operator +=(const Vector2& rhs);
+	Vector2 operator -()  const;
+	Vector2 operator -(const Vector2& rhs)  const;
+	Vector2 operator +(const Vector2& rhs)  const;
+	T cross(const Vector2& rhs) const;
+	T dot(const Vector2& rhs) const;
+	T squaredNorm() const;
+	T norm() const;
 	template<class U>
-	inline Vector2& operator /=(U rhs)
-	{
-		T* d = data();
-		d[0] /= (T)rhs;
-		d[1] /= (T)rhs;
-
-		return *this;
-	}
-
+	Vector2& operator /=(U rhs);
 	template<class U>
-	inline Vector2& operator *=(U rhs)
-	{
-		T* d = data();
-		d[0] *= (T)rhs;
-		d[1] *= (T)rhs;
-
-		return *this;
-	}
-
+	Vector2& operator *=(U rhs);
 	template<class U>
-	inline Vector2 operator /(U rhs) const
-	{
-		Vector2 result(*this);
-		result /= (T)rhs;
-
-		return result;
-	}
-
+	Vector2 operator /(U rhs) const;
 	template<class U>
-	inline Vector2 operator *(U rhs) const
-	{
-		Vector2 result(*this);
-		result *= (T)rhs;
-
-		return result;
-	}
-
-	inline Vector2 normalized() const
-	{
-		Vector2 result(*this);
-		T lInv =  1 / result.norm();
-		auto d = result.data();
-		d[0] *= lInv;
-		d[1] *= lInv;
-
-		return result;
-	}
-
-	void normalize()
-	{
-		auto lInv = 1 / norm();
-		_data[0] *= lInv;
-		_data[1] *= lInv;
-	}
-
-	inline operator Eigen::Matrix<T, 2, 1>() const
-	{
-		Eigen::Matrix<T, 2, 1> result(_data[0], _data[1]);
-
-		return result;
-	}
-
-	inline const T* data() const
-	{
-		return _data;
-	}
-	inline T* data()
-	{
-		return _data;
-	}
-
-	inline bool isNAN() const
-	{
-		for (int i = 0; i < 2; i++) {
-			if (std::isnan(_data[i]))
-				return true;
-		}
-		return false;
-	}
+	Vector2 operator *(U rhs) const;
+	Vector2 normalized() const;
+	void normalize();
+	operator Eigen::Matrix<T, 2, 1>() const;
+	const T* data() const;
+	T* data();
+	bool isNAN() const;
 	private:
 		T _data[2] = { 0, 0 };
 };
+
+template <typename T>
+inline Vector2<T>::Vector2(const Eigen::Matrix<T, 2, 1>& src)
+{
+	_data[0] = src[0];
+	_data[1] = src[1];
+}
+
+template <typename T>
+inline Vector2<T>::Vector2(T x, T y)
+{
+	_data[0] = x;
+	_data[1] = y;
+}
+
+template <typename T>
+inline Vector2<T>::Vector2(const T* data)
+{
+	_data[0] = data[0];
+	_data[1] = data[1];
+}
+
+template <typename T>
+template<class I>
+inline const T& Vector2<T>::operator[](I i) const
+{
+	return _data[i];
+}
+
+template <typename T>
+template<class I>
+inline T& Vector2<T>::operator[](I i)
+{
+	return _data[i];
+}
+
+
+template <typename T>
+inline bool Vector2<T>::operator == (const Vector2& rhs) {
+	return _data[0] == rhs._data[0] && _data[1] == rhs._data[1];
+}
+
+template <typename T>
+inline bool Vector2<T>::operator != (const Vector2& rhs) {
+	return _data[0] != rhs._data[0] || _data[1] != rhs._data[1];
+}
+
+template <typename T>
+inline bool Vector2<T>::operator < (const Vector2& rhs) const {
+	int i = 0;
+	if (_data[i] < rhs._data[i])
+		return true;
+	else if (_data[i] > rhs._data[i])
+		return false;
+
+	i = 1;
+	if (_data[i] < rhs._data[i])
+		return true;
+	else if (_data[i] > rhs._data[i])
+		return false;
+
+
+	return false;
+}
+
+template <typename T>
+inline Vector2<T>& Vector2<T>::operator -=(const Vector2& rhs)
+{
+	auto pLhs = _data;
+	auto pRhs = rhs._data;
+	*pLhs++ -= *pRhs++;
+	*pLhs++ -= *pRhs++;
+
+	return *this;
+}
+
+template <typename T>
+inline Vector2<T>& Vector2<T>::operator +=(const Vector2& rhs)
+{
+	auto pLhs = _data;
+	auto pRhs = rhs._data;
+	*pLhs++ += *pRhs++;
+	*pLhs++ += *pRhs++;
+
+	return *this;
+}
+
+template <typename T>
+inline Vector2<T> Vector2<T>::operator -()  const
+{
+	Vector2 result(*this);
+	auto d = result.data();
+	d[0] = -d[0];
+	d[1] = -d[1];
+	return result;
+}
+
+template <typename T>
+inline Vector2<T> Vector2<T>::operator -(const Vector2& rhs)  const
+{
+	Vector2 result(*this);
+	result -= rhs;
+	return result;
+}
+
+template <typename T>
+inline Vector2<T> Vector2<T>::operator +(const Vector2& rhs)  const
+{
+	Vector2 result(*this);
+	result += rhs;
+	return result;
+}
+
+template <typename T>
+inline T Vector2<T>::cross(const Vector2& rhs) const
+{
+	T result = _data[0] * rhs._data[1] - _data[1] * rhs._data[0];
+
+	return result;
+}
+
+template <typename T>
+inline T Vector2<T>::dot(const Vector2& rhs) const
+{
+	const auto d = data();
+	const auto dr = rhs.data();
+	return d[0] * dr[0] + d[1] * dr[1];
+}
+
+template <typename T>
+inline T Vector2<T>::squaredNorm() const
+{
+	const auto d = data();
+	return d[0] * d[0] + d[1] * d[1];
+}
+
+template <typename T>
+inline T Vector2<T>::norm() const
+{
+	return ::sqrt(squaredNorm());
+}
+
+template <typename T>
+template<class U>
+inline Vector2<T>& Vector2<T>::operator /=(U rhs)
+{
+	T* d = data();
+	d[0] /= (T)rhs;
+	d[1] /= (T)rhs;
+
+	return *this;
+}
+
+template <typename T>
+template<class U>
+inline Vector2<T>& Vector2<T>::operator *=(U rhs)
+{
+	T* d = data();
+	d[0] *= (T)rhs;
+	d[1] *= (T)rhs;
+
+	return *this;
+}
+
+template <typename T>
+template<class U>
+inline Vector2<T> Vector2<T>::operator /(U rhs) const
+{
+	Vector2 result(*this);
+	result /= (T)rhs;
+
+	return result;
+}
+
+template <typename T>
+template<class U>
+inline Vector2<T> Vector2<T>::operator *(U rhs) const
+{
+	Vector2 result(*this);
+	result *= (T)rhs;
+
+	return result;
+}
+
+template <typename T>
+inline Vector2<T> Vector2<T>::normalized() const
+{
+	Vector2 result(*this);
+	T lInv = 1 / result.norm();
+	auto d = result.data();
+	d[0] *= lInv;
+	d[1] *= lInv;
+
+	return result;
+}
+
+template <typename T>
+void Vector2<T>::normalize()
+{
+	auto lInv = 1 / norm();
+	_data[0] *= lInv;
+	_data[1] *= lInv;
+}
+
+template <typename T>
+inline Vector2<T>::operator Eigen::Matrix<T, 2, 1>() const
+{
+	Eigen::Matrix<T, 2, 1> result(_data[0], _data[1]);
+
+	return result;
+}
+
+template <typename T>
+inline const T* Vector2<T>::data() const
+{
+	return _data;
+}
+
+template <typename T>
+inline T* Vector2<T>::data()
+{
+	return _data;
+}
+
+template <typename T>
+inline bool Vector2<T>::isNAN() const
+{
+	for (int i = 0; i < 2; i++) {
+		if (std::isnan(_data[i]))
+			return true;
+	}
+	return false;
+}
 
 template <typename T>
 Vector2<T> operator *(T lhs, const Vector2<T>& rhs)

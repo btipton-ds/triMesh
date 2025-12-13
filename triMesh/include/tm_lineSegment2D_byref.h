@@ -42,16 +42,8 @@ This file is part of the TriMesh library.
 #include <tm_vector2.h>
 
 template<class T>
-class Plane;
+struct LineSegment2D;
 
-template<class T>
-class Plane_byref;
-
-template<class T>
-struct Ray;
-
-template<class T>
-struct RayHit;
 
 template<class T>
 struct LineSegment2D_byref {
@@ -64,10 +56,12 @@ struct LineSegment2D_byref {
 	POINT_TYPE interpolate(SCALAR_TYPE t) const;
 	SCALAR_TYPE parameterize(const POINT_TYPE& pt) const;
 	bool contains(const POINT_TYPE& pt, SCALAR_TYPE& t, SCALAR_TYPE tol) const;
-	Ray<SCALAR_TYPE> getRay() const;
+	bool intersects(const LineSegment2D<T>& other, POINT_TYPE& iPt, SCALAR_TYPE tol) const;
+	bool intersects(const LineSegment2D_byref& other, POINT_TYPE& iPt, SCALAR_TYPE tol) const;
 
 	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const;
 	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt) const;
+	SCALAR_TYPE distanceToPointSqr(const POINT_TYPE& pt) const;
 
 	const POINT_TYPE &_pt0, &_pt1;
 };

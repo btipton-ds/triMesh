@@ -45,6 +45,7 @@ endif(WIN32)
 add_library (
     triMesh 
     "src/tm_boundingBox.cpp" 
+    "src/tm_boundingBox2D.cpp" 
     "src/tm_defaultTolerances.cpp"
     "src/tm_edge.cpp"
     "src/tm_fixedMath.cpp"
@@ -54,6 +55,7 @@ add_library (
     "src/tm_plane.cpp"
     "src/tm_plane_byref.cpp"
     "src/tm_lineSegment.cpp"
+    "src/tm_lineSegment2D.cpp"
     "src/tm_spatialSearch.cpp"
     "src/tm_vertex.cpp"
     "src/tm_vector2.cpp"
@@ -64,7 +66,7 @@ add_library (
 
     "../stlReader/src/readWriteStl.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
-   "include/tm_boundingBox2D.h" "src/tm_boundingBox2D.cpp" "include/tm_lineSegment2D.h" "include/tm_lineSegment2D_byref.h" "include/tm_spatialSearch2D.h")
+    "include/tm_codeTemplates.h")
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

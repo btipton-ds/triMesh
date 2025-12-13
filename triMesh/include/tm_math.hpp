@@ -92,8 +92,8 @@ size_t Vector3Set<V>::count(const V& v) const {
 	return result;
 }
 
-template<typename SCALAR_TYPE>
-Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
+template<class VECTOR_TYPE>
+VECTOR_TYPE safeNormalize(const VECTOR_TYPE& v) {
 	auto l = v.norm();
 	if (l > minNormalizeDivisor)
 		return v / l;

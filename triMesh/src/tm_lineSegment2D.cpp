@@ -1,5 +1,3 @@
-#pragma once
-
 /*
 
 This file is part of the TriMesh library.
@@ -27,44 +25,13 @@ This file is part of the TriMesh library.
 
 	Dark Sky Innovative Solutions http://darkskyinnovation.com/
 
-	NOTE****
-	LineSegment DOES NOT preserve point order. It sorts the points so the "smaller" comes first using the Vertex3 operator < method.
-	This allows LineSegment to be used in sets and maps.
 */
 
-#include <tm_defines.h>
+#include <tm_lineSegment2D.hpp>
+#include <tm_lineSegment2D_byref.hpp>
 
-#include <cmath>
-#include <vector>
-#include <climits>
-#include <cfloat>
+template struct LineSegment2D<double>;
+template struct LineSegment2D<float>;
 
-#include <tm_vector2.h>
-
-template<class T>
-struct LineSegment2D_byref;
-
-template<class T>
-struct LineSegment2D {
-	using SCALAR_TYPE = T;
-	using POINT_TYPE = Vector2<SCALAR_TYPE>;
-
-	LineSegment2D() = default;
-	LineSegment2D(const POINT_TYPE& p0, const POINT_TYPE& p1);
-	SCALAR_TYPE calLength() const;
-	POINT_TYPE calcDir() const;
-	POINT_TYPE interpolate(SCALAR_TYPE t) const;
-	SCALAR_TYPE parameterize(const POINT_TYPE& pt) const;
-	bool contains(const POINT_TYPE& pt, SCALAR_TYPE& t, SCALAR_TYPE tol) const;
-	bool intersects(const LineSegment2D& other, POINT_TYPE& iPt, SCALAR_TYPE tol) const;
-	bool intersects(const LineSegment2D_byref<T>& other, POINT_TYPE& iPt, SCALAR_TYPE tol) const;
-
-	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt, POINT_TYPE& closestPt, SCALAR_TYPE& t) const;
-	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const;
-	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt) const;
-
-	POINT_TYPE _pt0, _pt1;
-};
-
-using LineSegment2Dd = LineSegment2D<double>;
-using LineSegment2Df = LineSegment2D<float>;
+template struct LineSegment2D_byref<double>;
+template struct LineSegment2D_byref<float>;
