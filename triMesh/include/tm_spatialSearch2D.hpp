@@ -174,15 +174,6 @@ size_t CSSB_DCL_2D::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, 
 }
 
 CSSB_TMPL_2D
-size_t CSSB_DCL_2D::biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const {
-	hits.clear();
-
-	biDirRayCastRecursive(ray, hits);
-
-	return hits.size();
-}
-
-CSSB_TMPL_2D
 template<class FUNC>
 void CSSB_DCL_2D::traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType testType) const {
 	if (containsBbox(_bbox, bbox, testType)) {
@@ -201,28 +192,6 @@ void CSSB_DCL_2D::traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType t
 			_pLeft->traverse(bbox, func, testType);
 		if (_pRight)
 			_pRight->traverse(bbox, func, testType);
-	}
-}
-
-CSSB_TMPL_2D
-template<class FUNC>
-void CSSB_DCL_2D::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol) const {
-	if (_bbox.intersects(ray, tol)) {
-		if (_pContents && _pContents->_bbox.intersects(ray, tol)) {
-			size_t num = _pContents->_vals.size();
-			auto pData = _pContents->_vals.data();
-			for (size_t i = 0; i < num; i++) {
-				if (pData->getBBox().intersects(ray, tol)) {
-					if (!func(ray, pData->getIndex()))
-						return;
-				}
-				pData++;
-			}
-		}
-		if (_pLeft)
-			_pLeft->biDirRayCastTraverse(ray, func, tol);
-		if (_pRight)
-			_pRight->biDirRayCastTraverse(ray, func, tol);
 	}
 }
 
@@ -370,7 +339,7 @@ void CSSB_DCL_2D::addToContents(const Entry& newEntry)
 
 	auto minPt = oldMin;
 	auto maxPt = oldMax;
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 2; i++) {
 		if (minPt[i] < oldMin[i])
 			minPt[i] = oldMin[i];
 		if (maxPt[i] > oldMax[i])
@@ -415,23 +384,6 @@ bool CSSB_DCL_2D::add(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
 CSSB_TMPL_2D
 bool CSSB_DCL_2D::remove(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
 	return remove(Entry(bbox, index));
-}
-
-CSSB_TMPL_2D
-void CSSB_DCL_2D::biDirRayCastRecursive(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const {
-	if (_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
-		if (_pContents && _pContents->_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
-			for (const auto& entry : _pContents->_vals) {
-				if (entry.getBBox().intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
-					hits.push_back(entry.getIndex());
-				}
-			}
-		}
-		if (_pLeft)
-			_pLeft->biDirRayCastRecursive(ray, hits);
-		if (_pRight)
-			_pRight->biDirRayCastRecursive(ray, hits);
-	}
 }
 
 CSSB_TMPL_2D

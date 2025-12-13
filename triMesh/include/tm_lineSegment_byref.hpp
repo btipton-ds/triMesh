@@ -94,6 +94,11 @@ bool LineSegment_byref<T>::contains(const POINT_TYPE& pt, LineSegment_byref<T>::
 }
 
 template<class T>
+inline Ray<typename LineSegment_byref<T>::SCALAR_TYPE> LineSegment_byref<T>::getRay() const {
+	return Ray<SCALAR_TYPE>(_pt0, calcDir());
+}
+
+template<class T>
 typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::distanceToPoint(const POINT_TYPE& pt) const {
 	SCALAR_TYPE t;
 	return distanceToPoint(pt, t);
@@ -123,4 +128,47 @@ typename LineSegment_byref<T>::SCALAR_TYPE LineSegment_byref<T>::distanceToPoint
 		dist = v0.norm();
 
 	return dist;
+}
+
+template<class T>
+bool LineSegment_byref<T>::intersectTri(const POINT_TYPE* pts[3], RayHit<T>& hit, T tol) const
+{
+	POINT_TYPE unitDir = _pt1 - _pt0;
+	auto l = unitDir.norm();
+	unitDir /= l;
+	Ray<SCALAR_TYPE> ray(_pt0, unitDir);
+	if (intersectRayTri(getRay(), pts, hit, tol)) {
+		auto d = hit.dist;
+		if (-tol < d && d < l + tol) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	return false;
+}
+
+template<class T>
+inline bool LineSegment_byref<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<T>& hit, T tol) const
+{
+	const POINT_TYPE* pts[] = { &pt0, &pt1, &pt2 };
+	return intersectTri(pts, hit, tol);
+}
+
+template<class T>
+bool LineSegment_byref<T>::intersectPlane(const Plane<T>& plane, RayHit<T>& hit, T tol) const
+{
+	if (plane.intersectRay(getRay(), hit, tol)) {
+		POINT_TYPE v = hit.hitPt - _pt0;
+		SCALAR_TYPE t = v.dot(calcDir()) / calLength();
+		return 0 <= t && t <= 1;
+	}
+	return false;
+}
+
+template<class T>
+bool LineSegment_byref<T>::intersectPlane(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
+{
+	return intersectPlane(Plane<SCALAR_TYPE>(pts), hit, tol);
 }
