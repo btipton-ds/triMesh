@@ -64,7 +64,7 @@ add_library (
 
     "../stlReader/src/readWriteStl.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
-   "include/tm_boundingBox2D.h" "src/tm_boundingBox2D.cpp" "include/tm_lineSegment2D.h" "include/tm_lineSegment2D_byref.h")
+   "include/tm_boundingBox2D.h" "src/tm_boundingBox2D.cpp" "include/tm_lineSegment2D.h" "include/tm_lineSegment2D_byref.h" "include/tm_spatialSearch2D.h")
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

@@ -156,8 +156,7 @@ public:
 
 	inline T cross(const Vector2& rhs) const
 	{
-		Vector2 result;
-		result = _data[0] * rhs._data[1] - _data[1] * rhs._data[0];
+		T result = _data[0] * rhs._data[1] - _data[1] * rhs._data[0];
 
 		return result;
 	}

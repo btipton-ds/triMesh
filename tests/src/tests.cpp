@@ -658,6 +658,7 @@ bool testTriLERP()
 bool runTests() {
 	TEST_TRUE(testBiLERP(), "Failed testBiLERP");
 	TEST_TRUE(testTriLERP(), "Failed testTriLERP");
+	TEST_TRUE(testVector2(), "Failed testVector2");
 	TEST_TRUE(testVector3(), "Failed testVector3");
 	TEST_TRUE(testMath(), "Failed testMath");
 	TEST_TRUE(testBoundingBox(), "Failed testBoundingBox");

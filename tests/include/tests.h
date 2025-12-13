@@ -62,6 +62,7 @@ inline bool testTrue(bool pass)
 }
 bool runTests();
 
+bool testVector2();
 bool testVector3();
 bool testMesh();
 bool testMath();

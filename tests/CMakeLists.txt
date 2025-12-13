@@ -54,6 +54,7 @@ add_executable (testMath
 "src/testMath.cpp" 
 "src/testBoundingBox.cpp" 
 "src/testVector3.cpp"
+"src/testVector2.cpp"
 )
 
 target_link_libraries("testMath" 

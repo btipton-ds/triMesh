@@ -89,8 +89,8 @@ private:
 	POINT_TYPE _min, _max;
 };
 
-using CBoundingBox3Dd = CBoundingBox2D<double>;
-using CBoundingBox3Df = CBoundingBox2D<float>;
+using CBoundingBox2Dd = CBoundingBox2D<double>;
+using CBoundingBox2Df = CBoundingBox2D<float>;
 
 template <typename SCALAR_TYPE>
 inline void CBoundingBox2D<SCALAR_TYPE>::write(std::ostream& out) const

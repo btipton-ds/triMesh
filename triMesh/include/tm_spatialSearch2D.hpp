@@ -1,0 +1,527 @@
+#pragma once
+/*
+
+This file is part of the TriMesh library.
+
+	The TriMesh library is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	The TriMesh library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	This link provides the exact terms of the GPL license <https://www.gnu.org/licenses/>.
+
+	The author's interpretation of GPL 3 is that if you receive money for the use or distribution of the TriMesh Library or a derivative product, GPL 3 no longer applies.
+
+	Under those circumstances, the author expects and may legally pursue a reasoble share of the income. To avoid the complexity of agreements and negotiation, the author makes
+	no specific demands in this regard. Compensation of roughly 1% of net or $5 per user license seems appropriate, but is not legally binding.
+
+	In lay terms, if you make a profit by using the TriMesh library (violating the spirit of Open Source Software), I expect a reasonable share for my efforts.
+
+	Robert R Tipton - Author
+
+	Dark Sky Innovative Solutions http://darkskyinnovation.com/
+
+*/
+
+#include <tm_defines.h>
+#include <iostream>
+#include <thread>
+#include <tm_spatialSearch2D.h>
+
+#define CSSB_TMPL_2D template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
+#define CSSB_DCL_2D CSpatialSearchBase2D<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>
+#define CSSB_PTR_DCL_2D CSpatialSearchBasePtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>
+
+#define DO_SPATIAL_SEARCH_TREE_VERIFICATION 0
+
+CSSB_TMPL_2D
+inline CSSB_DCL_2D::Entry::Entry(const BOX_TYPE& box, const INDEX_TYPE& idx)
+	: _index(idx)
+	, _bbox(box) {
+
+}
+
+CSSB_TMPL_2D
+inline const INDEX_TYPE& CSSB_DCL_2D::Entry::getIndex() const
+{
+	return _index;
+}
+
+CSSB_TMPL_2D
+inline const typename CSSB_DCL_2D::BOX_TYPE& CSSB_DCL_2D::Entry::getBBox() const
+{
+	return _bbox;
+}
+
+CSSB_TMPL_2D
+inline bool CSSB_DCL_2D::Entry::operator < (const Entry& rhs) const
+{
+	return _index < rhs._index;
+}
+
+CSSB_TMPL_2D
+CSSB_DCL_2D::CSpatialSearchBase2D(const BOX_TYPE& bbox, int axis)
+	: std::enable_shared_from_this<CSpatialSearchBase2D>()
+	, _bbox(bbox)
+	, _axis(axis)
+{
+	static std::atomic<size_t> s_count;
+	_id = s_count++;
+}
+
+CSSB_TMPL_2D
+CSSB_DCL_2D::~CSpatialSearchBase2D()
+{
+	clear();
+}
+
+CSSB_TMPL_2D
+void CSSB_DCL_2D::reset(const BOX_TYPE& bbox) {
+	clear();
+	_bbox = bbox;
+}
+
+CSSB_TMPL_2D
+void CSSB_DCL_2D::clear() {
+	_numInTree = 0;
+	_axis = 0;
+	_pLeft = _pRight = nullptr;
+	_pContents = nullptr;
+	_numInTree = 0;
+}
+
+CSSB_TMPL_2D
+size_t CSSB_DCL_2D::numBytes() const
+{
+	size_t result = sizeof(CSpatialSearchBase2D<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>);
+
+	if (_pContents)
+		result += _pContents->_vals.capacity() * sizeof(Entry);
+	if (_pLeft)
+		result += _pLeft->numBytes();
+	if (_pRight)
+		result += _pRight->numBytes();
+	return result;
+}
+
+CSSB_TMPL_2D
+size_t CSSB_DCL_2D::find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType testType) const {
+	if (containsBbox(_bbox, bbox, testType)) {
+		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				if (containsEntry(bbox, *pData, testType)) {
+					result.push_back(*pData);
+				}
+				pData++;
+			}
+		}
+		if (_pLeft)
+			_pLeft->find(bbox, result, testType);
+		if (_pRight)
+			_pRight->find(bbox, result, testType);
+	}
+	return result.size();
+}
+
+CSSB_TMPL_2D
+size_t CSSB_DCL_2D::count(const BOX_TYPE& bbox, BoxTestType testType) const {
+	size_t result = 0;
+	if (containsBbox(_bbox, bbox, testType)) {
+		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				if (containsEntry(bbox, *pData, testType)) {
+					result++;
+				}
+				pData++;
+			}
+		}
+		if (_pLeft)
+			result += _pLeft->count(bbox, testType);
+		if (_pRight)
+			result += _pRight->count(bbox, testType);
+	}
+	return result;
+}
+
+CSSB_TMPL_2D
+size_t CSSB_DCL_2D::find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType testType) const {
+	if (containsBbox(_bbox, bbox, testType)) {
+		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				if (containsEntry(bbox, *pData, testType)) {
+					result.push_back(pData->getIndex());
+				}
+				pData++;
+			}
+		}
+		if (_pLeft)
+			_pLeft->find(bbox, result, testType);
+		if (_pRight)
+			_pRight->find(bbox, result, testType);
+	}
+	return result.size();
+}
+
+CSSB_TMPL_2D
+size_t CSSB_DCL_2D::biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const {
+	hits.clear();
+
+	biDirRayCastRecursive(ray, hits);
+
+	return hits.size();
+}
+
+CSSB_TMPL_2D
+template<class FUNC>
+void CSSB_DCL_2D::traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType testType) const {
+	if (containsBbox(_bbox, bbox, testType)) {
+		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				if (containsEntry(bbox, *pData, testType)) {
+					if (!func(pData->getIndex()))
+						return;
+				}
+				pData++;
+			}
+		}
+		if (_pLeft)
+			_pLeft->traverse(bbox, func, testType);
+		if (_pRight)
+			_pRight->traverse(bbox, func, testType);
+	}
+}
+
+CSSB_TMPL_2D
+template<class FUNC>
+void CSSB_DCL_2D::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol) const {
+	if (_bbox.intersects(ray, tol)) {
+		if (_pContents && _pContents->_bbox.intersects(ray, tol)) {
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				if (pData->getBBox().intersects(ray, tol)) {
+					if (!func(ray, pData->getIndex()))
+						return;
+				}
+				pData++;
+			}
+		}
+		if (_pLeft)
+			_pLeft->biDirRayCastTraverse(ray, func, tol);
+		if (_pRight)
+			_pRight->biDirRayCastTraverse(ray, func, tol);
+	}
+}
+
+CSSB_TMPL_2D
+typename CSSB_DCL_2D::SpatialSearchBaseConstPtr CSSB_DCL_2D::getSubTree(const BOX_TYPE& bbox, BoxTestType testType) const
+{
+#if 0
+	return this->shared_from_this();
+#else
+	std::vector<INDEX_TYPE> entries;
+	if (find(bbox, entries, testType)) {
+#if !(DO_SPATIAL_SEARCH_TREE_VERIFICATION && defined(_DEBUG))
+		entries.clear();
+#endif
+		std::shared_ptr<CSpatialSearchBase2D> result = std::make_shared<CSpatialSearchBase2D>(_bbox, _axis);
+		copyTreeToReducedTree(bbox, result, testType);
+
+#if DO_SPATIAL_SEARCH_TREE_VERIFICATION && defined(_DEBUG)
+		std::vector<INDEX_TYPE> entries1;
+		if (result) {
+			if (result->find(bbox, refineFunc, entries1)) {
+				if (entries.size() == entries1.size()) {
+					set<INDEX_TYPE> test;
+					test.insert(entries1.begin(), entries1.end());
+					for (const auto& entry : entries) {
+						if (!test.contains(entry)) {
+							assert(!"Subtree search contents did not match source tree search contents.");
+						}
+					}
+				}
+				else {
+					assert(!"Subtree search size did not match source tree search size.");
+				}
+			}
+			else {
+				assert(!"Subtree search result did not match source tree search result.");
+			}
+		}
+#endif // _DEBUG
+		return result;
+	}
+	return nullptr;
+#endif
+}
+
+CSSB_TMPL_2D
+void CSSB_DCL_2D::copyTreeToReducedTree(const BOX_TYPE& smallerBbox, SpatialSearchBasePtr& dst, BoxTestType testType) const
+{
+	dst->setSubContents(smallerBbox, this, testType);
+
+	if (_pLeft) {
+		size_t n = _pLeft->count(smallerBbox, testType);
+		if (n > 0) {
+			dst->_pLeft = std::make_shared<CSpatialSearchBase2D>(_pLeft->_bbox, _pLeft->_axis);
+			_pLeft->copyTreeToReducedTree(smallerBbox, dst->_pLeft, testType);
+			assert(dst->_pLeft->count(smallerBbox, testType) == n);
+			dst->_numInTree += dst->_pLeft->_numInTree;
+		}
+	}
+
+	if (_pRight) {
+		size_t n = _pRight->count(smallerBbox, testType);
+		if (n > 0) {
+			dst->_pRight = std::make_shared<CSpatialSearchBase2D>(_pRight->_bbox, _pRight->_axis);
+			_pRight->copyTreeToReducedTree(smallerBbox, dst->_pRight, testType);
+			assert(dst->_pRight->count(smallerBbox, testType) == n);
+			dst->_numInTree += dst->_pRight->_numInTree;
+		}
+	}
+}
+
+CSSB_TMPL_2D
+bool CSSB_DCL_2D::add(const Entry& newEntry, int depth) {
+	if (!_bbox.contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
+		return false;
+
+	if (_pContents) {
+		size_t num = _pContents->_vals.size();
+		auto pData = _pContents->_vals.data();
+		for (size_t i = 0; i < num; i++) {
+			if (pData->getIndex() == newEntry.getIndex() && pData->getBBox().contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
+				assert(!"duplicate");
+				return false;
+			}
+			pData++;
+		}
+	}
+
+	if (_pLeft && _pLeft->add(newEntry, depth + 1)) {
+		_numInTree++;
+		return true;
+	} if (_pRight && _pRight->add(newEntry, depth + 1)) {
+		_numInTree++;
+		return true;
+	}
+
+	addToContents(newEntry);
+	_numInTree++;
+
+	// Split node and add to correct node
+	if (!_pLeft && _pContents->_vals.size() > ENTRY_LIMIT)
+		split(depth);
+
+	return true;
+
+}
+
+CSSB_TMPL_2D
+void CSSB_DCL_2D::setSubContents(const BOX_TYPE& smallerBbox, const CSpatialSearchBase2D* pSrc, BoxTestType testType)
+{
+	const auto tol = (SCALAR_TYPE)SAME_DIST_TOL;
+
+	if (!pSrc || !pSrc->_pContents)
+		return;
+
+	if (containsBbox(pSrc->_pContents->_bbox, smallerBbox, testType)) {
+		size_t n = 0;
+		for (auto& entry : pSrc->_pContents->_vals) {
+			if (containsEntry(smallerBbox, entry, testType)) {
+				n++;
+			}
+		}
+
+		if (n != 0) {
+			_pContents = pSrc->_pContents;
+			_numInTree += _pContents->_vals.size();
+		}
+	}
+
+}
+
+CSSB_TMPL_2D
+void CSSB_DCL_2D::addToContents(const Entry& newEntry)
+{
+	if (!_pContents)
+		_pContents = std::make_shared<Contents>();
+
+	_pContents->_vals.push_back(newEntry);
+
+	// Need to clip the newBox to the limits of the current box or ray casting will return false positives.
+	BOX_TYPE newBox(_bbox);
+	newBox.merge(newEntry.getBBox());
+	auto& oldMin = newBox.getMin();
+	auto& oldMax = newBox.getMax();
+
+	auto minPt = oldMin;
+	auto maxPt = oldMax;
+	for (int i = 0; i < 3; i++) {
+		if (minPt[i] < oldMin[i])
+			minPt[i] = oldMin[i];
+		if (maxPt[i] > oldMax[i])
+			maxPt[i] = oldMax[i];
+	}
+	newBox = BOX_TYPE(minPt, maxPt);
+	_pContents->_bbox.merge(newBox);
+}
+
+CSSB_TMPL_2D
+bool CSSB_DCL_2D::remove(const Entry& newEntry) {
+	if (_bbox.contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
+		if (_pContents) {
+			for (size_t idx = 0; idx < _pContents->_vals.size(); idx++) {
+				const auto& curEntry = _pContents->_vals[idx];
+				if (curEntry.getIndex() == newEntry.getIndex() && curEntry.getBBox().contains(newEntry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL)) {
+					_pContents->_vals.erase(_pContents->_vals.begin() + idx);
+					_numInTree--;
+					return true;
+				}
+			}
+		}
+
+		if (_pLeft && _pLeft->remove(newEntry)) {
+			// TODO prune dead branch
+			_numInTree--;
+			return true;
+		} if (_pRight && _pRight->remove(newEntry)) {
+			// TODO prune dead branch
+			_numInTree--;
+			return true;
+		}
+	}
+	return false;
+}
+
+CSSB_TMPL_2D
+bool CSSB_DCL_2D::add(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
+	return add(Entry(bbox, index), 0);
+}
+
+CSSB_TMPL_2D
+bool CSSB_DCL_2D::remove(const BOX_TYPE& bbox, const INDEX_TYPE& index) {
+	return remove(Entry(bbox, index));
+}
+
+CSSB_TMPL_2D
+void CSSB_DCL_2D::biDirRayCastRecursive(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const {
+	if (_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
+		if (_pContents && _pContents->_bbox.intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
+			for (const auto& entry : _pContents->_vals) {
+				if (entry.getBBox().intersects(ray, (SCALAR_TYPE)SAME_DIST_TOL)) {
+					hits.push_back(entry.getIndex());
+				}
+			}
+		}
+		if (_pLeft)
+			_pLeft->biDirRayCastRecursive(ray, hits);
+		if (_pRight)
+			_pRight->biDirRayCastRecursive(ray, hits);
+	}
+}
+
+CSSB_TMPL_2D
+void CSSB_DCL_2D::dump(std::wostream& out, size_t depth) const
+{
+	std::wstring pad = L"";
+	for (size_t i = 0; i < depth; i++)
+		pad += L"   ";
+	std::wstring axisStr = L"XAxis";
+	if (_axis == 1)
+		axisStr = L"YAxis";
+	out << pad << "Depth: " << depth << "\n";
+	out << pad << _bbox.getMin()[0] << " " << _bbox.getMin()[1] << " " << _bbox.getMin()[2] << "\n";
+	out << pad << _bbox.getMax()[0] << " " << _bbox.getMax()[1] << " " << _bbox.getMax()[2] << "\n";
+	if (_pContents) {
+		out << pad << axisStr << " " << _pContents->_vals.size() << "\n";
+		for (const auto& entry : _pContents->_vals) {
+			out << pad << "  " << entry.getIndex() << "\n";
+			out << pad << "  " << entry.getBBox().getMin()[0] << " " << entry.getBBox().getMin()[1] << " " << entry.getBBox().getMin()[2] << "\n";
+			out << pad << "  " << entry.getBBox().getMax()[0] << " " << entry.getBBox().getMax()[1] << " " << entry.getBBox().getMax()[2] << "\n";
+		}
+	}
+	if (_pLeft)
+		_pLeft->dump(out, depth + 1);
+	if (_pRight)
+		_pRight->dump(out, depth + 1);
+}
+
+CSSB_TMPL_2D
+void CSSB_DCL_2D::split(int depth) {
+	BOX_TYPE leftBBox, rightBBox;
+	_bbox.split(_axis, leftBBox, rightBBox, (SCALAR_TYPE)0.10);
+	int nextAxis = (_axis + 1) % 2;
+	_pLeft = std::make_shared<CSpatialSearchBase2D>(leftBBox, nextAxis);
+	_pRight = std::make_shared<CSpatialSearchBase2D>(rightBBox, nextAxis);
+	assert(_pContents);
+	const std::vector<Entry> temp(_pContents->_vals);
+	_pContents = nullptr;
+
+	for (const auto& entry : temp) {
+		if (leftBBox.contains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
+			_pLeft->add(entry, depth + 1);
+		else if (rightBBox.contains(entry.getBBox(), (SCALAR_TYPE)SAME_DIST_TOL))
+			_pRight->add(entry, depth + 1);
+		else {
+			addToContents(entry);
+		}
+	}
+
+}
+
+CSSB_TMPL_2D
+inline bool CSSB_DCL_2D::containsBbox(const BOX_TYPE& bbox, const BOX_TYPE& otherBbox, BoxTestType testType)
+{
+	bool result = false;
+	switch (testType) {
+		default:
+		case BoxTestType::IntersectsOrContains:
+			result = bbox.intersectsOrContains(otherBbox, (SCALAR_TYPE)SAME_DIST_TOL);
+			break;
+		case BoxTestType::Contains:
+			result = bbox.contains(otherBbox, (SCALAR_TYPE)SAME_DIST_TOL);
+			break;
+		case BoxTestType::Intersects:
+			result = bbox.intersects(otherBbox, (SCALAR_TYPE)SAME_DIST_TOL);
+			break;
+	}
+
+	return result;
+}
+
+CSSB_TMPL_2D
+inline bool CSSB_DCL_2D::containsEntry(const BOX_TYPE& bbox, const Entry& entry, BoxTestType testType)
+{
+	const auto& otherBbox = entry.getBBox();
+
+	bool result = false;
+	switch (testType) {
+	default:
+	case BoxTestType::IntersectsOrContains:
+		result = bbox.intersectsOrContains(otherBbox, (SCALAR_TYPE)SAME_DIST_TOL);
+		break;
+	case BoxTestType::Contains:
+		result = bbox.contains(otherBbox, (SCALAR_TYPE)SAME_DIST_TOL);
+		break;
+	case BoxTestType::Intersects:
+		result = bbox.intersects(otherBbox, (SCALAR_TYPE)SAME_DIST_TOL);
+		break;
+	}
+
+	return result;
+}
+
