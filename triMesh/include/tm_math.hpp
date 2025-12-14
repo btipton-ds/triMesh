@@ -630,11 +630,7 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 	T distSqr = (guess - pt).squaredNorm();
 	bool done = distSqr < tolSqr;
 
-	static std::atomic<size_t> numCalls(0);
-	static std::atomic<size_t> numPasses(0);
-	numCalls++;
 	while (!done && count++ < 100) {
-		numPasses++;
 		for (int axis = 0; axis < 3; axis++) {
 			auto oldVal = tuv[axis];
 
@@ -655,16 +651,8 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 		distSqr = (guess - pt).squaredNorm();
 		done = distSqr < tolSqr;
 	}
-	if (done) {
-		if (numCalls % 100 == 0) {
-			static std::mutex mut;
-			std::lock_guard<std::mutex> lg(mut);
-			double avgPassesPerCall = numPasses / (double)numCalls;
-			std::cout << "Average passes / call " << avgPassesPerCall << "\n";
-		}
-		return true;
-	}
-	return false;
+
+	return done;
 #endif
 }
 
