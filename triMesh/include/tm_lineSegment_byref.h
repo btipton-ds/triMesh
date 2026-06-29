@@ -75,6 +75,11 @@ struct LineSegment_byref {
 	bool intersectPlane(const Plane_byref<SCALAR_TYPE>& plane, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
 	bool intersectPlane(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
 
+	bool isCoincident(const POINT_TYPE& pt, SCALAR_TYPE tol) const;
+	bool isCoincident(const LineSegment<T>& other, SCALAR_TYPE tol) const;
+	bool isCoincident(const LineSegment_byref<T>& other, SCALAR_TYPE tol) const;
+	bool isCoincident(const Ray<T>& other, SCALAR_TYPE tol) const;
+
 	const POINT_TYPE &_pt0, &_pt1;
 };
 

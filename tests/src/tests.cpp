@@ -656,8 +656,6 @@ bool testTriLERP()
 }
 
 bool runTests() {
-	TEST_TRUE(testBiLERP(), "Failed testBiLERP");
-	TEST_TRUE(testTriLERP(), "Failed testTriLERP");
 	TEST_TRUE(testVector2(), "Failed testVector2");
 	TEST_TRUE(testVector3(), "Failed testVector3");
 	TEST_TRUE(testMath(), "Failed testMath");
@@ -665,6 +663,8 @@ bool runTests() {
 	TEST_TRUE(testBoundingBox2D(), "Failed testBoundingBox2D");
 	TEST_TRUE(testMesh(), "Failed testMesh");
 	TEST_TRUE(testMesh2(), "Failed testMesh2");
+	TEST_TRUE(testBiLERP(), "Failed testBiLERP");
+	TEST_TRUE(testTriLERP(), "Failed testTriLERP");
 
 	cout << "All tests passed\n";
 	return true;
