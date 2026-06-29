@@ -42,15 +42,7 @@ This file is part of the TriMesh library.
 
 #include <limits>
 #include <iostream>
-
-template<typename SCALAR_TYPE>
-SCALAR_TYPE defaultVal();
-
-// NOTE CRITICAL - Eigen has an intermittent error SOMEWHERE that was causing nondeterministic errors in intersections!
-// Vector3 had beend defined the same as Vector2, using Vector3 = Eigen::Matrix<T, 3, 1>, switching between our own and Eigen got rid
-// of the nondeterminism. That cost almost 2 months and the error was never found.
-//
-// If we switch back to Eigen, this must be identified and fixed.
+#include <tm_defaultTolerances.h>
 
 template <typename T>
 class Vector3
@@ -302,18 +294,11 @@ std::ostream& operator << (std::ostream& out, const Vector3<T>& val)
 	return out;
 }
 
-// NOTE Vector3 using Eigen had a nondeterministic error. We may need to change Vector2 as well, but it uses very few features - probably safe.
-template <typename T>
-using Vector2 = Eigen::Matrix<T, 2, 1>;
-
 using Vector3d = Vector3<double>;
 using Vector3f = Vector3<float>;
 
 // using size_t allows indexing into stl containers
 using Vector3i = Vector3<size_t>;
-
-template<class T>
-T defaultDistTol();
 
 template<class T>
 bool equalTol(const Vector3<T>& val0, const Vector3<T>& val1, T tol = defaultDistTol<T>());

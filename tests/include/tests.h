@@ -31,13 +31,23 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
+#include <string>
+#include <iostream>
+
+inline bool testTrue(bool pass) 
+{ 
+	if (!pass) {
+		return false;
+	} 
+	return true;
+}
+
 #define TEST_TRUE(FUNC, MESSAGE) \
-{ \
-	bool result = (FUNC); \
-	if (!result) { \
-		cout << MESSAGE << " fail\n"; \
-		return false; \
-	} \
+{\
+	if (!testTrue((FUNC))) {\
+		std::cout << MESSAGE << " fail\n";\
+		return false;\
+	}\
 }
 
 #define TEST_FALSE(FUNC, MESSAGE) TEST_TRUE(!(FUNC), MESSAGE)
@@ -52,8 +62,9 @@ This file is part of the TriMesh library.
 }
 bool runTests();
 
+bool testVector2();
 bool testVector3();
 bool testMesh();
 bool testMath();
-bool testBoundingBox();
-bool testLERP();
+bool testBoundingBox2D();
+bool testBoundingBox3D();

@@ -636,7 +636,7 @@ bool CMesh::verifyTris(size_t triIdx) const
 	{
 		BoundingBox bbox = getTriBBox(triIdx);
 		vector<size_t> foundTris;
-		_pTriTree->find(bbox, nullptr, foundTris);
+		_pTriTree->find(bbox, foundTris);
 		bool found = false;
 		for (const auto& idx : foundTris) {
 			if (idx == triIdx) {
@@ -671,7 +671,7 @@ bool CMesh::verifyVerts(size_t vertIdx) const
 	{
 		BoundingBox bbox = getVertBBox(vertIdx);
 		vector<size_t> foundTris;
-		_pVertTree->find(bbox, nullptr, foundTris);
+		_pVertTree->find(bbox, foundTris);
 		bool found = false;
 		for (const auto& idx : foundTris) {
 			if (idx == vertIdx) {
@@ -703,7 +703,7 @@ bool CMesh::verifyEdges(size_t edgeIdx, bool allowEmpty) const
 	{
 		BoundingBox bbox = getEdgeBBox(edgeIdx);
 		vector<size_t> foundTris;
-		_pEdgeTree->find(bbox, nullptr, foundTris);
+		_pEdgeTree->find(bbox, foundTris);
 		bool found = false;
 		for (const auto& idx : foundTris) {
 			if (idx == edgeIdx) {
@@ -789,7 +789,7 @@ size_t CMesh::addTriangle(const Vector3i& tri) {
 	}
 
 	vector<size_t> triIndices;
-	_pTriTree->find(triBox, nullptr, triIndices);
+	_pTriTree->find(triBox, triIndices);
 	for (const auto& triIdx : triIndices) {
 		if (sameTri(_tris[triIdx], tri))
 			return triIdx;
@@ -1149,7 +1149,7 @@ size_t CMesh::addVertex_d(const Vector3d& pt) {
 	}
 
 	std::vector<size_t> results;
-	_pVertTree->find(ptBBox, nullptr, results);
+	_pVertTree->find(ptBBox, results);
 	for (const auto& index : results) {
 		if ((_vertices[index]._pt - pt).norm() < SAME_DIST_TOL) {
 			return index;
@@ -1631,17 +1631,17 @@ double CMesh::calEdgeCurvature(size_t edgeIdx, double sinEdgeAngle) const
 }
 
 size_t CMesh::findVerts(const BoundingBox& bbox, vector<SearchEntry>& vertIndices, BoxTestType contains) const {
-	return _pVertTree->find(bbox, nullptr, vertIndices, contains);
+	return _pVertTree->find(bbox, vertIndices, contains);
 }
 
 size_t CMesh::findVerts(const BoundingBox& bbox, vector<size_t>& vertIndices, BoxTestType contains) const {
-	return _pVertTree->find(bbox, nullptr, vertIndices, contains);
+	return _pVertTree->find(bbox, vertIndices, contains);
 }
 
 size_t CMesh::findEdges(const BoundingBox& bbox, vector<SearchEntry>& edgeIndices, BoxTestType contains) const {
 	vector<SearchEntry> allHits;
 
-	if (_pEdgeTree->find(bbox, nullptr, allHits, contains))
+	if (_pEdgeTree->find(bbox, allHits, contains))
 		return processFoundEdges(allHits, bbox, edgeIndices, contains);
 
 	return false;
@@ -1672,7 +1672,7 @@ size_t CMesh::processFoundEdges(const vector<SearchEntry>& allHits, const Boundi
 
 size_t CMesh::findEdges(const BoundingBox& bbox, vector<size_t>& edgeIndices, BoxTestType contains) const {
 	vector<size_t> allHits;
-	if (_pEdgeTree->find(bbox, nullptr, allHits, contains))
+	if (_pEdgeTree->find(bbox, allHits, contains))
 		return processFoundEdges(allHits, bbox, edgeIndices, contains);
 
 	return false;
@@ -1705,7 +1705,7 @@ size_t CMesh::processFoundEdges(const vector<size_t>& allHits, const BoundingBox
 size_t CMesh::findTris(const BoundingBox& bbox, vector<SearchEntry>& triIndices, BoxTestType contains) const {
 	vector<SearchEntry> allHits;
 
-	if (_pTriTree->find(bbox, nullptr, allHits, contains) > 0) {
+	if (_pTriTree->find(bbox, allHits, contains) > 0) {
 		return processFoundTris(allHits, bbox, triIndices, contains);
 	}
 
@@ -1728,7 +1728,7 @@ size_t CMesh::processFoundTris(const vector<SearchEntry>& allHits, const Boundin
 
 size_t CMesh::findTris(const BoundingBox& bbox, vector<size_t>& triIndices, BoxTestType contains) const {
 	vector<size_t> allHits;
-	if (_pTriTree->find(bbox, nullptr, allHits, contains) > 0) {
+	if (_pTriTree->find(bbox, allHits, contains) > 0) {
 		return processFoundTris(allHits, bbox, triIndices, contains);
 	}
 
@@ -2314,7 +2314,7 @@ bool CMesh::verifyFindAllTris() const {
 		BoundingBox triBox = getTriBBox(triIdx);
 
 		vector<size_t> entries;
-		_pTriTree->find(triBox, nullptr, entries);
+		_pTriTree->find(triBox, entries);
 		bool found = false;
 		for (const auto& idx : entries) {
 			found = found || idx == triIdx;

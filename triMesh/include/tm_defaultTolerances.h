@@ -1,5 +1,3 @@
-#pragma once
-
 /*
 
 This file is part of the TriMesh library.
@@ -29,70 +27,17 @@ This file is part of the TriMesh library.
 
 */
 
+/*
+	Vector3 is a light weight substitute for Eigen. TriMesh originally used Eigen, but the debugging overhead (both speed and examination in a debugger) made it unweildy.
+	At one time a 1-1 substiution was possible. It is desired to retain this feature.
+*/
+
 #include <tm_defines.h>
-#include <tm_math.h>
-#include <tm_vector3.h>
+#include <cmath>
+
+
+template<typename SCALAR_TYPE>
+SCALAR_TYPE defaultVal();
 
 template<class T>
-struct Ray {
-	using POINT_TYPE = Vector3<T>;
-
-	Ray(const POINT_TYPE& origin = POINT_TYPE(0, 0, 0), const POINT_TYPE& dir = POINT_TYPE(0,0,0));
-	T distToPt(const POINT_TYPE& pt) const;
-	POINT_TYPE project(const POINT_TYPE& pt) const;
-
-	POINT_TYPE _origin, _dir;
-};
-
-template<class T>
-struct RayHit {
-	using POINT_TYPE = Vector3<T>;
-
-	RayHit();
-	bool operator < (const RayHit& rhs) const;
-
-	size_t triIdx = -1;
-	size_t edgeIdx = -1;
-	T dist = 0;
-	POINT_TYPE hitPt;
-};
-
-template<class T>
-inline Ray<T>::Ray(const POINT_TYPE& origin, const POINT_TYPE& dir)
-	: _origin(origin)
-	, _dir(dir)
-{
-	_dir.normalize();
-}
-
-template<class T>
-T Ray<T>::distToPt(const POINT_TYPE& pt) const
-{
-	POINT_TYPE v = pt - _origin;
-	v = v - _dir.dot(v) * _dir;
-	return v.norm();
-}
-
-template<class T>
-typename Ray<T>::POINT_TYPE Ray<T>::project(const POINT_TYPE& pt) const
-{
-	POINT_TYPE v = pt - _origin;
-	return _origin + _dir.dot(v) * _dir;
-}
-
-template<class T>
-inline RayHit<T>::RayHit()
-	: triIdx(stm1)
-	, dist(0)
-{}
-
-template<class T>
-inline bool RayHit<T>::operator < (const RayHit& rhs) const {
-	return fabs(dist) < fabs(rhs.dist);
-}
-
-using Rayd = Ray<double>;
-using Rayf = Ray<float>;
-
-using RayHitd = RayHit<double>;
-using RayHitf = RayHit<float>;
+T defaultDistTol();

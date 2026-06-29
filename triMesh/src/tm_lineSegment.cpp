@@ -30,6 +30,62 @@ This file is part of the TriMesh library.
 #include <tm_lineSegment.hpp>
 #include <tm_lineSegment_byref.hpp>
 
+template<class T>
+bool LineSegment<T>::isCoincident(const LineSegment<T>::POINT_TYPE& pt, LineSegment<T>::SCALAR_TYPE tol) const
+{
+	T t;
+	auto dist = distanceToPoint(pt, t);
+
+	return fabs(dist) < tol;
+}
+
+template<class T>
+bool LineSegment<T>::isCoincident(const LineSegment<T>& other, LineSegment<T>::SCALAR_TYPE tol) const
+{
+	return isCoincident(other._pt0, tol) && isCoincident(other._pt1, tol);
+}
+
+template<class T>
+bool LineSegment<T>::isCoincident(const LineSegment_byref<T>& other, LineSegment<T>::SCALAR_TYPE tol) const
+{
+	return isCoincident(other._pt0, tol) && isCoincident(other._pt1, tol);
+}
+
+template<class T>
+bool LineSegment<T>::isCoincident(const Ray<T>& other, LineSegment<T>::SCALAR_TYPE tol) const
+{
+	return isCoincident(other._origin, tol) && isCoincident(other._origin + other._dir, tol);
+}
+
+/*******************************************************************************************************/
+
+template<class T>
+bool LineSegment_byref<T>::isCoincident(const LineSegment_byref<T>::POINT_TYPE& pt, LineSegment_byref<T>::SCALAR_TYPE tol) const
+{
+	T t;
+	auto dist = distanceToPoint(pt, t);
+
+	return fabs(dist) < tol;
+}
+
+template<class T>
+bool LineSegment_byref<T>::isCoincident(const LineSegment<T>& other, LineSegment_byref<T>::SCALAR_TYPE tol) const
+{
+	return isCoincident(other._pt0, tol) && isCoincident(other._pt1, tol);
+}
+
+template<class T>
+bool LineSegment_byref<T>::isCoincident(const LineSegment_byref<T>& other, LineSegment_byref<T>::SCALAR_TYPE tol) const
+{
+	return isCoincident(other._pt0, tol) && isCoincident(other._pt1, tol);
+}
+
+template<class T>
+bool LineSegment_byref<T>::isCoincident(const Ray<T>& other, LineSegment_byref<T>::SCALAR_TYPE tol) const
+{
+	return isCoincident(other._origin, tol) && isCoincident(other._origin + other._dir, tol);
+}
+
 template struct LineSegment<double>;
 template struct LineSegment<float>;
 

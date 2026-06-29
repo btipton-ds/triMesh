@@ -37,6 +37,7 @@ This file is part of the TriMesh library.
 #include <cfloat>
 
 #include <tm_vector3.h>
+#include <tm_tolerance.h>
 
 template<class T>
 inline const T& ptOf3(int idx, const T& pt0, const T& pt1, const T& pt2) {
@@ -82,14 +83,11 @@ public:
 	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, LineSegment<T>& iSeg, T tol) const;
 	bool intersectTri(const Vector3<T>* const* pts, LineSegment<T>& iSeg, T tol) const;
 	bool intersectTri(const LineSegment<T> legs[], LineSegment<T>& iSeg, T tol) const;
-
-	// Returns a ray which is the line of intersection between the planes
 	bool intersectPlane(const Plane& otherPlane, Ray<T>& iSeg, T tol) const;
 	bool isCoincident(const POINT_TYPE& other, T tol) const;
 	bool isCoincident(const Plane& other, T distTol, T cpTol) const;
 
-	POINT_TYPE projectPoint(const POINT_TYPE& pt) const;
-	Vector2<T> projectPoint2D(const POINT_TYPE& pt) const;
+	POINT_TYPE projectPoint(const POINT_TYPE& pt, T tol = sameDistTol<T>()) const;
 	T distanceToPoint(const POINT_TYPE& pt, bool absolute = true) const;
 
 	const POINT_TYPE& getOrigin() const;

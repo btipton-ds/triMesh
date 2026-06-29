@@ -31,10 +31,11 @@ This file is part of the TriMesh library.
 
 #include <tm_defines.h>
 
-#include <cmath>
+#include <vector>
 #include <tm_lineSegment.hpp>
 #include <tm_lineSegment_byref.hpp>
 #include <tm_rootFinder.h>
+#include <mutex>
 
 template <class SCALAR_TYPE>
 inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol) {
@@ -43,6 +44,11 @@ inline bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol) {
 
 template <class SCALAR_TYPE>
 inline bool tolerantEquals(const Vector3< SCALAR_TYPE>& pt0, const Vector3< SCALAR_TYPE>& pt1, SCALAR_TYPE tol) {
+	return (pt1 - pt0).squaredNorm() < tol * tol;
+}
+
+template <class SCALAR_TYPE>
+inline bool tolerantEquals(const Vector2<SCALAR_TYPE>& pt0, const Vector2<SCALAR_TYPE>& pt1, SCALAR_TYPE tol) {
 	return (pt1 - pt0).squaredNorm() < tol * tol;
 }
 
@@ -87,8 +93,8 @@ size_t Vector3Set<V>::count(const V& v) const {
 	return result;
 }
 
-template<typename SCALAR_TYPE>
-Vector3<SCALAR_TYPE> safeNormalize(const Vector3<SCALAR_TYPE>& v) {
+template<class VECTOR_TYPE>
+VECTOR_TYPE safeNormalize(const VECTOR_TYPE& v) {
 	auto l = v.norm();
 	if (l > minNormalizeDivisor)
 		return v / l;
@@ -216,16 +222,6 @@ template<class T>
 inline Vector3<T> LERP(const Vector3<T>& p0, const Vector3<T>& p1, T t)
 {
 	return p0 + t * (p1 - p0);
-}
-
-template<class T>
-inline bool LERP_INV(const Vector3<T>& p, const Vector3<T>& p0, const Vector3<T>& p1, T& t)
-{
-	LineSegment<T> seg(p0, p1);
-	t = seg.parameterize(p);
-	if (t < 0 || 1 < t)
-		return false;
-	return true;
 }
 
 // pts must be size 8 or greater. No bounds checking is done.
@@ -404,94 +400,6 @@ Vector3<T> BI_LERP(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>&
 	return pt0 + u * (pt1 - pt0);
 }
 
-namespace {
-	template<class T>
-	T cross2d(const Vector2<T>& v0, const Vector2<T>& v1)
-	{
-		return v0[0] * v1[1] - v1[0] * v0[1];
-	}
-}
-
-template<class T>
-inline T mag2(T a, T b)
-{
-	return sqrt(a * a + b * b);
-}
-
-template<class T>
-bool BI_LERP_INV(const Vector3<T>& pt, const Vector3<T>& pt0, const Vector3<T>& pt1, const Vector3<T>& pt2, const Vector3<T>& pt3, T& t, T& u, T tol)
-{
-	std::vector<T> vPt = { pt[0], pt[1], pt[2] }, params = { 0.5, 0.5 };
-
-	auto errFunc = [pt, pt0, pt1, pt2, pt3](const std::vector<T>& params)->T {
-		auto testP = BI_LERP<T>(pt0, pt1, pt2, pt3, params[0], params[1]);
-		T err = (testP - pt).norm();
-		return err;
-	};
-
-	auto gradFunc = [pt, pt0, pt1, pt2, pt3](const std::vector<T>& params, std::vector<T>& grad) {
-		const T& t = params[0];
-		const T& u = params[1];
-
-		Vector3<T> v0 = pt - pt0;
-		Vector3<T> v01 = pt1 - pt0;
-		Vector3<T> v03 = pt3 - pt0;
-		Vector3<T> v32 = pt2 - pt3;
-
-		Vector3<T> denV = v0 - t * v01 + u * (t * (v01 - v32) - v03);
-		auto termA = u * (v01 - v32) - v01;
-		auto termB = t * (v01 - v32) - v03;
-		auto termC = u * (t * (v01 - v32) - v03);
-		auto termD = termC - v01 * t + v0;
-
-		auto den = denV.norm();
-
-		grad[0] = (
-			termA[2] * termD[2] +
-			termA[1] * termD[1] +
-			termA[0] * termD[0]) / den;
-
-		grad[1] = (
-			termB[2] * termD[2] + 
-			termB[1] * termD[1] + 
-			termB[0] * termD[0]) / den;
-
-		// REQUIRED!!! 
-		// Normalize grad
-		// There is not reason why these derivatives should form a vector of length 1 and they DO NOT during testin.
-		T avgSqr = 0;
-		for (size_t i = 0; i < grad.size(); i++)
-			avgSqr += grad[i] * grad[i];
-		avgSqr = sqrt(avgSqr);
-		for (size_t i = 0; i < grad.size(); i++)
-			grad[i] /= avgSqr;
-	};
-
-	bool result = RootFinder::findMin(vPt, params, errFunc, gradFunc, tol, 1.0e-6);
-
-	if (result) {
-		t = params[0];
-		u = params[1];
-		if (clamp<T>(t, 0, 1, tol) && clamp<T>(u, 0, 1, tol))
-			return true;
-	}
-	// u and t are now at machine precision.
-	return false;
-}
-
-template<class T>
-bool BI_LERP_INV(const Vector3<T>& p, const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2, T& t, T& u, T tol)
-{
-	if (pointInTriangle(p0, p1, p2, p, tol)) {
-		// make the triangle a parallelagram by creating p3.
-		auto v = p2 - p1;
-		auto p3 = p0 + v;
-
-		return BI_LERP_INV(p, p0, p1, p2, p3, t, u, tol);
-	}
-	return false;
-}
-
 // pts must be size 8 or greater. No bounds checking is done.
 template<class T>
 Vector3<T> TRI_LERP(const Vector3<T> pts[8], T t, T u, T v)
@@ -503,55 +411,250 @@ Vector3<T> TRI_LERP(const Vector3<T> pts[8], T t, T u, T v)
 }
 
 template<class T>
-bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
+bool BI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, T& t, T& u, T tol)
 {
-	const double tolSqr = tol * tol;
 	if (pts.empty())
 		return false;
 
+	/*
+	Current method is relaxation. Not the best but it works.
+	*/
 	T a, b, c, l;
 	Vector3<T> x, y, z, p0, p1, dir, v;
 
 	x = pts[1] - pts[0];
+	l = x.norm();
+	x /= l * l;
+
 	y = pts[3] - pts[0];
-	z = pts[4] - pts[0];
+	l = y.norm();
+	y /= l * l;
 
 	v = pt - pts[0];
-	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
-	bool done = false;
-	int count = 0;
-	while (!done && count++ < 100) {
-		p0 = TRI_LERP(pts, (T)0, tuv[1], tuv[2]);
-		p1 = TRI_LERP(pts, (T)1, tuv[1], tuv[2]);
-		dir = p1 - p0;
-		l = dir.norm();
-		dir /= l;
-		v = pt - p0;
-		a = v.dot(dir) / l;
 
-		p0 = TRI_LERP(pts, tuv[0], (T)0, tuv[2]);
-		p1 = TRI_LERP(pts, tuv[0], (T)1, tuv[2]);
-		dir = p1 - p0;
-		l = dir.norm();
-		dir /= l;
-		v = pt - p0;
-		b = v.dot(dir) / l;
+	auto errFunc = [&pt, &pts](const T* params, const T* gradient, T stepsize)->T {
 
-		p0 = TRI_LERP(pts, tuv[0], tuv[1], (T)0);
-		p1 = TRI_LERP(pts, tuv[0], tuv[1], (T)1);
-		dir = p1 - p0;
-		l = dir.norm();
-		dir /= l;
-		v = pt - p0;
-		c = v.dot(dir) / l;
+		const auto& testPt = BI_LERP(pts,
+			params[0] + gradient[0] * stepsize,
+			params[1] + gradient[1] * stepsize);
+		Vector3<T> v = testPt - pt;
+		return v.norm();
+		};
 
-		tuv = Vector3<T>(a, b, c);
-		Vector3<T> guess = TRI_LERP(pts, tuv);
-		T distSqr = (guess - pt).squaredNorm();
-		if (distSqr < tolSqr)
-			return true;
+	Vector3<T> v0(pt - pts[0]);
+	Vector3<T> v01(pts[1] - pts[0]);
+	Vector3<T> v03(pts[3] - pts[0]);
+	Vector3<T> v32(pts[2] - pts[3]);
+	Vector3<T> v01_32(v01 - v32);
+
+	auto gradFunc = [&](const T* params, T* gradient) {
+		const auto t = params[0];
+		const auto u = params[1];
+
+		Vector3<T> v01_32_t = v01_32 * t;
+		Vector3<T> v01_32_t_03 = v01_32_t - v03;
+
+		Vector3<T> termA = v01_32 * u - v01;
+		Vector3<T> termB = (v01_32_t_03)*u - v01 * t + v0;
+
+		gradient[0] =
+			termA[0] * termB[0] +
+			termA[1] * termB[1] +
+			termA[2] * termB[2];// / den;
+
+		termA = v01_32_t_03;
+		termB = v01_32_t_03 * u - v01 * t + v0;
+
+		gradient[1] =
+			termA[0] * termB[0] +
+			termA[1] * termB[1] +
+			termA[2] * termB[2]; // den;
+
+		T sum = 0;
+		for (size_t i = 0; i < 2; i++) {
+			const auto& v = gradient[i];
+			sum += v * v;
+		}
+		sum = sqrt(sum);
+		for (size_t i = 0; i < 2; i++) {
+			gradient[i] /= sum;
+		}
+		};
+
+	T params[] = { v.dot(x), v.dot(y) };
+	T err = RootFinder::findMin(pt, 2, params, errFunc, gradFunc, (T)1.0e-8, tol);
+	if (err < tol) {
+		for (int i = 0; i < 2; i++) {
+			T& val = params[i];
+			if (val < 0) {
+				if (val > -tol)
+					val = 0;
+				else
+					return false;
+			}
+			else if (val > 1) {
+				if (val < 1 + tol)
+					val = 1;
+				else
+					return false;
+			}
+		}
+
+		t = params[0];
+		u = params[1];
+		return true;
 	}
+
 	return false;
+}
+
+template<class T>
+bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
+{
+	if (pts.empty())
+		return false;
+
+	/*
+	Current method is relaxation. Not the best but it works.
+	*/
+	T a, b, c, l;
+	Vector3<T> x, y, z, p0, p1, dir, v;
+
+	auto pPts = pts.data();
+	x = pPts[1] - pPts[0];
+	l = x.norm();
+	x /= l * l;
+
+	y = pPts[3] - pPts[0];
+	l = y.norm();
+	y /= l * l;
+
+	z = pPts[4] - pPts[0];
+	l = z.norm();
+	z /= l * l;
+
+	v = pt - pPts[0];
+	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
+#if 1
+	const double tolSqr = tol * tol;
+	int count = 0;
+
+	Vector3<T> guess = TRI_LERP(pts, tuv);
+	T distSqr = (guess - pt).squaredNorm();
+	bool done = distSqr < tolSqr;
+
+	while (!done && count++ < 100) {
+		for (int axis = 0; axis < 3; axis++) {
+			auto oldVal = tuv[axis];
+
+			tuv[axis] = 0;
+			p0 = TRI_LERP(pts, tuv);
+
+			tuv[axis] = 1;
+			p1 = TRI_LERP(pts, tuv);
+
+			dir = p1 - p0;
+			l = dir.norm();
+			dir /= l;
+			v = pt - p0;
+			tuv[axis] = v.dot(dir) / l;
+		}
+
+		guess = TRI_LERP(pts, tuv);
+		distSqr = (guess - pt).squaredNorm();
+		done = distSqr < tolSqr;
+	}
+
+	return done;
+#else
+	auto errFunc = [&pt, &pPts](const T* params, const T* gradient, T stepsize)->T {
+
+		const auto& testPt = TRI_LERP(pPts,
+			params[0] + gradient[0] * stepsize,
+			params[1] + gradient[1] * stepsize,
+			params[2] + gradient[2] * stepsize);
+		Vector3<T> v = testPt - pt;
+		return v.norm();
+		};
+
+	const Vector3<T> v0(pt - pPts[0]);
+	const Vector3<T> v01(pPts[1] - pPts[0]);
+	const Vector3<T> v03(pPts[3] - pPts[0]);
+	const Vector3<T> v04(pPts[4] - pPts[0]);
+	const Vector3<T> v32(pPts[2] - pPts[3]);
+	const Vector3<T> v45(pPts[5] - pPts[4]);
+	const Vector3<T> v47(pPts[7] - pPts[4]);
+	const Vector3<T> v76(pPts[6] - pPts[7]);
+
+	const Vector3<T> v32_01(v32 - v01);
+	const Vector3<T> v45_01(v45 - v01);
+	const Vector3<T> v76_45(v76 - v45);
+
+	auto gradFunc = [&](const T* params, T* gradient) {
+		const auto t = params[0];
+		const auto u = params[1];
+		const auto v = params[2];
+
+		Vector3<T> termA = (-(((v76_45 - v32_01) * u + v45_01) * v) - v32_01 * u - v01);
+		Vector3<T> termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
+
+		gradient[0] =
+			termA[0] * termB[0] +
+			termA[1] * termB[1] +
+			termA[2] * termB[2];// / den;
+
+		termA = (-(((v76_45 - v32_01 * t) + v47 - v03) * v) - v32_01 * t - v03);
+		termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
+
+		gradient[1] =
+			termA[0] * termB[0] +
+			termA[1] * termB[1] +
+			termA[2] * termB[2]; // den;
+
+		termA = (-((v76_45 * t + v47) * u) + (v32_01 * t + v03) * u - v45_01 * t - v04);
+		termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
+
+		gradient[2] =
+			termA[0] * termB[0] +
+			termA[1] * termB[1] +
+			termA[2] * termB[2]; // den;
+
+		T sum = 0;
+		for (size_t i = 0; i < 3; i++) {
+			const auto& v = gradient[i];
+			sum += v * v;
+		}
+		sum = sqrt(sum);
+		for (size_t i = 0; i < 3; i++) {
+			gradient[i] /= sum;
+		}
+		};
+
+	T params[3] = { tuv[0], tuv[1], tuv[2] };
+	T err = RootFinder::findMin(pt, 3, params, errFunc, gradFunc, (T)1.0e-8, tol);
+	if (err < tol) {
+		for (int i = 0; i < 3; i++) {
+			T& val = params[i];
+			if (val < 0) {
+				if (val > -tol)
+					val = 0;
+				else
+					return false;
+			}
+			else if (val > 1) {
+				if (val < 1 + tol)
+					val = 1;
+				else
+					return false;
+			}
+
+			tuv[i] = val;
+		}
+		return true;
+	}
+
+	return false;
+#endif
 }
 
 template<class T>

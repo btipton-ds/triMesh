@@ -32,6 +32,7 @@ This file is part of the DistFieldHexMesh application/library.
 #include <vector>
 #include <set>
 #include <map>
+#include <tm_vector2.h>
 #include <tm_vector3.h>
 
 namespace TriMesh
@@ -148,6 +149,22 @@ namespace IoUtil
 
 	template<class T>
 	void readObj(std::istream& in, std::vector<T>& vals, size_t meshId);
+
+	/************************************************************************************/
+
+	template <typename T>
+	inline void write(std::ostream& out, const Vector2<T>& v);
+
+	template <typename T>
+	inline void read(std::istream& in, Vector2<T>& v);
+
+	template<class T>
+	void write(std::ostream& out, const std::vector<Vector2<T>>& vals);
+
+	template<class T>
+	void read(std::istream& in, std::vector<Vector2<T>>& vals);
+
+	/************************************************************************************/
 
 	template <typename T>
 	inline void write(std::ostream& out, const Vector3<T>& v);
@@ -349,6 +366,44 @@ namespace IoUtil
 		}
 	}
 
+	/*****************************************************************************/
+
+	template <typename T>
+	inline void write(std::ostream& out, const Vector2<T>& v)
+	{
+		write(out, v.data(), 2);
+	}
+
+	template <typename T>
+	inline void read(std::istream& in, Vector2<T>& v)
+	{
+		read(in, v.data(), 2);
+	}
+
+	template<class T>
+	void write(std::ostream& out, const std::vector<Vector2<T>>& vals)
+	{
+		size_t num = vals.size();
+		write(out, num);
+		for (const auto& val : vals) {
+			write(out, val);
+		}
+	}
+
+	template<class T>
+	void read(std::istream& in, std::vector<Vector2<T>>& vals)
+	{
+		size_t num;
+		read(in, num);
+
+		vals.resize(num);
+		for (auto& val : vals) {
+			read(in, val);
+		}
+	}
+
+	/*****************************************************************************/
+
 	template <typename T>
 	inline void write(std::ostream& out, const Vector3<T>& v)
 	{
@@ -384,6 +439,7 @@ namespace IoUtil
 	}
 
 	/************************************************************************************/
+
 	template<class T, class U>
 	void write(std::ostream& out, const std::map<T, U>& val)
 	{

@@ -1,0 +1,385 @@
+/*
+
+This file is part of the TriMesh library.
+
+	The TriMesh library is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	The TriMesh library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	This link provides the exact terms of the GPL license <https://www.gnu.org/licenses/>.
+
+	The author's interpretation of GPL 3 is that if you receive money for the use or distribution of the TriMesh Library or a derivative product, GPL 3 no longer applies.
+
+	Under those circumstances, the author expects and may legally pursue a reasoble share of the income. To avoid the complexity of agreements and negotiation, the author makes
+	no specific demands in this regard. Compensation of roughly 1% of net or $5 per user license seems appropriate, but is not legally binding.
+
+	In lay terms, if you make a profit by using the TriMesh library (violating the spirit of Open Source Software), I expect a reasonable share for my efforts.
+
+	Robert R Tipton - Author
+
+	Dark Sky Innovative Solutions http://darkskyinnovation.com/
+
+*/
+
+#include <tm_ray.h>
+#include <tm_lineSegment.hpp>
+#include <tm_lineSegment_byref.hpp>
+#include <tm_boundingBox2D.h>
+#include <tm_plane_byref.h>
+
+using namespace std;
+
+template <class SCALAR_TYPE>
+const typename CBoundingBox2D<SCALAR_TYPE>::POINT_TYPE CBoundingBox2D<SCALAR_TYPE>::_axes[2] = {
+	POINT_TYPE(1, 0),
+	POINT_TYPE(0, 1)
+};
+
+template <class SCALAR_TYPE>
+const typename CBoundingBox2D<SCALAR_TYPE>::POINT_TYPE CBoundingBox2D<SCALAR_TYPE>::_negAxes[2] = {
+	POINT_TYPE(-1, 0),
+	POINT_TYPE(0, -1)
+};
+
+
+template <class SCALAR_TYPE>
+CBoundingBox2D<SCALAR_TYPE>::CBoundingBox2D()
+{
+	clear();
+}
+
+template <class SCALAR_TYPE>
+CBoundingBox2D<SCALAR_TYPE>::CBoundingBox2D(const POINT_TYPE& pt0)
+{
+	clear();
+	merge(pt0);
+}
+
+template <class SCALAR_TYPE>
+CBoundingBox2D<SCALAR_TYPE>::CBoundingBox2D(const POINT_TYPE& pt0, const POINT_TYPE& pt1)
+{
+	clear();
+	merge(pt0);
+	merge(pt1);
+}
+
+template <class SCALAR_TYPE>
+void CBoundingBox2D<SCALAR_TYPE>::clear() {
+	_min = POINT_TYPE(FLT_MAX, FLT_MAX);
+	_max = POINT_TYPE(-FLT_MAX, -FLT_MAX);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::empty() const {
+	return (_min[0] > _max[0]);
+}
+
+template <class SCALAR_TYPE>
+void CBoundingBox2D<SCALAR_TYPE>::merge(const POINT_TYPE& pt) {
+	for (int i = 0; i < 2; i++) {
+		if (pt[i] < _min[i])
+			_min[i] = pt[i];
+		if (pt[i] > _max[i])
+			_max[i] = pt[i];
+	}
+}
+
+template <class SCALAR_TYPE>
+void CBoundingBox2D<SCALAR_TYPE>::merge(const CBoundingBox2D& bboxIn) {
+	if (!bboxIn.empty()) {
+		merge(bboxIn._min);
+		merge(bboxIn._max);
+	}
+}
+
+template <class SCALAR_TYPE>
+inline const typename CBoundingBox2D<SCALAR_TYPE>::POINT_TYPE& CBoundingBox2D<SCALAR_TYPE>::getMin() const {
+	return _min;
+}
+
+template <class SCALAR_TYPE>
+inline const typename CBoundingBox2D<SCALAR_TYPE>::POINT_TYPE& CBoundingBox2D<SCALAR_TYPE>::getMax() const {
+	return _max;
+}
+
+template <class SCALAR_TYPE>
+inline typename CBoundingBox2D<SCALAR_TYPE>::POINT_TYPE CBoundingBox2D<SCALAR_TYPE>::range() const {
+	return _max - _min;
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::contains(const POINT_TYPE& pt, SCALAR_TYPE tol) const {
+	const SCALAR_TYPE lpt[] = { pt[0], pt[1] };
+
+	SCALAR_TYPE delta;
+	
+	int i = 0;
+	delta = lpt[i] - _min[i];
+	if (delta < -tol)
+		return false;
+	delta = lpt[i] - _max[i];
+	if (delta > tol)
+		return false;
+
+	i = 1;
+	delta = lpt[i] - _min[i];
+	if (delta < -tol)
+		return false;
+	delta = lpt[i] - _max[i];
+	if (delta > tol)
+		return false;
+
+	return true;
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::contains(const CBoundingBox2D& other, SCALAR_TYPE tol) const {
+	return contains(other._min, tol) && contains(other._max, tol);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::tolerantEquals(const CBoundingBox2D & other, SCALAR_TYPE tol) const
+{
+	return ::tolerantEquals(_min, other._min, tol) && ::tolerantEquals(_max, other._max, tol);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersects(const CBoundingBox2D& otherBox, SCALAR_TYPE tol) const
+{
+	return intersectsOrContains(otherBox, tol) && !contains(otherBox, tol);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const
+{
+	vector<POINT_TYPE> pts;
+	return intersectsInner(seg, pts, tol, false);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const
+{
+	return intersectsInner(seg, pts, tol, true);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D_byref<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const
+{
+	vector<POINT_TYPE> pts;
+	return intersectsInner(seg, pts, tol, false);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersects(const LineSegment2D_byref<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const
+{
+	return intersectsInner(seg, pts, tol, true);
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersectsInner(const LineSegment2D<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll) const
+{
+	pts.clear();
+
+	if (seg.calLength() < tol)
+		return false;
+
+	Vector2<SCALAR_TYPE> r = _max - _min;
+	Vector2<SCALAR_TYPE> boxPts[] = {
+		_min,
+		_min + Vector2<SCALAR_TYPE>(r[0], 0),
+		_max,
+		_min + Vector2<SCALAR_TYPE>(0, r[1]),
+	};
+
+	bool result = true;
+	for (size_t i = 0; i < 4; i++) {
+		LineSegment2D_byref leg(boxPts[i], boxPts[(i + 1) % 4]);
+		Vector2<SCALAR_TYPE> iPt;
+		if (seg.intersects(leg, iPt, tol)) {
+			result = true;
+			pts.push_back(iPt);
+		}
+	}
+
+	return !pts.empty();
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersectsInner(const LineSegment2D_byref<SCALAR_TYPE>& seg, vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll) const
+{
+	pts.clear();
+	if (seg.calLength() < tol)
+		return false;
+
+	Vector2<SCALAR_TYPE> r = _max - _min;
+	Vector2<SCALAR_TYPE> boxPts[] = {
+		_min,
+		_min + Vector2<SCALAR_TYPE>(r[0], 0),
+		_max,
+		_min + Vector2<SCALAR_TYPE>(0, r[1]),
+	};
+
+	bool result = true;
+	for (size_t i = 0; i < 4; i++) {
+		LineSegment2D_byref leg(boxPts[i], boxPts[(i + 1) % 4]);
+		Vector2<SCALAR_TYPE> iPt;
+		if (seg.intersects(leg, iPt, tol)) {
+			result = true;
+			pts.push_back(iPt);
+		}
+	}
+
+	return !pts.empty();
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersectsOrContains(const CBoundingBox2D& otherBox, SCALAR_TYPE tol) const {
+	const auto& otherMin = otherBox._min;
+	const auto& otherMax = otherBox._max;
+	if ((otherMin[0] > _max[0] + tol) || (otherMin[1] > _max[1] + tol))
+		return false;
+	else if ((otherMax[0] < _min[0] - tol) || (otherMax[1] < _min[1] - tol))
+		return false;
+
+	return true;
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersectsOrContains(const LineSegment2D<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const
+{
+	if (contains(seg._pt0, tol) || contains(seg._pt1, tol))
+		return true;
+
+	if (seg.calLength() < tol)
+		return false;
+
+	Vector2<SCALAR_TYPE> r = _max - _min;
+	Vector2<SCALAR_TYPE> pts[] = {
+		_min,
+		_min + Vector2<SCALAR_TYPE>(r[0], 0),
+		_max,
+		_min + Vector2<SCALAR_TYPE>(0, r[1]),
+	};
+
+	for (int i = 0; i < 4; i++) {
+		LineSegment2D_byref<SCALAR_TYPE> leg(pts[i], pts[(i + 1) % 4]);
+		Vector2<SCALAR_TYPE> iPt;
+		if (seg.intersects(leg, iPt, tol))
+			return true;
+	}
+	return false;
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersectsOrContains(const LineSegment2D_byref<SCALAR_TYPE>& seg, SCALAR_TYPE tol) const
+{
+	if (contains(seg._pt0, tol) || contains(seg._pt1, tol))
+		return true;
+
+	if (seg.calLength() < tol)
+		return false;
+
+	Vector2<SCALAR_TYPE> r = _max - _min;
+	Vector2<SCALAR_TYPE> pts[] = {
+		_min,
+		_min + Vector2<SCALAR_TYPE>(r[0], 0),
+		_max,
+		_min + Vector2<SCALAR_TYPE>(0, r[1]),
+	};
+
+	for (int i = 0; i < 4; i++) {
+		LineSegment2D_byref<SCALAR_TYPE> leg(pts[i], pts[(i + 1) % 4]);
+		Vector2<SCALAR_TYPE> iPt;
+		if (seg.intersects(leg, iPt, tol))
+			return true;
+	}
+	return false;
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox2D<SCALAR_TYPE>::intersectsOrContains(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, SCALAR_TYPE tol) const
+{
+	if (contains(pt0, tol) || contains(pt1, tol) || contains(pt2, tol))
+		return true;
+
+	LineSegment2D_byref<SCALAR_TYPE> triSegs[] = { 
+		LineSegment2D_byref<SCALAR_TYPE>(pt0, pt1), 
+		LineSegment2D_byref<SCALAR_TYPE>(pt1, pt2),
+		LineSegment2D_byref<SCALAR_TYPE>(pt2, pt0),
+	};
+
+	Vector2<SCALAR_TYPE> r = _max - _min;
+	Vector2<SCALAR_TYPE> boxPts[] = {
+		_min,
+		_min + Vector2<SCALAR_TYPE>(r[0], 0),
+		_max,
+		_min + Vector2<SCALAR_TYPE>(0, r[1]),
+	};
+
+	for (int i = 0; i < 4; i++) {
+		LineSegment2D_byref<SCALAR_TYPE> leg(boxPts[i], boxPts[(i + 1) % 4]);
+		Vector2<SCALAR_TYPE> iPt;
+		for (int j = 0; j < 3; j++) {
+			const auto& seg = triSegs[j];
+			if (seg.intersects(leg, iPt, tol))
+				return true;
+		}
+	}
+	return false;
+}
+
+template <class SCALAR_TYPE>
+void CBoundingBox2D<SCALAR_TYPE>::getEdges(LineSegment2D<SCALAR_TYPE> edgeSegs[4]) const
+{
+	POINT_TYPE r = range();
+	POINT_TYPE corners[] = {
+		_min,
+		_min + POINT_TYPE(r[0],    0),
+		_min + POINT_TYPE(r[0], r[1]),
+		_min + POINT_TYPE(0,    r[1])
+	};
+
+	// x edgeSegs
+	edgeSegs[0] = LineSegment2D<SCALAR_TYPE>(corners[0], corners[1]);
+	edgeSegs[1] = LineSegment2D<SCALAR_TYPE>(corners[3], corners[2]);
+
+	// y edgeSegs
+	edgeSegs[2] = LineSegment2D<SCALAR_TYPE>(corners[0], corners[3]);
+	edgeSegs[3] = LineSegment2D<SCALAR_TYPE>(corners[1], corners[2]);
+}
+
+template <class SCALAR_TYPE>
+void CBoundingBox2D<SCALAR_TYPE>::split(int axis, CBoundingBox2D& left, CBoundingBox2D& right, Scalar overlap) const {
+	left = right = *this;
+	auto mid = (_min[axis] + _max[axis]) * (SCALAR_TYPE)0.5;
+
+	const auto tol = overlap > 1e-6 ? (_max[axis] - _min[axis]) * overlap : (SCALAR_TYPE)0;
+	left._max[axis] = mid + tol;
+	right._min[axis] = mid - tol;
+}
+
+template <class SCALAR_TYPE>
+void CBoundingBox2D<SCALAR_TYPE>::grow(Scalar dist) {
+	for (int i = 0; i < 2; i++) {
+		_min[i] -= dist;
+		_max[i] += dist;
+	}
+}
+
+template <class SCALAR_TYPE>
+void CBoundingBox2D<SCALAR_TYPE>::growPercent(SCALAR_TYPE amount)
+{
+	auto r = range() * amount;
+	_min -= r;
+	_max += r;
+}
+
+template class CBoundingBox2D<double>;
+template class CBoundingBox2D<float>;
+

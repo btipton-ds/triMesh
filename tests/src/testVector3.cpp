@@ -34,288 +34,174 @@ This file is part of the TriMesh library.
 #include <math.h>
 
 #include <tests.h>
-#include <tm_math.hpp>
 
 using namespace std;
 
-template<typename NUM_TYPE>
-class VectorTests {
-	using v3 = Vector3<NUM_TYPE>;
-public:
+namespace {
 
-	bool testAll() {
-		TEST_TRUE (testAssign(), "Failed testAssign");
-		TEST_TRUE(testAdd(), "Failed testAdd");
-		TEST_TRUE(testSub(), "Failed testSub");
-		TEST_TRUE(testMult(), "Failed testMult");
-		TEST_TRUE(testDiv(), "Failed testDiv");
-		TEST_TRUE(testDot(), "Failed testDot");
-		TEST_TRUE(testCross(), "Failed testCross");
+	template<typename NUM_TYPE>
+	class VectorTests {
+		using v3 = Vector3<NUM_TYPE>;
+	public:
 
-		cout << "All vector3 tests passed\n";
-		return true;
-	}
-	bool testAssign() {
-		v3 a(1, 2, 3);
+		bool testAll() {
+			TEST_TRUE(testAssign(), "Failed testAssign");
+			TEST_TRUE(testAdd(), "Failed testAdd");
+			TEST_TRUE(testSub(), "Failed testSub");
+			TEST_TRUE(testMult(), "Failed testMult");
+			TEST_TRUE(testDiv(), "Failed testDiv");
+			TEST_TRUE(testDot(), "Failed testDot");
+			TEST_TRUE(testCross(), "Failed testCross");
 
-		TEST_EQUAL(a[0], 1, "Assign idx 0 ");
-		TEST_EQUAL(a[1], 2, "Assign idx 1 ");
-		TEST_EQUAL(a[2], 3, "Assign idx 2 ");
-
-		{
-			v3 b;
-			b = a;
-			TEST_EQUAL(b[0], 1, "Assign b= idx 0 ");
-			TEST_EQUAL(b[1], 2, "Assign b= idx 1 ");
-			TEST_EQUAL(b[2], 3, "Assign b= idx 2 ");
+			cout << "All vector3 tests passed\n";
+			return true;
 		}
-
-		{
-			v3 b(a);
-			TEST_EQUAL(b[0], 1, "Assign b copy constructor idx 0 ");
-			TEST_EQUAL(b[1], 2, "Assign b copy constructor idx 1 ");
-			TEST_EQUAL(b[2], 3, "Assign b copy constructor idx 2 ");
-		}
-		return true;
-	}
-
-	bool testAdd() {
-		{
-			v3 a(3, 2, 1), b(1, 2, 3);
-			v3 c = a + b;
-
-			TEST_EQUAL(c, v3(4,4,4), "add 4");
-		}
-		{
-			v3 a(2, 3, 4), b(-1, -2, -3);
-			v3 c = a + b;
-
-			TEST_EQUAL(c, v3(1, 1, 1), "add 1");
-		}
-		return true;
-	}
-
-	bool testSub() {
-		{
-			v3 a(1, 2, 3), b(1, 2, 3);
-			v3 c = a - b;
-			TEST_EQUAL(c, v3(0, 0, 0), "add 0");
-		}
-		return true;
-	}
-
-	bool testMult() {
-		{
+		bool testAssign() {
 			v3 a(1, 2, 3);
-			v3 c = a * 2;
-			TEST_EQUAL(c, v3(2, 4, 6), "post mult");
-		}
-		{
-			v3 a(1, 2, 3);
-			NUM_TYPE k = 2;
-			v3 c = k * a;
-			TEST_EQUAL(c, v3(2, 4, 6), "pre mult");
-		}
-		return true;
-	}
 
-	bool testDiv() {
-		{
-			v3 a(2, 4, 6);
-			v3 c = a / 2;
-			TEST_EQUAL(c, v3(1, 2, 3), "div");
-		}
-		return true;
-	}
+			TEST_EQUAL(a[0], 1, "Assign idx 0 ");
+			TEST_EQUAL(a[1], 2, "Assign idx 1 ");
+			TEST_EQUAL(a[2], 3, "Assign idx 2 ");
 
-	bool testDot() {
-		{
-			v3 a(1, 0, 0), b(2, 0, 0);
-			NUM_TYPE c = a.dot(b);
-			TEST_EQUAL(c, 2, "dot 1");
-		}
-		{
-			v3 a(1, 0, 0), b(0, 1, 0);
-			NUM_TYPE c = a.dot(b);
-			TEST_EQUAL(c, 0, "dot 2");
-		}
-		{
-			v3 a(1, 1, 0), b(1, 1, 1);
-			NUM_TYPE c = a.dot(b);
-			TEST_EQUAL(c, 2, "dot 3");
-		}
-		{
-			v3 a(1, 1, 1), b(1, 1, 1);
-			NUM_TYPE c = a.dot(b);
-			TEST_EQUAL(c, 3, "dot 4");
-		}
-		return true;
-	}
+			{
+				v3 b;
+				b = a;
+				TEST_EQUAL(b[0], 1, "Assign b= idx 0 ");
+				TEST_EQUAL(b[1], 2, "Assign b= idx 1 ");
+				TEST_EQUAL(b[2], 3, "Assign b= idx 2 ");
+			}
 
-	bool testCross() {
-		{
-			v3 a(1, 0, 0), b(1, 0, 0);
-			v3 c = a.cross(b);
-			TEST_EQUAL(c, v3(0,0,0), "cross 0");
+			{
+				v3 b(a);
+				TEST_EQUAL(b[0], 1, "Assign b copy constructor idx 0 ");
+				TEST_EQUAL(b[1], 2, "Assign b copy constructor idx 1 ");
+				TEST_EQUAL(b[2], 3, "Assign b copy constructor idx 2 ");
+			}
+			return true;
 		}
-		{
-			v3 a(0, 1, 0), b(0, 0, 1);
-			v3 c = a.cross(b);
-			TEST_EQUAL(c, v3(1, 0, 0), "cross x");
-		}
-		{
-			v3 a(0, 0, 1), b(1, 0, 0);
-			v3 c = a.cross(b);
-			TEST_EQUAL(c, v3(0, 1, 0), "cross y");
-		}
-		{
-			v3 a(1, 0, 0), b(0, 1, 0);
-			v3 c = a.cross(b);
-			TEST_EQUAL(c, v3(0, 0, 1), "cross z");
-		}
-		return true;
-	}
 
-};
+		bool testAdd() {
+			{
+				v3 a(3, 2, 1), b(1, 2, 3);
+				v3 c = a + b;
+
+				TEST_EQUAL(c, v3(4, 4, 4), "add 4");
+			}
+			{
+				v3 a(2, 3, 4), b(-1, -2, -3);
+				v3 c = a + b;
+
+				TEST_EQUAL(c, v3(1, 1, 1), "add 1");
+			}
+			return true;
+		}
+
+		bool testSub() {
+			{
+				v3 a(1, 2, 3), b(1, 2, 3);
+				v3 c = a - b;
+				TEST_EQUAL(c, v3(0, 0, 0), "add 0");
+			}
+			return true;
+		}
+
+		bool testMult() {
+			{
+				v3 a(1, 2, 3);
+				v3 c = a * 2;
+				TEST_EQUAL(c, v3(2, 4, 6), "post mult");
+			}
+			{
+				v3 a(1, 2, 3);
+				NUM_TYPE k = 2;
+				v3 c = k * a;
+				TEST_EQUAL(c, v3(2, 4, 6), "pre mult");
+			}
+			return true;
+		}
+
+		bool testDiv() {
+			{
+				v3 a(2, 4, 6);
+				v3 c = a / 2;
+				TEST_EQUAL(c, v3(1, 2, 3), "div");
+			}
+			return true;
+		}
+
+		bool testDot() {
+			{
+				v3 a(1, 0, 0), b(2, 0, 0);
+				NUM_TYPE c = a.dot(b);
+				TEST_EQUAL(c, 2, "dot 1");
+			}
+			{
+				v3 a(1, 0, 0), b(0, 1, 0);
+				NUM_TYPE c = a.dot(b);
+				TEST_EQUAL(c, 0, "dot 2");
+			}
+			{
+				v3 a(1, 1, 0), b(1, 1, 1);
+				NUM_TYPE c = a.dot(b);
+				TEST_EQUAL(c, 2, "dot 3");
+			}
+			{
+				v3 a(1, 1, 1), b(1, 1, 1);
+				NUM_TYPE c = a.dot(b);
+				TEST_EQUAL(c, 3, "dot 4");
+			}
+			return true;
+		}
+
+		bool testCross() {
+			{
+				v3 a(1, 0, 0), b(1, 0, 0);
+				v3 c = a.cross(b);
+				TEST_EQUAL(c, v3(0, 0, 0), "cross 0");
+			}
+			{
+				v3 a(0, 1, 0), b(0, 0, 1);
+				v3 c = a.cross(b);
+				TEST_EQUAL(c, v3(1, 0, 0), "cross x");
+			}
+			{
+				v3 a(0, 0, 1), b(1, 0, 0);
+				v3 c = a.cross(b);
+				TEST_EQUAL(c, v3(0, 1, 0), "cross y");
+			}
+			{
+				v3 a(1, 0, 0), b(0, 1, 0);
+				v3 c = a.cross(b);
+				TEST_EQUAL(c, v3(0, 0, 1), "cross z");
+			}
+			return true;
+		}
+
+	};
 
 
-template<typename NUM_TYPE>
-class LERPTests {
-	using v3 = Vector3<NUM_TYPE>;
-public:
+	template<typename NUM_TYPE>
 	bool testAll() {
-		TEST_TRUE(testBiLerp(), "Failed testBiLerp");
+		VectorTests<NUM_TYPE> tests;
 
-		cout << "All LERP tests passed\n";
-		return true;
+		return tests.testAll();
 	}
 
-	bool testBiLerp() {
-		{
-			Vector3<NUM_TYPE> p((NUM_TYPE)0.25, (NUM_TYPE)0.25, 0),
-				p0(0, 0, 0),
-				p1(1, 0, 0),
-				p2(1, 1, 0),
-				p3(0, 1, 0);
+	bool testNorms3d() {
+		using v3 = Vector3<double>;
 
-			NUM_TYPE t, u;
-			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");;
-			TEST_TRUE(fabs(t - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
-			TEST_TRUE(fabs(u - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
-		}
+		v3 a(1, 1, 1);
+		double v = sqrt(3);
+		double vInv = 1 / v;
+		TEST_EQUAL(a.norm(), v, "test norm double");
+		TEST_EQUAL(a.normalized(), v3(vInv, vInv, vInv), "test normalized double");
+		TEST_EQUAL(a.squaredNorm(), 3, "test squaredNorm double");
 
-		{
-			Vector3<NUM_TYPE> p((NUM_TYPE)0.0, (NUM_TYPE)0.25, 0),
-				p0(0, 0, 0),
-				p1(1, 0, 0),
-				p2(1, 1, 0),
-				p3(0, 1, 0);
-
-			NUM_TYPE t, u;
-			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");;
-			TEST_TRUE(fabs(t - 0.0) < (NUM_TYPE)1.0e-8, "testBiLerp");
-			TEST_TRUE(fabs(u - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
-		}
-
-		{
-			Vector3<NUM_TYPE> p((NUM_TYPE)1.0, (NUM_TYPE)0.25, 0),
-				p0(0, 0, 0),
-				p1(1, 0, 0),
-				p2(1, 1, 0),
-				p3(0, 1, 0);
-
-			NUM_TYPE t, u;
-			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");;
-			TEST_TRUE(fabs(t - 1.0) < (NUM_TYPE)1.0e-8, "testBiLerp");
-			TEST_TRUE(fabs(u - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
-		}
-
-		{
-			Vector3<NUM_TYPE> p((NUM_TYPE)0.25, (NUM_TYPE)0., 0),
-				p0(0, 0, 0),
-				p1(1, 0, 0),
-				p2(1, 1, 0),
-				p3(0, 1, 0);
-
-			NUM_TYPE t, u;
-			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");;
-			TEST_TRUE(fabs(t - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
-			TEST_TRUE(fabs(u - 0.) < (NUM_TYPE)1.0e-8, "testBiLerp");
-		}
-
-		{
-			Vector3<NUM_TYPE> p((NUM_TYPE)0.25, (NUM_TYPE)1., 0),
-				p0(0, 0, 0),
-				p1(1, 0, 0),
-				p2(1, 1, 0),
-				p3(0, 1, 0);
-
-			NUM_TYPE t, u;
-			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");;
-			TEST_TRUE(fabs(t - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
-			TEST_TRUE(fabs(u - 1.) < (NUM_TYPE)1.0e-8, "testBiLerp");
-		}
-
-		{
-			Vector3<NUM_TYPE>
-				p0(0, 0, 0),
-				p1(1, 0, 0.25), // Non planar surface
-				p2(1, 1, 0),
-				p3(0, 1, 0);
-			Vector3<NUM_TYPE> p = BI_LERP(p0, p1, p2, p3, (NUM_TYPE)0.25, (NUM_TYPE)0.25);
-
-			NUM_TYPE t, u;
-			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");
-			TEST_TRUE(fabs(t - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
-			TEST_TRUE(fabs(u - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
-		}
-
-		{
-			Vector3<NUM_TYPE>
-				p0(-1, 0, -0.5),
-				p1(1, 0, 0.25), // Non planar surface
-				p2(1, 1, 0.777),
-				p3(0, 2, -0.12);
-			Vector3<NUM_TYPE> p = BI_LERP(p0, p1, p2, p3, (NUM_TYPE)0.25, (NUM_TYPE)0.25);
-
-			NUM_TYPE t, u;
-			TEST_TRUE(BI_LERP_INV<NUM_TYPE>(p, p0, p1, p2, p3, t, u), "testBiLerp");
-			TEST_TRUE(fabs(t - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
-			TEST_TRUE(fabs(u - 0.25) < (NUM_TYPE)1.0e-8, "testBiLerp");
-		}
+		a.normalize();
+		TEST_EQUAL(a, v3(vInv, vInv, vInv), "test normalize double");
 
 		return true;
 	}
-};
-
-template<typename NUM_TYPE>
-bool testAll() {
-	VectorTests<NUM_TYPE> tests;
-
-	return tests.testAll();
-}
-
-template<typename NUM_TYPE>
-bool testAllLERP() {
-	LERPTests<NUM_TYPE> tests;
-
-	return tests.testAll();
-}
-
-bool testNormsd() {
-	using v3 = Vector3<double>;
-
-	v3 a(1, 1, 1);
-	double v = sqrt(3);
-	double vInv = 1 / v;
-	TEST_EQUAL(a.norm(), v, "test norm double");
-	TEST_EQUAL(a.normalized(), v3(vInv, vInv, vInv), "test normalized double");
-	TEST_EQUAL(a.squaredNorm(), 3, "test squaredNorm double");
-
-	a.normalize();
-	TEST_EQUAL(a, v3(vInv, vInv, vInv), "test normalize double");
-
-	return true;
 }
 
 bool testVector3() {
@@ -323,14 +209,7 @@ bool testVector3() {
 	TEST_TRUE(testAll<double>(), "failed testAll<double>");
 	TEST_TRUE(testAll<size_t>(), "failed testAll<size_t>");
 
-	TEST_TRUE(testNormsd(), "failed testNormsd");
-
-	return true;
-}
-
-bool testLERP() {
-	// Don't test LERP with float, it's not accurate enough
-	TEST_TRUE(testAllLERP<double>(), "failed testAll<double>");
+	TEST_TRUE(testNorms3d(), "failed testNormsd");
 
 	return true;
 }

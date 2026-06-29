@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 
 /*
 
@@ -33,75 +34,78 @@ This file is part of the TriMesh library.
 
 #include <cmath>
 #include <vector>
-#include <tm_util.h>
+#include <tm_vector3.h>
 
 namespace RootFinder {
 
-
-template <class T>
-void normalizeStdVector(std::vector<T>& grad)
+template<class T, class ERR_FUNC, class GRAD_FUNC>
+T findMin(const Vector3<T>& pt, size_t numParams, T* params, const ERR_FUNC& errFunc, const GRAD_FUNC& gradFunc, T stepsize, T tol)
 {
-	T avgSqrs = 0;
-	for (T v : grad) {
-		avgSqrs += v * v;
-	}
-	avgSqrs = sqrt(avgSqrs);
-	for (T& v : grad) {
-		v /= avgSqrs;
-	}
-}
+	const T DIV_ZERO_VAL = (T)1.0e-12;
+	const T MIN_PARAM_DELTA = (T)1.0e-14;
+	std::vector<T> gradientVec;
+	gradientVec.resize(numParams);
 
-template <class T, typename ERR_FUNC, typename GRAD_FUNC>
-bool findMin(const std::vector<T>& pt, std::vector<T>& params, const ERR_FUNC& errFunc, const GRAD_FUNC& gradFunc, T resultErr, T stepSize)
-{
-	T slope = DBL_MAX;
-	T err = errFunc(params);
-	std::vector<T> grad, tempParams;
-	grad.resize(params.size(), 0);
-	tempParams.resize(params.size(), 0);
-	while (err > resultErr) {
-		T err0, err1;
-		gradFunc(params, grad);
+	T* gradient = gradientVec.data();
+	auto err = errFunc(params, gradient, 0);
 
-		for (size_t i = 0; i < params.size(); i++) 
-			tempParams[i] = params[i] - stepSize * grad[i];
-		
-		err0 = errFunc(tempParams);
+	int numConvergences = 0;
+	while (fabs(err) > tol) {
+		gradFunc(params, gradient);
 
-		for (size_t i = 0; i < params.size(); i++) 
-			tempParams[i] = params[i] + stepSize * grad[i];
-		
-		err1 = errFunc(tempParams);
+		auto err0 = errFunc(params, gradient, -stepsize);
+		auto err1 = errFunc(params, gradient, stepsize);
 
-		auto a = ((err0 - err) + (err1 - err)) / (2 * stepSize * stepSize);
-		slope = (err1 - err0) / (2 * stepSize);
-		T deltaX = FLT_MAX;
-		if (fabs(a) > 1.0e-12) {
-			// It took awhile to get this right.
-			// As you approach the bottom the parabola, the slope goes to zero, so the slope estimated x approaches infinity,
-			// but the parabolic estimate is now more accurate.
-			// On the steep part of the parabola, a is almost zero and slope is large, so it produced the best estimate.
-			// So...
-			// Choose the one that's smallest.
-			deltaX = -slope / (2 * a);
-			T deltaX1 = -err / slope;
-			if (fabs(deltaX1) < fabs(deltaX))
-				deltaX = deltaX1;
-		} else if (fabs(slope) > resultErr)
-			deltaX = -err / slope;
-		else {
-			break;
-		}
+		auto a = ((err0 - err) + (err1 - err)) / (2 * stepsize * stepsize);
+		auto b = (err1 - err0) / (2 * stepsize);
 
-		if (fabs(deltaX) < FLT_MAX) {
-			for (size_t i = 0; i < params.size(); i++) {
-				params[i] += deltaX * grad[i];
+		T deltaX = 0;
+		if (fabs(a) > DIV_ZERO_VAL) {
+			deltaX = -b / (2 * a);
+			if (fabs(b) > DIV_ZERO_VAL) {
+				T deltaXLin = -err / b;
+
+				// The best way to determine which delta reduces error the most is
+				// to test both ways and choose one
+				err0 = errFunc(params, gradient, deltaX);
+				err1 = errFunc(params, gradient, deltaXLin);
+
+				// since we have both, update the params and continue from here
+				if (err0 < err1) {
+					err = err0;
+					for (size_t i = 0; i < numParams; i++) {
+						params[i] += gradient[i] * deltaX;
+					}
+				}
+				else {
+					err = err1;
+					for (size_t i = 0; i < numParams; i++) {
+						params[i] += gradient[i] * deltaXLin;
+					}
+				}
+				continue;
 			}
 		}
-		err = errFunc(params);
+		else if (fabs(b) > DIV_ZERO_VAL) {
+			deltaX = -err / b;
+		}
+		else {
+			return err; // We've got the best answer we're going to get
+		}
+
+		if (fabs(deltaX) < MIN_PARAM_DELTA) {
+			numConvergences++;
+			if (numConvergences > 100)
+				return err;
+		}
+
+		for (size_t i = 0; i < numParams; i++) {
+			params[i] += gradient[i] * deltaX;
+		}
+		err = errFunc(params, gradient, 0);
 	}
 
-	return true;
+	return err;
 }
 
 }

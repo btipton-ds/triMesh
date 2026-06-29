@@ -28,8 +28,8 @@ This file is part of the TriMesh library.
 	Dark Sky Innovative Solutions http://darkskyinnovation.com/
 
 	NOTE****
-	LineSegment DOES NOT preserve point order. It sorts the points so the "smaller" comes first using the Vertex3 operator < method.
-	This allows LineSegment to be used in sets and maps.
+	LineSegment_byref DOES NOT preserve point order. It sorts the points so the "smaller" comes first using the Vertex3 operator < method.
+	This allows LineSegment_byref to be used in sets and maps.
 */
 
 #include <tm_defines.h>
@@ -39,50 +39,32 @@ This file is part of the TriMesh library.
 #include <climits>
 #include <cfloat>
 
-#include <tm_vector3.h>
+#include <tm_vector2.h>
 
 template<class T>
-class Plane;
+struct LineSegment2D;
+
 
 template<class T>
-struct Ray;
-
-template<class T>
-struct RayHit;
-
-template<class T>
-class LineSegment_byref;
-
-template<class T>
-struct LineSegment {
+struct LineSegment2D_byref {
 	using SCALAR_TYPE = T;
-	using POINT_TYPE = Vector3<SCALAR_TYPE>;
+	using POINT_TYPE = Vector2<SCALAR_TYPE>;
 
-	LineSegment() = default;
-	LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1);
+	LineSegment2D_byref(const POINT_TYPE& p0, const POINT_TYPE& p1);
 	SCALAR_TYPE calLength() const;
 	POINT_TYPE calcDir() const;
 	POINT_TYPE interpolate(SCALAR_TYPE t) const;
 	SCALAR_TYPE parameterize(const POINT_TYPE& pt) const;
 	bool contains(const POINT_TYPE& pt, SCALAR_TYPE& t, SCALAR_TYPE tol) const;
-	Ray<SCALAR_TYPE> getRay() const;
+	bool intersects(const LineSegment2D<T>& other, POINT_TYPE& iPt, SCALAR_TYPE tol) const;
+	bool intersects(const LineSegment2D_byref& other, POINT_TYPE& iPt, SCALAR_TYPE tol) const;
 
-	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt, POINT_TYPE& closestPt, SCALAR_TYPE& t) const;
 	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt, SCALAR_TYPE& t) const;
 	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt) const;
+	SCALAR_TYPE distanceToPointSqr(const POINT_TYPE& pt) const;
 
-	bool intersectTri(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
-	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
-	bool intersectPlane(const Plane<SCALAR_TYPE>& plane, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
-	bool intersectPlane(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
-
-	bool isCoincident(const POINT_TYPE& pt, SCALAR_TYPE tol) const;
-	bool isCoincident(const LineSegment<T>& other, SCALAR_TYPE tol) const;
-	bool isCoincident(const LineSegment_byref<T>& other, SCALAR_TYPE tol) const;
-	bool isCoincident(const Ray<T>& other, SCALAR_TYPE tol) const;
-
-	POINT_TYPE _pt0, _pt1;
+	const POINT_TYPE &_pt0, &_pt1;
 };
 
-using LineSegmentd = LineSegment<double>;
-using LineSegmentf = LineSegment<float>;
+using LineSegment_byrefd = LineSegment_byref<double>;
+using LineSegment_byreff = LineSegment_byref<float>;

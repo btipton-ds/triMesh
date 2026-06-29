@@ -309,8 +309,6 @@ bool Plane<T>::intersectPlane(const Plane& otherPlane, Ray<T>& iSeg, T tol) cons
 	Ray<T> perpRay(otherPlane._origin, vPerp);
 	RayHit<T> hp;
 	if (intersectRay(perpRay, hp, tol)) {
-		assert(distanceToPoint(hp.hitPt) < 1.0e-6);
-		assert(otherPlane.distanceToPoint(hp.hitPt) < 1.0e-6);
 		iSeg = Ray<T>(hp.hitPt, dir);
 		return true;
 	}
@@ -333,26 +331,26 @@ bool Plane<T>::isCoincident(const Plane& other, T distTol, T cpTol) const
 }
 
 template<class T>
-typename Plane<T>::POINT_TYPE Plane<T>::projectPoint(const POINT_TYPE& pt) const
+typename Plane<T>::POINT_TYPE Plane<T>::projectPoint(const POINT_TYPE& pt, T tol) const
 {
 	POINT_TYPE v = pt - _origin;
-	v = v - _normal.dot(v) * _normal;
-	POINT_TYPE result = _origin + v;
+	auto dp = v.dot(_normal);
+	POINT_TYPE result = pt - dp * _normal;
+	// This refinement is required to assure that future isCoincident tests pass.
+	// Without this, testing for insideTriangle after a project can fail because the projected
+	// point is not within tolerance of the triangle's plane.
+	auto err = (result - _origin).dot(_normal);
+	int count = 0;
+	while (fabs(err) > tol && count++ < 3) { // On refinement was always enough in testing. 3 Should be overkill.
+		v = result - _origin;
+		dp = v.dot(_normal);
+		result = result - dp * _normal;
+		err = (result - _origin).dot(_normal);
+	}
 #if FULL_TESTS
 	assert(distanceToPoint(result) < 1.0e-8);
 #endif
 	return result;
-}
-
-template<class T>
-Vector2<T> Plane<T>::projectPoint2D(const POINT_TYPE& pt) const
-{
-	POINT_TYPE v = pt - _origin;
-	Vector3<T> yAxis = _normal.cross(_xRef);
-	yAxis.normalize();
-	auto x = _xRef.dot(v);
-	auto y = yAxis.dot(v);
-	return Vector2<T>(x, y);
 }
 
 template class Plane<double>;

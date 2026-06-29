@@ -39,7 +39,6 @@ This file is part of the TriMesh library.
 #include <tm_edge.h>
 #include <tm_ray.h>
 #include <tm_vertex.h>
-#include <tm_util.h>
 
 /*
 	All vertices and triangles are stored in a CMeshRepo. If a shared repo is desired, create one and pass it as a parameter. If not
@@ -55,7 +54,17 @@ This file is part of the TriMesh library.
 
 namespace TriMesh {
 
-class CMesh;
+	template<typename T>
+	class ScopedSetVal {
+	public:
+		ScopedSetVal(T& variable, T newVal);
+		~ScopedSetVal();
+	private:
+		T _oldVal;
+		T& _variable;
+	};
+
+	class CMesh;
 	using CMeshPtr = std::shared_ptr<CMesh>;
 	using CMeshConstPtr = std::shared_ptr<const CMesh>;
 
@@ -402,6 +411,21 @@ class CMesh;
 
 	inline const CEdge& CMesh::getEdge(size_t idx) const {
 		return _edges[idx];
+	}
+
+
+	template<typename T>
+	inline ScopedSetVal<T>::ScopedSetVal(T& variable, T newVal)
+		: _variable(variable)
+	{
+		_oldVal = _variable;
+		_variable = newVal;
+	}
+
+	template<typename T>
+	inline ScopedSetVal<T>::~ScopedSetVal()
+	{
+		_variable = _oldVal;
 	}
 
 }
