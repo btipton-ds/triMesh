@@ -509,13 +509,31 @@ bool BI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, T& t,
 }
 
 template<class T>
-bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
+void TRI_LERP_GRAD_SLOPES(const Vector3<T>& pt, const std::vector<Vector3<T>>& p, const Vector3<T>& tuv, Vector3<T>& grad)
+{
+	auto t = tuv[0];
+	auto u = tuv[1];
+	auto v = tuv[2];
+
+	auto dx0 = p[1] - p[0];
+	auto dx1 = p[2] - p[3];
+	auto dx2 = p[5] - p[4];
+	auto dx3 = p[6] - p[7];
+
+	auto calculatedPoint = TRI_LERP(p, tuv);
+	grad = calculatedPoint - pt;
+
+	int dbgBreak = 1;
+}
+
+template<class T>
+bool TRI_LERP_INV_DEPRECATED(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
 {
 	if (pts.empty())
 		return false;
 
 	/*
-	Current method is relaxation. Not the best but it works.
+	Old method was relaxation. Not the best but it works.
 	*/
 	T a, b, c, l;
 	Vector3<T> x, y, z, p0, p1, dir, v;
@@ -535,7 +553,7 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 
 	v = pt - pPts[0];
 	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
-#if 1
+
 	const double tolSqr = tol * tol;
 	int count = 0;
 
@@ -566,95 +584,69 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 	}
 
 	return done;
-#else
-	auto errFunc = [&pt, &pPts](const T* params, const T* gradient, T stepsize)->T {
+}
 
-		const auto& testPt = TRI_LERP(pPts,
-			params[0] + gradient[0] * stepsize,
-			params[1] + gradient[1] * stepsize,
-			params[2] + gradient[2] * stepsize);
-		Vector3<T> v = testPt - pt;
-		return v.norm();
-		};
+template<class T>
+bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
+{
+	if (pts.empty())
+		return false;
 
-	const Vector3<T> v0(pt - pPts[0]);
-	const Vector3<T> v01(pPts[1] - pPts[0]);
-	const Vector3<T> v03(pPts[3] - pPts[0]);
-	const Vector3<T> v04(pPts[4] - pPts[0]);
-	const Vector3<T> v32(pPts[2] - pPts[3]);
-	const Vector3<T> v45(pPts[5] - pPts[4]);
-	const Vector3<T> v47(pPts[7] - pPts[4]);
-	const Vector3<T> v76(pPts[6] - pPts[7]);
+	/*
+	New method is Newton-Raphson and converges 10 times faster with numeric precision or zero error on the value of tuv.
+	Early testing showed a divergence in results resulting in crashes because the new method was MORE accurate, but these 
+	are no longer occurring. Not sure why, so keeping the old version around for testing if the issue returns.
+	*/
+	T a, b, c, l;
+	Vector3<T> x, y, z, p0, p1, dir, v;
 
-	const Vector3<T> v32_01(v32 - v01);
-	const Vector3<T> v45_01(v45 - v01);
-	const Vector3<T> v76_45(v76 - v45);
+	auto pPts = pts.data();
+	x = pPts[1] - pPts[0];
+	l = x.norm();
+	x /= l * l;
 
-	auto gradFunc = [&](const T* params, T* gradient) {
-		const auto t = params[0];
-		const auto u = params[1];
-		const auto v = params[2];
+	y = pPts[3] - pPts[0];
+	l = y.norm();
+	y /= l * l;
 
-		Vector3<T> termA = (-(((v76_45 - v32_01) * u + v45_01) * v) - v32_01 * u - v01);
-		Vector3<T> termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
+	z = pPts[4] - pPts[0];
+	l = z.norm();
+	z /= l * l;
 
-		gradient[0] =
-			termA[0] * termB[0] +
-			termA[1] * termB[1] +
-			termA[2] * termB[2];// / den;
+	v = pt - pPts[0];
+	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
 
-		termA = (-(((v76_45 - v32_01 * t) + v47 - v03) * v) - v32_01 * t - v03);
-		termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
-
-		gradient[1] =
-			termA[0] * termB[0] +
-			termA[1] * termB[1] +
-			termA[2] * termB[2]; // den;
-
-		termA = (-((v76_45 * t + v47) * u) + (v32_01 * t + v03) * u - v45_01 * t - v04);
-		termB = (-(((v76_45 * t + v47) * u - (v32_01 * t + v03) * u + v45_01 * t + v04) * v) - (v32_01 * t + v03) * u - v01 * t + v0);
-
-		gradient[2] =
-			termA[0] * termB[0] +
-			termA[1] * termB[1] +
-			termA[2] * termB[2]; // den;
-
-		T sum = 0;
-		for (size_t i = 0; i < 3; i++) {
-			const auto& v = gradient[i];
-			sum += v * v;
-		}
-		sum = sqrt(sum);
-		for (size_t i = 0; i < 3; i++) {
-			gradient[i] /= sum;
-		}
-		};
-
-	T params[3] = { tuv[0], tuv[1], tuv[2] };
-	T err = RootFinder::findMin(pt, 3, params, errFunc, gradFunc, (T)1.0e-8, tol);
-	if (err < tol) {
-		for (int i = 0; i < 3; i++) {
-			T& val = params[i];
-			if (val < 0) {
-				if (val > -tol)
-					val = 0;
-				else
-					return false;
-			}
-			else if (val > 1) {
-				if (val < 1 + tol)
-					val = 1;
-				else
-					return false;
-			}
-
-			tuv[i] = val;
-		}
-		return true;
-	}
-
-	return false;
+	/*
+	After studying this for several years and using a relaxation algorithm, I realized the key was
+	to perform the root finding using the target point as the origin, not the block and the gradient is
+	pCalc - pActual.
+	This provides a signed, orthogonal coordineate system with signed errors. This allows a simple, linear Newton-Raphson solution.
+	This solution is converging 1 to 4 steps instead of 20 to 50. If the block is has planar faces, it converges in 1 step.
+	The result is usually accurate with an error of zero or numeric tolerance.
+	*/
+	const T maxErr = 1.0e-12, delta = 1.0e-8;
+	Vector3<T> errVec;
+	TRI_LERP_GRAD_SLOPES<T>(pt, pts, tuv, errVec);
+	auto err = errVec.norm();
+	int count = 0;
+	while (err > maxErr && count++ < 6) {
+		auto gradient = errVec.normalized();
+		Vector3<T> tuv2 = tuv + delta * gradient;
+		TRI_LERP_GRAD_SLOPES<T>(pt, pts, tuv2, errVec);
+		auto err2 = errVec.norm();
+		auto slope = (err2 - err) / delta;
+		auto newVal = -err / slope;
+		tuv = tuv + newVal * gradient;
+		TRI_LERP_GRAD_SLOPES<T>(pt, pts, tuv, errVec);
+		err = errVec.norm();
+#if 0
+		auto checkPt = TRI_LERP(pts, tuv);
+		auto checkErr = checkPt - pt;
+		int dbgBreak = 1;
 #endif
+	}
+	//	std::cout << "TRI_LERP_INV err: " << err << ", count: " << count << "\n";
+	return err <= maxErr;
 }
 
 template<class T>

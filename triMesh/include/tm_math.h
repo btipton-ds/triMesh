@@ -161,6 +161,9 @@ template<class T>
 Vector3<T> TRI_LERP(const std::vector<Vector3<T>>& pts, const Vector3<T>& uvw);
 
 template<class T>
+bool TRI_LERP_INV_DEPRECATED(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol = sameDistTol<T>());
+
+template<class T>
 bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol = sameDistTol<T>());
 
 #include <tm_math.hpp>

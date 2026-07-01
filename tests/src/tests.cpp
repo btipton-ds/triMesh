@@ -549,12 +549,24 @@ bool testTriLERP(const std::vector<Vector3d>& corners, const Vector3d& tuv)
 	stringstream ss;
 	ss << "testTriLERP tuv: [" << tuv[0] << " " << tuv[1] << " " << tuv[2] << "]";
 
-	Vector3d tuvTest;
-	TEST_TRUE(TRI_LERP_INV(testPt, corners, tuvTest, 0.1 * tol), ss.str());
-	TEST_TRUE((tuvTest- tuv).norm() < tol, ss.str());
+	{
+		Vector3d tuvTest;
+		TEST_TRUE(TRI_LERP_INV_DEPRECATED(testPt, corners, tuvTest, 0.1 * tol), ss.str());
+		TEST_TRUE((tuvTest - tuv).norm() < tol, ss.str());
 
-	Vector3d checkPt = TRI_LERP(corners, tuvTest);
-	TEST_TRUE((testPt - checkPt).norm() < tol, ss.str());
+		Vector3d checkPt = TRI_LERP(corners, tuvTest);
+		TEST_TRUE((testPt - checkPt).norm() < tol, ss.str());
+	}
+
+	{
+		Vector3d tuvTest;
+		TEST_TRUE(TRI_LERP_INV(testPt, corners, tuvTest, 0.1 * tol), ss.str());
+		TEST_TRUE((tuvTest - tuv).norm() < tol, ss.str());
+
+		Vector3d checkPt = TRI_LERP(corners, tuvTest);
+		TEST_TRUE((testPt - checkPt).norm() < tol, ss.str());
+	}
+
 
 	return true;
 }
