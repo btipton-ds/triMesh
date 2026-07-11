@@ -98,15 +98,19 @@ void CSSB_DCL::clear() {
 CSSB_TMPL
 size_t CSSB_DCL::numBytes() const
 {
-	size_t result = sizeof(CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>);
+	if (_numBytesDirty) {
+		_numBytes = sizeof(CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>);
 
-	if (_pContents)
-		result += _pContents->_vals.capacity() * sizeof(Entry);
-	if (_pLeft)
-		result += _pLeft->numBytes();
-	if (_pRight)
-		result += _pRight->numBytes();
-	return result;
+		if (_pContents)
+			_numBytes += _pContents->_vals.capacity() * sizeof(Entry);
+		if (_pLeft)
+			_numBytes += _pLeft->numBytes();
+		if (_pRight)
+			_numBytes += _pRight->numBytes();
+
+		_numBytesDirty = false;
+	}
+	return _numBytes;
 }
 
 CSSB_TMPL
@@ -321,6 +325,7 @@ bool CSSB_DCL::add(const Entry& newEntry, int depth) {
 
 	addToContents(newEntry);
 	_numInTree++;
+	_numBytes = true;
 
 	// Split node and add to correct node
 	if (!_pLeft && _pContents->_vals.size() > ENTRY_LIMIT)

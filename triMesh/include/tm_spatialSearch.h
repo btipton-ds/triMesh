@@ -116,7 +116,11 @@ private:
 	static bool containsBbox(const BOX_TYPE& bbox, const BOX_TYPE& otherBbox, BoxTestType testType);
 	static bool containsEntry(const BOX_TYPE& bbox, const Entry& entry, BoxTestType testType);
 
+	mutable bool _numBytesDirty = false;
+	mutable size_t _numBytes = 0;
+
 	size_t _numInTree = 0;
+
 	size_t _id = 0;
 	BOX_TYPE _bbox;
 	int _axis = 0;
