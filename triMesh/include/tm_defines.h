@@ -54,3 +54,5 @@ constexpr double minNormalizeDivisor = 1.0e-12;
 #define stm1 0xffffffffffffffff
 #endif
 #define CHECK_NAN 1
+
+#define _HAS_CXX17 1

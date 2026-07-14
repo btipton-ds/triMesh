@@ -60,6 +60,10 @@ inline bool testTrue(bool pass)
 		return false; \
 	} \
 }
+
+#define TEST_NULL(A, MESSAGE) TEST_TRUE(A == nullptr, MESSAGE)
+#define TEST_NOT_NULL(A, MESSAGE) TEST_TRUE(A != nullptr, MESSAGE)
+
 bool runTests();
 
 bool testVector2();
