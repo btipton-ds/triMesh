@@ -62,4 +62,12 @@ PUBLIC triMesh
 PUBLIC stlReader
 )
 
+if(WIN32)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+else(WIN32)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wno-deprecated-enum-enum-conversion")
+target_compile_features(DistFieldHexMesh PRIVATE cxx_std_20)
+endif(WIN32)
+
 # TODO: Add tests and install targets if needed.
