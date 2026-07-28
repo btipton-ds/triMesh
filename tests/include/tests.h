@@ -64,9 +64,10 @@ inline bool testTrue(bool pass)
 #define TEST_EQUAL_TOL(FUNC, VAL, TOL, MESSAGE) \
 { \
 	auto result = (FUNC); \
-	auto ratio = fabs(result / VAL - 1); \
-	if (ratio > TOL) { \
-		cout << MESSAGE << " fail, out of range. Expected " << VAL << ", got " << result << "\n"; \
+	auto ratio = (result) / (double)(VAL) - 1.0; \
+	cout << "ratio: " << ratio << "\n"; \
+	if (fabs(ratio) > TOL) { \
+		cout << MESSAGE << " fail, out of range. Expected " << (VAL) << ", got " << result << "\n"; \
 		return false; \
 	} \
 }
