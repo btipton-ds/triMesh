@@ -50,7 +50,7 @@ if (!((A) != (B))) { \
 	return false; \
 }
 
-#define TEST_EQUAL_TOL(A, B, msg) \
+#define TEST_EQUAL_TOL_LOCAL(A, B, msg) \
 if (!((fabs((A) - (B)) <= tol()))) { \
 	cout << msg << " " << fabs((A) - (B)) << "\n"; \
 	return false; \
@@ -149,24 +149,24 @@ bool Test_double_f<T>::testAssign()
 	double dr;
 
 	dst = double_f<T>(0.2);
-	TEST_EQUAL_TOL(0.2, dst, "Test_double_f::testAssign fail: (1 = 2) == 2.");
+	TEST_EQUAL_TOL_LOCAL(0.2, dst, "Test_double_f::testAssign fail: (1 = 2) == 2.");
 	dst = 0.2;
-	TEST_EQUAL_TOL(0.2, dst, "Test_double_f::testAssign fail: (1 = 2) == 2.");
+	TEST_EQUAL_TOL_LOCAL(0.2, dst, "Test_double_f::testAssign fail: (1 = 2) == 2.");
 	dst = double_f<T>(-0.2);
-	TEST_EQUAL_TOL(-0.2, dst, "Test_double_f::testAssign fail: (1 = -2) == -2.");
+	TEST_EQUAL_TOL_LOCAL(-0.2, dst, "Test_double_f::testAssign fail: (1 = -2) == -2.");
 	dst = -0.2;
-	TEST_EQUAL_TOL(-0.2, dst, "Test_double_f::testAssign fail: (1 = -2) == -2.");
+	TEST_EQUAL_TOL_LOCAL(-0.2, dst, "Test_double_f::testAssign fail: (1 = -2) == -2.");
 
 	dr = double_f<T>(0.3);
-	TEST_EQUAL_TOL(dr, 0.3, "Test_double_f::testAssign fail: double x = double_f(3).");
+	TEST_EQUAL_TOL_LOCAL(dr, 0.3, "Test_double_f::testAssign fail: double x = double_f(3).");
 
 	double_f<T> r = double_f<T>(0.5) - double_f<T>(0.2);
 	dr = r;
-	TEST_EQUAL_TOL(dr, 0.3, "Test_double_f::testAssign fail: double x = double_f<T>(5) - double_f<T>(2).");
+	TEST_EQUAL_TOL_LOCAL(dr, 0.3, "Test_double_f::testAssign fail: double x = double_f<T>(5) - double_f<T>(2).");
 
 	double_f<T> df;
 	df = 0.23;
-	TEST_EQUAL_TOL(df, 0.23, "Test_double_f::testAssign fail: df = 0.23.");
+	TEST_EQUAL_TOL_LOCAL(df, 0.23, "Test_double_f::testAssign fail: df = 0.23.");
 
 	return true;
 }
@@ -203,8 +203,8 @@ template<class T>
 bool Test_double_f<T>::testMath()
 {
 	double d = double_f<T>(0.5) - double_f<T>(0.2);
-	TEST_EQUAL_TOL(0.3, double_f<T>(0.5) - double_f<T>(0.2), "Test_double_f::testMath 3 == 5 - 2 fail");
-	TEST_EQUAL_TOL(double_f<T>(0.20 / 3.0), double_f<T>(0.2) / 3, "Test_double_f::testMath 2.0 / 3.0 == double_f<T>(2) / double_f<T>(3) fail");
+	TEST_EQUAL_TOL_LOCAL(0.3, double_f<T>(0.5) - double_f<T>(0.2), "Test_double_f::testMath 3 == 5 - 2 fail");
+	TEST_EQUAL_TOL_LOCAL(double_f<T>(0.20 / 3.0), double_f<T>(0.2) / 3, "Test_double_f::testMath 2.0 / 3.0 == double_f<T>(2) / double_f<T>(3) fail");
 	return true;
 }
 
