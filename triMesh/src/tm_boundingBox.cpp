@@ -252,6 +252,21 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment_byref<SCALAR
 }
 
 template <class SCALAR_TYPE>
+void CBoundingBox3D<SCALAR_TYPE>::cornerPoints(POINT_TYPE pts[8]) const
+{
+	auto range = _max - _min;
+	pts[0] = POINT_TYPE(_min[0], _min[1], _min[2]);
+	pts[1] = POINT_TYPE(_min[0] + range[0], _min[1], _min[2]);
+	pts[2] = POINT_TYPE(_min[0] + range[0], _min[1] + range[1], _min[2]);
+	pts[3] = POINT_TYPE(_min[0], _min[1] + range[1], _min[2]);
+
+	pts[4] = POINT_TYPE(_min[0], _min[1], _min[2] + range[2]);
+	pts[5] = POINT_TYPE(_min[0] + range[0], _min[1], _min[2] + range[2]);
+	pts[6] = POINT_TYPE(_min[0] + range[0], _min[1] + range[1], _min[2] + range[2]);
+	pts[7] = POINT_TYPE(_min[0], _min[1] + range[1], _min[2] + range[2]);
+}
+
+template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const CBoundingBox3D& otherBox, SCALAR_TYPE tol) const {
 	const auto& otherMin = otherBox._min;
 	const auto& otherMax = otherBox._max;
@@ -326,6 +341,44 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, vector
 	}
 
 	return !pts.empty();
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Plane<SCALAR_TYPE>& pl, SCALAR_TYPE tol) const
+{
+	POINT_TYPE corners[8];
+	cornerPoints(corners);
+
+	RayHit<SCALAR_TYPE> hit;
+
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[0], corners[1]), hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[1], corners[2]), hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[2], corners[3]), hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[3], corners[0]), hit, tol))
+		return true;
+
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[4], corners[5]), hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[5], corners[6]), hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[6], corners[7]), hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[7], corners[4]), hit, tol))
+		return true;
+
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[0], corners[4]), hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[1], corners[5]), hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[2], corners[6]), hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[3], corners[7]), hit, tol))
+		return true;
+
+	return false;
 }
 
 template <class SCALAR_TYPE>

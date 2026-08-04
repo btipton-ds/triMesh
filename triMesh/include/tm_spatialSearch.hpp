@@ -187,6 +187,28 @@ size_t CSSB_DCL::biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYP
 }
 
 CSSB_TMPL
+size_t CSSB_DCL::intersects(const Plane<SCALAR_TYPE>& pl, std::vector<Entry>& result, SCALAR_TYPE tol) const
+{
+	if (_bbox.intersects(pl, tol)) {
+		if (_pContents && _pContents->_bbox.intersects(pl, tol)) {
+			const auto vec = _pContents->_vals;
+			auto pData = vec.data();
+			for (size_t i = 0; i < vec.size(); i++) {
+				if (pData->getBBox().intersects(pl, tol))
+					result.push_back(*pData);
+				pData++;
+			}
+		}
+
+		if (_pLeft)
+			_pLeft->intersects(pl, result, tol);
+		if (_pRight)
+			_pRight->intersects(pl, result, tol);
+	}
+	return result.size();
+}
+
+CSSB_TMPL
 template<class FUNC>
 void CSSB_DCL::traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType testType) const {
 	if (containsBbox(_bbox, bbox, testType)) {

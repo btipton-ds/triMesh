@@ -59,6 +59,7 @@ public:
 
 	bool intersects(const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const;
 	bool intersects(const Ray<SCALAR_TYPE>& ray, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol) const;
+	bool intersects(const Plane<SCALAR_TYPE>& pl, SCALAR_TYPE tol) const;
 
 	bool intersects(const LineSegment<SCALAR_TYPE>& seg, SCALAR_TYPE tol, int skipAxis) const;
 	bool intersects(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, int skipAxis) const;
@@ -85,6 +86,7 @@ private:
 
 	bool intersectsInner(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const;
 	bool intersectsInner(const LineSegment_byref<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const;
+	void cornerPoints(POINT_TYPE pts[8]) const;
 
 	POINT_TYPE _min, _max;
 };
