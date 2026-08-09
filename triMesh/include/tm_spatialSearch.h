@@ -49,6 +49,7 @@ template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
 class CSpatialSearchBase : public std::enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>> {
 public:
 	using BOX_TYPE = CBoundingBox3D<SCALAR_TYPE>;
+	using POINT_TYPE = Vector3<SCALAR_TYPE>;
 	using SpatialSearchBasePtr = CSpatialSearchBasePtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>;
 	using SpatialSearchBaseConstPtr = CSpatialSearchBaseConstPtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>;
 
@@ -82,13 +83,16 @@ public:
 	size_t count(const BOX_TYPE& bbox, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	size_t find(const POINT_TYPE& pt, std::vector<Entry>& result, SCALAR_TYPE tol = (SCALAR_TYPE)SAME_DIST_TOL) const;
 	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
 	size_t intersects(const Plane<SCALAR_TYPE>& pl, std::vector<Entry>& result, SCALAR_TYPE tol = (SCALAR_TYPE)SAME_DIST_TOL) const;
 
 	template<class FUNC>
-	void traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
+	bool traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	template<class FUNC>
-	void biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol = (SCALAR_TYPE) SAME_DIST_TOL) const;
+	bool traverse(const POINT_TYPE& pt, const FUNC& func, SCALAR_TYPE tol = (SCALAR_TYPE)SAME_DIST_TOL) const;
+	template<class FUNC>
+	bool biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol = (SCALAR_TYPE) SAME_DIST_TOL) const;
 
 	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
 
