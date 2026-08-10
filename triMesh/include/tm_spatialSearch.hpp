@@ -230,63 +230,64 @@ size_t CSSB_DCL::intersects(const Plane<SCALAR_TYPE>& pl, std::vector<Entry>& re
 CSSB_TMPL
 template<class FUNC>
 bool CSSB_DCL::traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType testType) const {
-	bool continueFlag = true;
 	if (containsBbox(_bbox, bbox, testType)) {
 		if (_pContents && containsBbox(_pContents->_bbox, bbox, testType)) {
 			size_t num = _pContents->_vals.size();
 			auto pData = _pContents->_vals.data();
 			for (size_t i = 0; i < num; i++) {
 				if (containsEntry(bbox, *pData, testType)) {
-					if (!func(pData->getIndex())) {
-						continueFlag = false;
-						break;
-					}
+					if (!func(pData->getIndex()))
+						return false;
 				}
 				pData++;
 			}
 		}
-		if (continueFlag && _pLeft)
-			continueFlag = _pLeft->traverse(bbox, func, testType);
-		if (continueFlag && _pRight)
-			continueFlag = _pRight->traverse(bbox, func, testType);
+		if (_pLeft) {
+			if (!_pLeft->traverse(bbox, func, testType))
+				return false;
+		}
+		if (_pRight) {
+			if (!_pRight->traverse(bbox, func, testType))
+				return false;
+		}
 	}
 
-	return continueFlag;
+	return true;
 }
 
 CSSB_TMPL
 template<class FUNC>
 bool CSSB_DCL::traverse(const POINT_TYPE& pt, const FUNC& func, SCALAR_TYPE tol) const
 {
-	bool continueFlag = true;
 	if (_bbox.contains(pt, tol)) {
 		if (_pContents && _pContents->_bbox.contains(pt, tol)) {
 			size_t num = _pContents->_vals.size();
 			auto pData = _pContents->_vals.data();
 			for (size_t i = 0; i < num; i++) {
 				if (pData->getBBox().contains(pt, tol)) {
-					if (!func(pData->getIndex())) {
-						continueFlag = false;
-						break;
-					}
+					if (!func(pData->getIndex()))
+						return false;
 				}
 				pData++;
 			}
 		}
-
-		if (continueFlag && _pLeft)
-			continueFlag = _pLeft->traverse(pt, func, tol);
-		if (continueFlag && _pRight)
-			continueFlag = _pRight->traverse(pt, func, tol);
+		
+		if (_pLeft) {
+			if (!_pLeft->traverse(pt, func, tol))
+				return false;
+		}
+		if (_pRight) {
+			if (!_pRight->traverse(pt, func, tol))
+				return false;
+		}
 	}
 
-	return continueFlag;
+	return true;
 }
 
 CSSB_TMPL
 template<class FUNC>
 bool CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol) const {
-	bool continueFlag = true;
 	if (_bbox.intersects(ray, tol)) {
 		if (_pContents && _pContents->_bbox.intersects(ray, tol)) {
 			size_t num = _pContents->_vals.size();
@@ -294,19 +295,22 @@ bool CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& fun
 			for (size_t i = 0; i < num; i++) {
 				if (pData->getBBox().intersects(ray, tol)) {
 					if (!func(ray, pData->getIndex()))
-						continueFlag = false;
-						break;
+						return false;
 				}
 				pData++;
 			}
 		}
 
-		if (continueFlag && _pLeft)
-			continueFlag = _pLeft->biDirRayCastTraverse(ray, func, tol);
-		if (continueFlag && _pRight)
-			continueFlag = _pRight->biDirRayCastTraverse(ray, func, tol);
+		if (_pLeft) {
+			if (!_pLeft->biDirRayCastTraverse(ray, func, tol))
+				return false;
+		}
+		if (_pRight) {
+			if (!_pRight->biDirRayCastTraverse(ray, func, tol))
+				return false;
+		}
 	}
-	return continueFlag;
+	return true;
 }
 
 CSSB_TMPL
