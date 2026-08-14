@@ -91,8 +91,13 @@ public:
 	bool traverse(const BOX_TYPE& bbox, const FUNC& func, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	template<class FUNC>
 	bool traverse(const POINT_TYPE& pt, const FUNC& func, SCALAR_TYPE tol = (SCALAR_TYPE)SAME_DIST_TOL) const;
-	template<class FUNC>
-	bool biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol = (SCALAR_TYPE) SAME_DIST_TOL) const;
+	template<class TEST_FUNC>
+	bool biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const TEST_FUNC& testFunc, SCALAR_TYPE tol = (SCALAR_TYPE) SAME_DIST_TOL) const;
+
+	// This version performs at test before testing the bounding box intersects the ray. BBox intersect ray is expensive
+	// and in some cases we can skip entries which are the wrong type.
+	template<class PRE_BBOX_TEST_FUNC, class TEST_FUNC>
+	bool biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const PRE_BBOX_TEST_FUNC& preTestBBoxFunc, const TEST_FUNC& testFunc, SCALAR_TYPE tol = (SCALAR_TYPE)SAME_DIST_TOL) const;
 
 	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
 

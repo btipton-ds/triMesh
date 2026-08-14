@@ -286,15 +286,16 @@ bool CSSB_DCL::traverse(const POINT_TYPE& pt, const FUNC& func, SCALAR_TYPE tol)
 }
 
 CSSB_TMPL
-template<class FUNC>
-bool CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& func, SCALAR_TYPE tol) const {
+template<class TEST_FUNC>
+bool CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const TEST_FUNC& testFunc, SCALAR_TYPE tol) const {
 	if (_bbox.intersects(ray, tol)) {
 		if (_pContents && _pContents->_bbox.intersects(ray, tol)) {
 			size_t num = _pContents->_vals.size();
 			auto pData = _pContents->_vals.data();
 			for (size_t i = 0; i < num; i++) {
-				if (pData->getBBox().intersects(ray, tol)) {
-					if (!func(ray, pData->getIndex()))
+				const Entry& entry = *pData;
+				if (entry.getBBox().intersects(ray, tol)) {
+					if (!testFunc(ray, entry.getIndex()))
 						return false;
 				}
 				pData++;
@@ -302,11 +303,44 @@ bool CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const FUNC& fun
 		}
 
 		if (_pLeft) {
-			if (!_pLeft->biDirRayCastTraverse(ray, func, tol))
+			if (!_pLeft->biDirRayCastTraverse(ray, testFunc, tol))
 				return false;
 		}
 		if (_pRight) {
-			if (!_pRight->biDirRayCastTraverse(ray, func, tol))
+			if (!_pRight->biDirRayCastTraverse(ray, testFunc, tol))
+				return false;
+		}
+	}
+	return true;
+}
+
+CSSB_TMPL
+template<class PRE_BBOX_TEST_FUNC, class TEST_FUNC>
+bool CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const PRE_BBOX_TEST_FUNC& preTestBBoxFunc, const TEST_FUNC& testFunc,
+	SCALAR_TYPE tol) const
+{
+	if (_bbox.intersects(ray, tol)) {
+		if (_pContents && _pContents->_bbox.intersects(ray, tol)) {
+			size_t num = _pContents->_vals.size();
+			auto pData = _pContents->_vals.data();
+			for (size_t i = 0; i < num; i++) {
+				const Entry& entry = *pData;
+				const auto& entryBBox = entry.getBBox();
+				const auto& idx = entry.getIndex();
+				if (preTestBBoxFunc(ray, idx) && entryBBox.intersects(ray, tol)) {
+					if (!testFunc(ray, idx))
+						return false;
+				}
+				pData++;
+			}
+		}
+
+		if (_pLeft) {
+			if (!_pLeft->biDirRayCastTraverse(ray, preTestBBoxFunc, testFunc, tol))
+				return false;
+		}
+		if (_pRight) {
+			if (!_pRight->biDirRayCastTraverse(ray, preTestBBoxFunc, testFunc, tol))
 				return false;
 		}
 	}
