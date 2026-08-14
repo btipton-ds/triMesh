@@ -304,20 +304,127 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<SCALAR_
 }
 
 template <class SCALAR_TYPE>
-bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const {
-	for (int i = 0; i < 3; i++) {
-		RayHit<SCALAR_TYPE> hit;
+inline bool CBoundingBox3D<SCALAR_TYPE>::intersectsInnerX(const POINT_TYPE& planeOrigin, 
+	const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const
+{
+	RayHit<SCALAR_TYPE> hit;
+	Plane_byref<SCALAR_TYPE> minPlane(planeOrigin, _axes[0]);
+	if (minPlane.intersectRay(ray, hit, tol)) {
+		const SCALAR_TYPE lpt[] = { hit.hitPt[0], hit.hitPt[1], hit.hitPt[2] };
 
-		Plane_byref<SCALAR_TYPE> minPlane(_min, _axes[i]);
-		if (minPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
-			return true;
-		}
+		SCALAR_TYPE delta;
 
-		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
-		if (maxPlane.intersectRay(ray, hit, tol) && contains(hit.hitPt, tol)) {
-			return true;
-		}
+		int i;
+		
+		i = 1;
+		delta = lpt[i] - _min[i];
+		if (delta < -tol)
+			return false;
+		delta = lpt[i] - _max[i];
+		if (delta > tol)
+			return false;
+
+		i = 2;
+		delta = lpt[i] - _min[i];
+		if (delta < -tol)
+			return false;
+		delta = lpt[i] - _max[i];
+		if (delta > tol)
+			return false;
+
+		return true;
 	}
+	return false;
+}
+
+template <class SCALAR_TYPE>
+inline bool CBoundingBox3D<SCALAR_TYPE>::intersectsInnerY(const POINT_TYPE& planeOrigin,
+	const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const
+{
+	RayHit<SCALAR_TYPE> hit;
+	Plane_byref<SCALAR_TYPE> minPlane(planeOrigin, _axes[1]);
+	if (minPlane.intersectRay(ray, hit, tol)) {
+		const SCALAR_TYPE lpt[] = { hit.hitPt[0], hit.hitPt[1], hit.hitPt[2] };
+
+		SCALAR_TYPE delta;
+
+		int i;
+
+		i = 0;
+		delta = lpt[i] - _min[i];
+		if (delta < -tol)
+			return false;
+		delta = lpt[i] - _max[i];
+		if (delta > tol)
+			return false;
+
+		i = 2;
+		delta = lpt[i] - _min[i];
+		if (delta < -tol)
+			return false;
+		delta = lpt[i] - _max[i];
+		if (delta > tol)
+			return false;
+
+		return true;
+	}
+	return false;
+}
+
+template <class SCALAR_TYPE>
+inline bool CBoundingBox3D<SCALAR_TYPE>::intersectsInnerZ(const POINT_TYPE& planeOrigin,
+	const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const
+{
+	RayHit<SCALAR_TYPE> hit;
+	Plane_byref<SCALAR_TYPE> minPlane(planeOrigin, _axes[2]);
+	if (minPlane.intersectRay(ray, hit, tol)) {
+		const SCALAR_TYPE lpt[] = { hit.hitPt[0], hit.hitPt[1], hit.hitPt[2] };
+
+		SCALAR_TYPE delta;
+
+		int i;
+
+		i = 0;
+		delta = lpt[i] - _min[i];
+		if (delta < -tol)
+			return false;
+		delta = lpt[i] - _max[i];
+		if (delta > tol)
+			return false;
+
+		i = 1;
+		delta = lpt[i] - _min[i];
+		if (delta < -tol)
+			return false;
+		delta = lpt[i] - _max[i];
+		if (delta > tol)
+			return false;
+
+		return true;
+	}
+	return false;
+}
+
+template <class SCALAR_TYPE>
+bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const {
+	if (_radiusSquared < 0) {
+		_center = (_min + _max) * (SCALAR_TYPE)0.5;
+		auto vR = _max - _center;
+		vR += POINT_TYPE(tol, tol, tol);
+		_radiusSquared = vR.squaredNorm();
+	}
+
+	auto distSqr = ray.distToPtSquared(_center);
+	if (distSqr > _radiusSquared)
+		return false;
+
+	if (intersectsInnerX(_min, ray, tol)) return true;
+	if (intersectsInnerY(_min, ray, tol)) return true;
+	if (intersectsInnerZ(_min, ray, tol)) return true;
+
+	if (intersectsInnerX(_max, ray, tol)) return true;
+	if (intersectsInnerY(_max, ray, tol)) return true;
+	if (intersectsInnerZ(_max, ray, tol)) return true;
 
 	return false;
 }

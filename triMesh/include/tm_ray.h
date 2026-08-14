@@ -39,6 +39,7 @@ struct Ray {
 
 	Ray(const POINT_TYPE& origin = POINT_TYPE(0, 0, 0), const POINT_TYPE& dir = POINT_TYPE(0,0,0));
 	T distToPt(const POINT_TYPE& pt) const;
+	T distToPtSquared(const POINT_TYPE& pt) const;
 	POINT_TYPE project(const POINT_TYPE& pt) const;
 
 	POINT_TYPE _origin, _dir;
@@ -66,11 +67,17 @@ inline Ray<T>::Ray(const POINT_TYPE& origin, const POINT_TYPE& dir)
 }
 
 template<class T>
-T Ray<T>::distToPt(const POINT_TYPE& pt) const
+inline T Ray<T>::distToPt(const POINT_TYPE& pt) const
+{
+	return sqrt(distToPtSquared(pt));
+}
+
+template<class T>
+inline T Ray<T>::distToPtSquared(const POINT_TYPE& pt) const
 {
 	POINT_TYPE v = pt - _origin;
 	v = v - _dir.dot(v) * _dir;
-	return v.norm();
+	return v.squaredNorm();
 }
 
 template<class T>

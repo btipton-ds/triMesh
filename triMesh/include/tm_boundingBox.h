@@ -86,9 +86,14 @@ private:
 
 	bool intersectsInner(const LineSegment<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const;
 	bool intersectsInner(const LineSegment_byref<SCALAR_TYPE>& seg, std::vector<POINT_TYPE>& pts, SCALAR_TYPE tol, bool getAll, int skipAxis) const;
+	bool intersectsInnerX(const POINT_TYPE& planeOrigin, const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const;
+	bool intersectsInnerY(const POINT_TYPE& planeOrigin, const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const;
+	bool intersectsInnerZ(const POINT_TYPE& planeOrigin, const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const;
 	void cornerPoints(POINT_TYPE pts[8]) const;
 
 	POINT_TYPE _min, _max;
+	mutable SCALAR_TYPE _radiusSquared = -1;
+	mutable POINT_TYPE _center;
 };
 
 using CBoundingBox3Dd = CBoundingBox3D<double>;
