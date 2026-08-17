@@ -348,7 +348,7 @@ bool CSSB_DCL::biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const PRE_BBOX_
 }
 
 CSSB_TMPL
-typename CSSB_DCL::SpatialSearchBaseConstPtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox, BoxTestType testType) const
+typename CSSB_DCL::SpatialSearchBasePtr CSSB_DCL::getSubTree(const BOX_TYPE& bbox, BoxTestType testType) const
 {
 #if 0
 	return this->shared_from_this();

@@ -43,15 +43,11 @@ template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
 using CSpatialSearchBasePtr = std::shared_ptr<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>;
 
 template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
-using CSpatialSearchBaseConstPtr = std::shared_ptr<const CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>>;
-
-template <class SCALAR_TYPE, class INDEX_TYPE, int ENTRY_LIMIT>
 class CSpatialSearchBase : public std::enable_shared_from_this<CSpatialSearchBase<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>> {
 public:
 	using BOX_TYPE = CBoundingBox3D<SCALAR_TYPE>;
 	using POINT_TYPE = Vector3<SCALAR_TYPE>;
 	using SpatialSearchBasePtr = CSpatialSearchBasePtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>;
-	using SpatialSearchBaseConstPtr = CSpatialSearchBaseConstPtr<SCALAR_TYPE, INDEX_TYPE, ENTRY_LIMIT>;
 
 	enum class BoxTestType {
 		Contains, Intersects, IntersectsOrContains
@@ -84,6 +80,7 @@ public:
 	size_t find(const BOX_TYPE& bbox, std::vector<Entry>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	size_t find(const BOX_TYPE& bbox, std::vector<INDEX_TYPE>& result, BoxTestType contains = BoxTestType::IntersectsOrContains) const;
 	size_t find(const POINT_TYPE& pt, std::vector<Entry>& result, SCALAR_TYPE tol = (SCALAR_TYPE)SAME_DIST_TOL) const;
+	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<Entry>& hits) const;
 	size_t biDirRayCast(const Ray<SCALAR_TYPE>& ray, std::vector<INDEX_TYPE>& hits) const;
 	size_t intersects(const Plane<SCALAR_TYPE>& pl, std::vector<Entry>& result, SCALAR_TYPE tol = (SCALAR_TYPE)SAME_DIST_TOL) const;
 
@@ -99,7 +96,7 @@ public:
 	template<class PRE_BBOX_TEST_FUNC, class TEST_FUNC>
 	bool biDirRayCastTraverse(const Ray<SCALAR_TYPE>& ray, const PRE_BBOX_TEST_FUNC& preTestBBoxFunc, const TEST_FUNC& testFunc, SCALAR_TYPE tol = (SCALAR_TYPE)SAME_DIST_TOL) const;
 
-	SpatialSearchBaseConstPtr getSubTree(const BOX_TYPE& bbox, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
+	SpatialSearchBasePtr getSubTree(const BOX_TYPE& bbox, BoxTestType testType = BoxTestType::IntersectsOrContains) const;
 
 	bool add(const BOX_TYPE& bbox, const INDEX_TYPE& index);
 
