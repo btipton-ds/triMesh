@@ -52,6 +52,7 @@ public:
 	void merge(const CBoundingBox3D& bboxIn);
 	const POINT_TYPE& getMin() const;
 	const POINT_TYPE& getMax() const;
+	void getCornerPts(std::vector<POINT_TYPE>& pts) const;
 	POINT_TYPE range() const;
 	bool contains(const POINT_TYPE& pt, SCALAR_TYPE tol) const;
 	bool contains(const CBoundingBox3D& other, SCALAR_TYPE tol) const;

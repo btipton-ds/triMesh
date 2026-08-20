@@ -111,6 +111,23 @@ inline const typename CBoundingBox3D<SCALAR_TYPE>::POINT_TYPE& CBoundingBox3D<SC
 }
 
 template <class SCALAR_TYPE>
+void CBoundingBox3D<SCALAR_TYPE>::getCornerPts(std::vector<POINT_TYPE>& pts) const
+{
+	auto r = range();
+	pts.reserve(8);
+
+	pts.push_back(_min + POINT_TYPE(  0,    0,  0));
+	pts.push_back(_min + POINT_TYPE(r[0],   0,  0));
+	pts.push_back(_min + POINT_TYPE(r[0], r[1], 0));
+	pts.push_back(_min + POINT_TYPE(  0,  r[1], 0));
+
+	pts.push_back(_min + POINT_TYPE(  0,    0,  r[2]));
+	pts.push_back(_min + POINT_TYPE(r[0],   0,  r[2]));
+	pts.push_back(_min + POINT_TYPE(r[0], r[1], r[2]));
+	pts.push_back(_min + POINT_TYPE(  0,  r[1], r[2]));
+}
+
+template <class SCALAR_TYPE>
 inline typename CBoundingBox3D<SCALAR_TYPE>::POINT_TYPE CBoundingBox3D<SCALAR_TYPE>::range() const {
 	return _max - _min;
 }
