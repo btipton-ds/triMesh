@@ -66,7 +66,7 @@ class Plane {
 public:
 	using POINT_TYPE = Vector3<T>;
 
-	Plane() = default;
+	Plane();
 	Plane(const Plane& src) = default;
 	Plane(const POINT_TYPE& origin, const POINT_TYPE& normal, bool alreadyNormalzed = false);
 	Plane(const POINT_TYPE* const* pts, bool initXRef = true);
@@ -86,6 +86,7 @@ public:
 	bool intersectPlane(const Plane& otherPlane, Ray<T>& iSeg, T tol) const;
 	bool isCoincident(const POINT_TYPE& other, T tol) const;
 	bool isCoincident(const Plane& other, T distTol, T cpTol) const;
+	bool isValid() const;
 
 	POINT_TYPE projectPoint(const POINT_TYPE& pt, T tol = sameDistTol<T>()) const;
 	T distanceToPoint(const POINT_TYPE& pt, bool absolute = true) const;

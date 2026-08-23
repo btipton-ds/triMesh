@@ -34,6 +34,30 @@ This file is part of the TriMesh library.
 #include <tm_lineSegment.h>
 #include <tm_lineSegment_byref.h>
 
+namespace
+{
+	template<class T>
+	T maxVal();
+
+	template<>
+	double maxVal()
+	{
+		return DBL_MAX;
+	}
+
+	template<>
+	float maxVal()
+	{
+		return FLT_MAX;
+	}
+}
+template<class T>
+Plane<T>::Plane()
+	: _origin(maxVal<T>(), maxVal<T>(), maxVal<T>())
+	, _normal(maxVal<T>(), maxVal<T>(), maxVal<T>())
+{
+}
+
 template<class T>
 Plane<T>::Plane(const POINT_TYPE* const* pts, bool initXRef)
 	: Plane(*pts[0], *pts[1], *pts[2])
@@ -328,6 +352,12 @@ bool Plane<T>::isCoincident(const Plane& other, T distTol, T cpTol) const
 		return false;
 
 	return true;
+}
+
+template<class T>
+bool Plane<T>::isValid() const
+{
+	return _origin[0] != maxVal<T>() && _normal[0] != maxVal<T>();
 }
 
 template<class T>
