@@ -65,9 +65,13 @@ inline bool testTrue(bool pass)
 { \
 	auto result = (FUNC); \
 	auto ratio = (result) / (double)(VAL) - 1.0; \
-	cout << "ratio: " << ratio << "\n"; \
-	if (fabs(ratio) > TOL) { \
-		cout << MESSAGE << " fail, out of range. Expected " << (VAL) << ", got " << result << "\n"; \
+	int64_t a = (int64_t)(FUNC); \
+	int64_t b = (int64_t)(VAL); \
+	int64_t diff = a - b; \
+	if (fabs(diff) > 0)\
+		cout << MESSAGE << " not zero. Diff/Vals: " << diff << "/" << b << "\n"; \
+	if (fabs(ratio) > TOL) {\
+		cout << MESSAGE << " fail.\n"; \
 		return false; \
 	} \
 }
