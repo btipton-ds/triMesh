@@ -64,6 +64,7 @@ struct LineSegment_byref;
 template<class T>
 class Plane {
 public:
+	using SCALAR_TYPE = T;
 	using POINT_TYPE = Vector3<T>;
 
 	Plane();
@@ -73,6 +74,7 @@ public:
 	Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, bool initXRef = true);
 
 	void makePrincipal();
+	SCALAR_TYPE getPrincipalDistance() const;
 	void setXRef(const POINT_TYPE& xRef);
 	void reverse();
 	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt, T tol) const;
@@ -98,6 +100,7 @@ public:
 private:
 	static void orthogonalize(const POINT_TYPE& v0, POINT_TYPE& v1);
 	POINT_TYPE _origin, _normal, _xRef;
+	mutable SCALAR_TYPE _cachedPrincipalDistance;
 };
 
 

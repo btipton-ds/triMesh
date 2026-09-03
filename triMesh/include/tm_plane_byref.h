@@ -50,10 +50,12 @@ struct LineSegment_byref;
 template<class T>
 class Plane_byref {
 public:
+	using SCALAR_TYPE = T;
 	using POINT_TYPE = Vector3<T>;
 
 	Plane_byref(const POINT_TYPE& origin, const POINT_TYPE& normal);
 
+	SCALAR_TYPE getPrincipalDistance() const;
 	bool intersectLine(const POINT_TYPE& pt0, const POINT_TYPE& pt1, RayHit<T>& hitPt, T tol) const;
 	bool intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const;
 	bool intersectLineSegment(const LineSegment_byref<T>& seg, RayHit<T>& hitPt, T tol) const;
@@ -139,6 +141,12 @@ inline bool Plane_byref<T>::intersectRay(const Ray<T>& ray, RayHit<T>& hit, T to
 	
 #endif
 	return true;
+}
+
+template<class T>
+inline Plane_byref<T>::SCALAR_TYPE Plane_byref<T>::getPrincipalDistance() const
+{
+	return _origin.dot(_normal); // Distance from the global origin to the plane origin;
 }
 
 template<class T>

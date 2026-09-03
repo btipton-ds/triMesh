@@ -62,15 +62,15 @@ inline typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::parameterize(const P
 }
 
 template<class T>
-bool LineSegment<T>::contains(const POINT_TYPE& pt, LineSegment<T>::SCALAR_TYPE& t, SCALAR_TYPE tol) const
+bool LineSegment<T>::contains(const POINT_TYPE& pt, bool includeEndPoints, SCALAR_TYPE& t, SCALAR_TYPE tol) const
 {
 	if (tolerantEquals(_pt0, pt, tol)) {
 		t = 0;
-		return true;
+		return includeEndPoints;
 	}
 	else if (tolerantEquals(_pt1, pt, tol)) {
 		t = 1;
-		return true;
+		return includeEndPoints;
 	} else {
 		const auto tolSqr = tol * tol;
 		POINT_TYPE vDir = _pt1 - _pt0;
@@ -89,7 +89,11 @@ bool LineSegment<T>::contains(const POINT_TYPE& pt, LineSegment<T>::SCALAR_TYPE&
 			return false; // pt does not lie on the segment within tolerance.
 
 		t = dp / len;
-		return -tol < dp && dp < (len + tol); // return if the pt lies in [zero, len] within tolerance
+		if (includeEndPoints)
+			return -tol < dp && dp < (len + tol);
+		else
+			return tol < dp && dp < (len - tol);
+
 	}
 }
 

@@ -687,10 +687,10 @@ bool intersectTriTri(class Vector3<T> const* const* triPts0, class Vector3<T> co
 
 	auto looseTol = 10 * tol;
 	T t;
-	if (iSeg0.contains(iSeg1._pt0, t, looseTol) || iSeg0.contains(iSeg1._pt1, t, looseTol))
+	if (iSeg0.contains(iSeg1._pt0, true, t, looseTol) || iSeg0.contains(iSeg1._pt1, true, t, looseTol))
 		return true;
 
-	if (iSeg1.contains(iSeg0._pt0, t, looseTol) || iSeg1.contains(iSeg0._pt1, t, looseTol))
+	if (iSeg1.contains(iSeg0._pt0, true, t, looseTol) || iSeg1.contains(iSeg0._pt1, true, t, looseTol))
 		return true;
 
 	return false;

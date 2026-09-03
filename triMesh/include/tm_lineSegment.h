@@ -64,7 +64,7 @@ struct LineSegment {
 	POINT_TYPE calcDir() const;
 	POINT_TYPE interpolate(SCALAR_TYPE t) const;
 	SCALAR_TYPE parameterize(const POINT_TYPE& pt) const;
-	bool contains(const POINT_TYPE& pt, SCALAR_TYPE& t, SCALAR_TYPE tol) const;
+	bool contains(const POINT_TYPE& pt, bool includeEndPoints, SCALAR_TYPE& t, SCALAR_TYPE tol) const;
 	Ray<SCALAR_TYPE> getRay() const;
 
 	SCALAR_TYPE distanceToPoint(const POINT_TYPE& pt, POINT_TYPE& closestPt, SCALAR_TYPE& t) const;
