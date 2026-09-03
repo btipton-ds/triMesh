@@ -100,7 +100,6 @@ public:
 private:
 	static void orthogonalize(const POINT_TYPE& v0, POINT_TYPE& v1);
 	POINT_TYPE _origin, _normal, _xRef;
-	mutable SCALAR_TYPE _cachedPrincipalDistance;
 };
 
 

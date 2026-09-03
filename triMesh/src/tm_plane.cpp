@@ -55,19 +55,17 @@ template<class T>
 Plane<T>::Plane()
 	: _origin(maxVal<T>(), maxVal<T>(), maxVal<T>())
 	, _normal(maxVal<T>(), maxVal<T>(), maxVal<T>())
-	, _cachedPrincipalDistance(maxVal<T>())
 {
 }
 
 template<class T>
 Plane<T>::Plane(const POINT_TYPE* const* pts, bool initXRef)
-	: Plane(*pts[0], *pts[1], *pts[2])
+	: Plane(*pts[0], *pts[1], *pts[2], initXRef)
 {
 }
 
 template<class T>
 Plane<T>::Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, bool initXRef)
-	: _cachedPrincipalDistance(maxVal<T>())
 {
 	_origin = pt0;
 	POINT_TYPE v0 = pt1 - pt0;
@@ -146,9 +144,7 @@ void Plane<T>::makePrincipal()
 template<class T>
 Plane<T>::SCALAR_TYPE Plane<T>::getPrincipalDistance() const
 {
-	if (_cachedPrincipalDistance == maxVal<T>())
-		_cachedPrincipalDistance = _origin.dot(_normal); // Distance from the global origin to the plane origin;
-	return _cachedPrincipalDistance;
+	return _origin.dot(_normal);
 }
 
 template<class T>
