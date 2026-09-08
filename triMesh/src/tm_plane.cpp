@@ -185,45 +185,17 @@ bool Plane<T>::intersectLineSegment_rev0(const LineSegment<T>& seg, RayHit<T>& h
 }
 
 template<class T>
-bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, RayHit<T>& hitPt, T tol) const
+bool Plane<T>::intersectLineSegment(const LineSegment<T>& seg, bool includeEndPoints, RayHit<T>& hitPt, T tol) const
 {
-	T h0 = (seg._pt0 - _origin).dot(_normal); // distanceToPoint(seg._pt0, false);
-	T h1 = (seg._pt1 - _origin).dot(_normal); // distanceToPoint(seg._pt1, false);
-
-	if (h0 * h1 <= 0) {
-		T absh0 = fabs(h0);
-		T absh1 = fabs(h1);
-		T l = absh0 + absh1;
-		if (l > 0) {
-			T t = absh0 / l;
-			hitPt.hitPt = seg.interpolate(t);
-			hitPt.dist = absh0;
-			assert(distanceToPoint(hitPt.hitPt) < tol);
-			return true;
-		}
-	}
-	return false;
+	// IntersectPlane call plane.interectRay and then does the inbounds check for the seg
+	return seg.intersectPlane(*this, includeEndPoints, hitPt, tol);
 }
 
 template<class T>
-bool Plane<T>::intersectLineSegment(const LineSegment_byref<T>& seg, RayHit<T>& hitPt, T tol) const
+bool Plane<T>::intersectLineSegment(const LineSegment_byref<T>& seg, bool includeEndPoints, RayHit<T>& hitPt, T tol) const
 {
-	T h0 = (seg._pt0 - _origin).dot(_normal); // distanceToPoint(seg._pt0, false);
-	T h1 = (seg._pt1 - _origin).dot(_normal); // distanceToPoint(seg._pt1, false);
-
-	if (h0 * h1 <= 0) {
-		T absh0 = fabs(h0);
-		T absh1 = fabs(h1);
-		T l = absh0 + absh1;
-		if (l > 0) {
-			T t = absh0 / l;
-			hitPt.hitPt = seg.interpolate(t);
-			hitPt.dist = absh0;
-			assert(distanceToPoint(hitPt.hitPt) < tol);
-			return true;
-		}
-	}
-	return false;
+	// IntersectPlane call plane.interectRay and then does the inbounds check for the seg
+	return seg.intersectPlane(*this, includeEndPoints, hitPt, tol);
 }
 
 template<class T>
@@ -238,7 +210,7 @@ bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const 
 	{
 		LineSegment<T> seg(pt0, pt1);
 
-		if (intersectLineSegment(seg, hit, tol)) {
+		if (intersectLineSegment(seg, true, hit, tol)) {
 			iPt0 = hit.hitPt;
 			numHits++;
 		}
@@ -247,7 +219,7 @@ bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const 
 	{
 		LineSegment<T> seg(pt1, pt2);
 
-		if (intersectLineSegment(seg, hit, tol)) {
+		if (intersectLineSegment(seg, true, hit, tol)) {
 			if (numHits == 0)
 				iPt0 = hit.hitPt;
 			else if (numHits == 1) {
@@ -262,7 +234,7 @@ bool Plane<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const 
 	{
 		LineSegment<T> seg(pt2, pt0);
 
-		if (intersectLineSegment(seg, hit, tol)) {
+		if (intersectLineSegment(seg, true, hit, tol)) {
 			if (numHits == 0)
 				iPt0 = hit.hitPt;
 			else if (numHits == 1) {
@@ -292,14 +264,14 @@ bool Plane<T>::intersectTri(const LineSegment<T> legs[], LineSegment<T>& iSeg, T
 	RayHit<T> hit;
 
 	{
-		if (intersectLineSegment(legs[0], hit, tol)) {
+		if (intersectLineSegment(legs[0], true, hit, tol)) {
 			iPt0 = hit.hitPt;
 			numHits++;
 		}
 	}
 
 	{
-		if (intersectLineSegment(legs[1], hit, tol)) {
+		if (intersectLineSegment(legs[1], true, hit, tol)) {
 			if (numHits == 0)
 				iPt0 = hit.hitPt;
 			else if (numHits == 1) {
@@ -312,7 +284,7 @@ bool Plane<T>::intersectTri(const LineSegment<T> legs[], LineSegment<T>& iSeg, T
 	}
 
 	{
-		if (intersectLineSegment(legs[2], hit, tol)) {
+		if (intersectLineSegment(legs[2], true, hit, tol)) {
 			if (numHits == 1) {
 				iPt1 = hit.hitPt;
 				iSeg = LineSegment<T>(iPt0, iPt1);

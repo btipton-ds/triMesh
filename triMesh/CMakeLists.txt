@@ -66,7 +66,7 @@ add_library (
 
     "../stlReader/src/readWriteStl.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
-    "include/tm_codeTemplates.h")
+ "include/tm_lineSegmentUtils.h")
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

@@ -27,53 +27,22 @@ This file is part of the TriMesh library.
 
 	Dark Sky Innovative Solutions http://darkskyinnovation.com/
 
+	NOTE****
+	LineSegment DOES NOT preserve point order. It sorts the points so the "smaller" comes first using the Vertex3 operator < method.
+	This allows LineSegment to be used in sets and maps.
 */
 
-#include <tm_defines.h>
-#include <tm_math.h>
-#include <tm_vector3.h>
-#include <tm_rayHit.h>
+#define SEG_INTERSECT_PLANE \
+if (plane.intersectRay(getRay(), hit, tol)) {\
+	auto v = hit.hitPt - _pt0;\
+	auto len = calLength();\
+	auto l = v.dot(calcDir());\
+	auto t = l / len;\
+	if (includeEndPoints)\
+		return -tol <= l && l < len + tol;\
+	else\
+		return tol <= l && l < len - tol;\
+}\
+return false;\
 
-template<class T>
-struct Ray {
-	using POINT_TYPE = Vector3<T>;
 
-	Ray(const POINT_TYPE& origin = POINT_TYPE(0, 0, 0), const POINT_TYPE& dir = POINT_TYPE(0,0,0));
-	T distToPt(const POINT_TYPE& pt) const;
-	T distToPtSquared(const POINT_TYPE& pt) const;
-	POINT_TYPE project(const POINT_TYPE& pt) const;
-
-	POINT_TYPE _origin, _dir;
-};
-
-template<class T>
-inline Ray<T>::Ray(const POINT_TYPE& origin, const POINT_TYPE& dir)
-	: _origin(origin)
-	, _dir(dir)
-{
-	_dir.normalize();
-}
-
-template<class T>
-inline T Ray<T>::distToPt(const POINT_TYPE& pt) const
-{
-	return sqrt(distToPtSquared(pt));
-}
-
-template<class T>
-inline T Ray<T>::distToPtSquared(const POINT_TYPE& pt) const
-{
-	POINT_TYPE v = pt - _origin;
-	v = v - _dir.dot(v) * _dir;
-	return v.squaredNorm();
-}
-
-template<class T>
-typename Ray<T>::POINT_TYPE Ray<T>::project(const POINT_TYPE& pt) const
-{
-	POINT_TYPE v = pt - _origin;
-	return _origin + _dir.dot(v) * _dir;
-}
-
-using Rayd = Ray<double>;
-using Rayf = Ray<float>;

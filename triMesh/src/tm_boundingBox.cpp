@@ -215,20 +215,21 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment<SCALAR_TYPE>
 	if (seg.calLength() < tol)
 		return false;
 
+	bool includeEndPoints = true;
 	for (size_t i = 0; i < 3; i++) {
 		if (skipAxis == i)
 			continue;
 
 		RayHit<SCALAR_TYPE> hit;
 		Plane_byref<SCALAR_TYPE> minPlane(_min, _axes[i]);
-		if (minPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
+		if (minPlane.intersectLineSegment(seg, includeEndPoints, hit, tol) && contains(hit.hitPt, tol)) {
 			pts.push_back(hit.hitPt);
 			if (!getAll)
 				break;
 		}
 
 		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
-		if (maxPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
+		if (maxPlane.intersectLineSegment(seg, includeEndPoints, hit, tol) && contains(hit.hitPt, tol)) {
 			pts.push_back(hit.hitPt);
 			if (!getAll)
 				break;
@@ -245,20 +246,21 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsInner(const LineSegment_byref<SCALAR
 	if (seg.calLength() < tol)
 		return false;
 
+	bool includeEndPoints = true;
 	for (size_t i = 0; i < 3; i++) {
 		if (skipAxis == i)
 			continue;
 
 		RayHit<SCALAR_TYPE> hit;
 		Plane_byref<SCALAR_TYPE> minPlane(_min, _axes[i]);
-		if (minPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
+		if (minPlane.intersectLineSegment(seg, includeEndPoints, hit, tol) && contains(hit.hitPt, tol)) {
 			pts.push_back(hit.hitPt);
 			if (!getAll)
 				break;
 		}
 
 		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
-		if (maxPlane.intersectLineSegment(seg, hit, tol) && contains(hit.hitPt, tol)) {
+		if (maxPlane.intersectLineSegment(seg, includeEndPoints, hit, tol) && contains(hit.hitPt, tol)) {
 			pts.push_back(hit.hitPt);
 			if (!getAll)
 				break;
@@ -308,13 +310,14 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersectsOrContains(const LineSegment<SCALAR_
 		if (skipAxis == i)
 			continue;
 
+		bool includeEndPoints = true;
 		RayHit<SCALAR_TYPE> hitPt;
 		Plane_byref<SCALAR_TYPE> minPlane(_min, _axes[i]);
-		if (minPlane.intersectLineSegment(seg, hitPt, tol) && contains(hitPt.hitPt, tol))
+		if (minPlane.intersectLineSegment(seg, includeEndPoints, hitPt, tol) && contains(hitPt.hitPt, tol))
 			return true;
 
 		Plane_byref<SCALAR_TYPE> maxPlane(_max, _axes[i]);
-		if (maxPlane.intersectLineSegment(seg, hitPt, tol) && contains(hitPt.hitPt, tol))
+		if (maxPlane.intersectLineSegment(seg, includeEndPoints, hitPt, tol) && contains(hitPt.hitPt, tol))
 			return true;
 	}
 	return false;
@@ -475,31 +478,32 @@ bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Plane<SCALAR_TYPE>& pl, SCALA
 
 	RayHit<SCALAR_TYPE> hit;
 
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[0], corners[1]), hit, tol))
+	bool includeEndPoints = true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[0], corners[1]), includeEndPoints, hit, tol))
 		return true;
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[1], corners[2]), hit, tol))
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[1], corners[2]), includeEndPoints, hit, tol))
 		return true;
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[2], corners[3]), hit, tol))
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[2], corners[3]), includeEndPoints, hit, tol))
 		return true;
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[3], corners[0]), hit, tol))
-		return true;
-
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[4], corners[5]), hit, tol))
-		return true;
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[5], corners[6]), hit, tol))
-		return true;
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[6], corners[7]), hit, tol))
-		return true;
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[7], corners[4]), hit, tol))
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[3], corners[0]), includeEndPoints, hit, tol))
 		return true;
 
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[0], corners[4]), hit, tol))
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[4], corners[5]), includeEndPoints, hit, tol))
 		return true;
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[1], corners[5]), hit, tol))
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[5], corners[6]), includeEndPoints, hit, tol))
 		return true;
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[2], corners[6]), hit, tol))
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[6], corners[7]), includeEndPoints, hit, tol))
 		return true;
-	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[3], corners[7]), hit, tol))
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[7], corners[4]), includeEndPoints, hit, tol))
+		return true;
+
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[0], corners[4]), includeEndPoints, hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[1], corners[5]), includeEndPoints, hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[2], corners[6]), includeEndPoints, hit, tol))
+		return true;
+	if (pl.intersectLineSegment(LineSegment_byref<SCALAR_TYPE>(corners[3], corners[7]), includeEndPoints, hit, tol))
 		return true;
 
 	return false;

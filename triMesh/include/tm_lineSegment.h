@@ -45,6 +45,9 @@ template<class T>
 class Plane;
 
 template<class T>
+class Plane_byref;
+
+template<class T>
 struct Ray;
 
 template<class T>
@@ -73,8 +76,9 @@ struct LineSegment {
 
 	bool intersectTri(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
 	bool intersectTri(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& pt2, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
-	bool intersectPlane(const Plane<SCALAR_TYPE>& plane, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
-	bool intersectPlane(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
+	bool intersectPlane(const Plane<SCALAR_TYPE>& plane, bool includeEndPoints, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
+	bool intersectPlane(const Plane_byref<SCALAR_TYPE>& plane, bool includeEndPoints, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
+	bool intersectPlane(const POINT_TYPE* pts[3], bool includeEndPoints, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const;
 
 	bool isCoincident(const POINT_TYPE& pt, SCALAR_TYPE tol) const;
 	bool isCoincident(const LineSegment<T>& other, SCALAR_TYPE tol) const;

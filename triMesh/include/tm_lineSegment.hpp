@@ -33,6 +33,9 @@ This file is part of the TriMesh library.
 #include <tm_math.h>
 #include <tm_ray.h>
 #include <tm_lineSegment.h>
+#include <tm_plane.h>
+#include <tm_plane_byref.h>
+#include <tm_lineSegmentUtils.h>
 
 template<class T>
 inline LineSegment<T>::LineSegment(const POINT_TYPE& p0, const POINT_TYPE& p1)
@@ -172,18 +175,41 @@ inline bool LineSegment<T>::intersectTri(const POINT_TYPE& pt0, const POINT_TYPE
 }
 
 template<class T>
-bool LineSegment<T>::intersectPlane(const Plane<T>& plane, RayHit<T>& hit, T tol) const
+bool LineSegment<T>::intersectPlane(const Plane<T>& plane, bool includeEndPoints, RayHit<T>& hit, T tol) const
 {
+//SEG_INTERSECT_PLANE
 	if (plane.intersectRay(getRay(), hit, tol)) {
-		POINT_TYPE v = hit.hitPt - _pt0;
-		SCALAR_TYPE t = v.dot(calcDir()) / calLength();
-		return 0 <= t && t <= 1;
+		auto v = hit.hitPt - _pt0; 
+		auto len = calLength(); 
+		auto l = v.dot(calcDir()); 
+		auto t = l / len; 
+		if (includeEndPoints) 
+			return -tol <= l && l < len + tol; 
+		else 
+			return tol <= l && l < len - tol;
 	}
 	return false;
 }
 
 template<class T>
-bool LineSegment<T>::intersectPlane(const POINT_TYPE* pts[3], RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
+bool LineSegment<T>::intersectPlane(const Plane_byref<SCALAR_TYPE>& plane, bool includeEndPoints, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
 {
-	return intersectPlane(Plane<SCALAR_TYPE>(pts), hit, tol);
+//SEG_INTERSECT_PLANE
+	if (plane.intersectRay(getRay(), hit, tol)) {
+		auto v = hit.hitPt - _pt0; 
+		auto len = calLength(); 
+		auto l = v.dot(calcDir()); 
+		auto t = l / len; 
+		if (includeEndPoints) 
+			return -tol <= l && l < len + tol; 
+		else 
+			return tol <= l && l < len - tol;
+	}
+	return false;
+}
+
+template<class T>
+bool LineSegment<T>::intersectPlane(const POINT_TYPE* pts[3], bool includeEndPoints, RayHit<SCALAR_TYPE>& hit, SCALAR_TYPE tol) const
+{
+	return intersectPlane(Plane<SCALAR_TYPE>(pts), includeEndPoints, hit, tol);
 }
