@@ -551,15 +551,6 @@ bool testTriLERP(const std::vector<Vector3d>& corners, const Vector3d& tuv)
 
 	{
 		Vector3d tuvTest;
-		TEST_TRUE(TRI_LERP_INV_DEPRECATED(testPt, corners, tuvTest, 0.1 * tol), ss.str());
-		TEST_TRUE((tuvTest - tuv).norm() < tol, ss.str());
-
-		Vector3d checkPt = TRI_LERP(corners, tuvTest);
-		TEST_TRUE((testPt - checkPt).norm() < tol, ss.str());
-	}
-
-	{
-		Vector3d tuvTest;
 		TEST_TRUE(TRI_LERP_INV(testPt, corners, tuvTest, 0.1 * tol), ss.str());
 		TEST_TRUE((tuvTest - tuv).norm() < tol, ss.str());
 

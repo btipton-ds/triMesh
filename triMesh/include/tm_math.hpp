@@ -527,66 +527,6 @@ void TRI_LERP_GRAD_SLOPES(const Vector3<T>& pt, const std::vector<Vector3<T>>& p
 }
 
 template<class T>
-bool TRI_LERP_INV_DEPRECATED(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
-{
-	if (pts.empty())
-		return false;
-
-	/*
-	Old method was relaxation. Not the best but it works.
-	*/
-	T a, b, c, l;
-	Vector3<T> x, y, z, p0, p1, dir, v;
-
-	auto pPts = pts.data();
-	x = pPts[1] - pPts[0];
-	l = x.norm();
-	x /= l * l;
-
-	y = pPts[3] - pPts[0];
-	l = y.norm();
-	y /= l * l;
-
-	z = pPts[4] - pPts[0];
-	l = z.norm();
-	z /= l * l;
-
-	v = pt - pPts[0];
-	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
-
-	const double tolSqr = tol * tol;
-	int count = 0;
-
-	Vector3<T> guess = TRI_LERP(pts, tuv);
-	T distSqr = (guess - pt).squaredNorm();
-	bool done = distSqr < tolSqr;
-
-	while (!done && count++ < 100) {
-		for (int axis = 0; axis < 3; axis++) {
-			auto oldVal = tuv[axis];
-
-			tuv[axis] = 0;
-			p0 = TRI_LERP(pts, tuv);
-
-			tuv[axis] = 1;
-			p1 = TRI_LERP(pts, tuv);
-
-			dir = p1 - p0;
-			l = dir.norm();
-			dir /= l;
-			v = pt - p0;
-			tuv[axis] = v.dot(dir) / l;
-		}
-
-		guess = TRI_LERP(pts, tuv);
-		distSqr = (guess - pt).squaredNorm();
-		done = distSqr < tolSqr;
-	}
-
-	return done;
-}
-
-template<class T>
 bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
 {
 	if (pts.size() != 8)
@@ -640,11 +580,6 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 		tuv = tuv + newVal * gradient;
 		TRI_LERP_GRAD_SLOPES<T>(pt, pts, tuv, errVec);
 		err = errVec.norm();
-#if 0
-		auto checkPt = TRI_LERP(pts, tuv);
-		auto checkErr = checkPt - pt;
-		int dbgBreak = 1;
-#endif
 	}
 	//	std::cout << "TRI_LERP_INV err: " << err << ", count: " << count << "\n";
 	return err <= maxErr;
