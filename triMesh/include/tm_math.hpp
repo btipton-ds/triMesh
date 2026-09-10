@@ -589,7 +589,7 @@ bool TRI_LERP_INV_DEPRECATED(const Vector3<T>& pt, const std::vector<Vector3<T>>
 template<class T>
 bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vector3<T>& tuv, T tol)
 {
-	if (pts.empty())
+	if (pts.size() != 8)
 		return false;
 
 	/*
@@ -601,21 +601,22 @@ bool TRI_LERP_INV(const Vector3<T>& pt, const std::vector<Vector3<T>>& pts, Vect
 	Vector3<T> x, y, z, p0, p1, dir, v;
 
 	auto pPts = pts.data();
-	x = pPts[1] - pPts[0];
-	l = x.norm();
-	x /= l * l;
+	if (tuv[0] < 0) {
+		x = pPts[1] - pPts[0];
+		l = x.norm();
+		x /= l * l;
 
-	y = pPts[3] - pPts[0];
-	l = y.norm();
-	y /= l * l;
+		y = pPts[3] - pPts[0];
+		l = y.norm();
+		y /= l * l;
 
-	z = pPts[4] - pPts[0];
-	l = z.norm();
-	z /= l * l;
+		z = pPts[4] - pPts[0];
+		l = z.norm();
+		z /= l * l;
 
-	v = pt - pPts[0];
-	tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
-
+		v = pt - pPts[0];
+		tuv = Vector3<T>(v.dot(x), v.dot(y), v.dot(z));
+	}
 	/*
 	After studying this for several years and using a relaxation algorithm, I realized the key was
 	to perform the root finding using the target point as the origin, not the block and the gradient is
