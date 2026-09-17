@@ -42,6 +42,7 @@ struct Ray {
 	T distToPt(const POINT_TYPE& pt) const;
 	T distToPtSquared(const POINT_TYPE& pt) const;
 	POINT_TYPE project(const POINT_TYPE& pt) const;
+	bool isCoincident(const Ray& other, T tol = sameDistTol<T>()) const;
 
 	POINT_TYPE _origin, _dir;
 };
@@ -73,6 +74,16 @@ typename Ray<T>::POINT_TYPE Ray<T>::project(const POINT_TYPE& pt) const
 {
 	POINT_TYPE v = pt - _origin;
 	return _origin + _dir.dot(v) * _dir;
+}
+
+template<class T>
+bool Ray<T>::isCoincident(const Ray& other, T tol) const
+{
+	auto tolSqr = tol * tol;
+	if (distToPtSquared(other._origin) >= tolSqr)
+		return false;
+	auto cp = _dir.cross(other._dir).squaredNorm();
+	return cp < tolSqr;
 }
 
 using Rayd = Ray<double>;
