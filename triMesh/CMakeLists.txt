@@ -43,7 +43,7 @@ else (WIN32)
 endif(WIN32)
 
 add_library (
-    triMesh 
+    triMesh
     "src/tm_boundingBox.cpp" 
     "src/tm_boundingBox2D.cpp" 
     "src/tm_defaultTolerances.cpp"
@@ -66,7 +66,7 @@ add_library (
 
     "../stlReader/src/readWriteStl.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
- "include/tm_lineSegmentUtils.h")
+)
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

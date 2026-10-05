@@ -65,7 +65,7 @@ inline typename LineSegment<T>::SCALAR_TYPE LineSegment<T>::parameterize(const P
 }
 
 template<class T>
-bool LineSegment<T>::contains(const POINT_TYPE& pt, bool includeEndPoints, SCALAR_TYPE& t, SCALAR_TYPE tol) const
+bool LineSegment<T>::contains(const POINT_TYPE& pt, bool includeEndPoints, SCALAR_TYPE& t, const SCALAR_TYPE tol) const
 {
 	if (tolerantEquals(_pt0, pt, tol)) {
 		t = 0;
