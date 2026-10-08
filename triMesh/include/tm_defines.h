@@ -56,3 +56,9 @@ constexpr double minNormalizeDivisor = 1.0e-12;
 #define CHECK_NAN 1
 
 #define _HAS_CXX17 1
+#define THROW_RUNTIME(MSG, FILE, LINE) \
+{\
+std::stringstream __ssException__; \
+__ssException__ << FILE << ":" << LINE << " " << MSG;\
+throw std::runtime_error(__ssException__.str()); \
+}

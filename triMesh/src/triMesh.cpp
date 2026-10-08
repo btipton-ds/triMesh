@@ -806,7 +806,7 @@ size_t CMesh::addTriangle(const Vector3i& tri) {
 
 		auto& edge = _edges[edgeIdx];
 		if (_enforceManifold && edge.numFaces() >= 2)
-			assert(!"Non manifold mesh");
+			THROW_RUNTIME("Non manifold mesh encountered during STL import.", __FILE__, __LINE__);
 		edge.addFaceIndex(triIdx);
 	}
 	triBox.grow(SAME_DIST_TOL);
