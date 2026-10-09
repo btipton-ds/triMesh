@@ -66,7 +66,7 @@ add_library (
 
     "../stlReader/src/readWriteStl.cpp"
     "../../utilities/threads/src/MultiCoreUtil.cpp"
-)
+ )
 
 link_directories(
 ../${CMAKE_BUILD_TYPE}

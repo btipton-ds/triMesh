@@ -56,9 +56,43 @@ constexpr double minNormalizeDivisor = 1.0e-12;
 #define CHECK_NAN 1
 
 #define _HAS_CXX17 1
-#define THROW_RUNTIME(MSG, FILE, LINE) \
+
+#include <string>
+#include <iostream>
+
+inline std::string removePath(const std::string& filename)
+{
+	auto pos = filename.rfind("/"); // Linux path separator
+	if (pos == std::string::npos)
+		pos = filename.rfind("\\");  // Windows path separator
+
+	std::string result = (pos == std::string::npos) ? filename : filename.substr(pos + 1);
+	return result;
+}
+
+struct TMSourceLine
+{
+	inline TMSourceLine(const std::string& filename,
+		int lineNumber)
+		: _filename(removePath(filename))
+		, _lineNumber(lineNumber)
+	{}
+
+	std::string _filename;
+	int _lineNumber;
+};
+
+inline std::iostream& operator << (std::iostream& out, const TMSourceLine& sl)
+{
+	out << "{File:" << sl._filename << ", Line:" << sl._lineNumber << "}";
+
+	return out;
+}
+
+#define THROW_RUNTIME(MSG) \
 {\
-std::stringstream __ssException__; \
-__ssException__ << FILE << ":" << LINE << " " << MSG;\
-throw std::runtime_error(__ssException__.str()); \
+TMSourceLine sl(__FILE__, __LINE__);\
+std::stringstream ss; \
+ss << sl << " " << MSG;\
+throw std::runtime_error(ss.str()); \
 }
