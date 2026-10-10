@@ -47,6 +47,16 @@ using lint = long long;
 template<class T>
 struct LineSegment;
 
+template<class INT_TYPE, class FLOAT_TYPE>
+inline INT_TYPE typedRound(FLOAT_TYPE val)
+{
+	/*
+	This is a type precise round function that delivers the specific int type required.
+	The 0.5 is ALWAYS double and then cast to the same floating type as val
+	*/
+	return (INT_TYPE)(val + (FLOAT_TYPE)0.5);
+}
+
 template <class SCALAR_TYPE>
 bool tolerantEquals(SCALAR_TYPE v0, SCALAR_TYPE v1, SCALAR_TYPE tol);
 
