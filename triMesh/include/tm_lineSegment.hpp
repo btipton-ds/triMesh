@@ -213,3 +213,20 @@ bool LineSegment<T>::intersectPlane(const POINT_TYPE* pts[3], bool includeEndPoi
 {
 	return intersectPlane(Plane<SCALAR_TYPE>(pts), includeEndPoints, hit, tol);
 }
+
+template<class T>
+bool LineSegment<T>::projectPoint(const POINT_TYPE& pt, POINT_TYPE projectedPt, SCALAR_TYPE tol, bool mustBeInBounds) const
+{
+	auto dir = _pt1 - _pt0;
+	auto len = dir.norm();
+	if (len < tol)
+		return false;
+
+	auto v = pt - _pt0;
+	auto dist = v.dot(dir);
+	projectedPt = _pt0 + dir * dist;
+	if (!mustBeInBounds)
+		return true;
+
+	return -tol < dist && dist < len + tol;
+}
