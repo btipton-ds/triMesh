@@ -210,6 +210,8 @@ bool LineSegment_byref<T>::projectPoint(const POINT_TYPE& pt, POINT_TYPE project
 	if (len < tol)
 		return false;
 
+	dir /= len;
+
 	auto v = pt - _pt0;
 	auto dist = v.dot(dir);
 	projectedPt = _pt0 + dir * dist;
