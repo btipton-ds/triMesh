@@ -80,7 +80,7 @@ struct LineSegment_byref {
 	bool isCoincident(const LineSegment_byref<T>& other, SCALAR_TYPE tol) const;
 	bool isCoincident(const Ray<T>& other, SCALAR_TYPE tol) const;
 
-	bool projectPoint(const POINT_TYPE& pt, POINT_TYPE projectedPt, SCALAR_TYPE tol, bool mustBeInBounds = true) const;
+	bool projectPoint(const POINT_TYPE& pt, POINT_TYPE& projectedPt, SCALAR_TYPE tol, bool mustBeInBounds = true) const;
 
 	const POINT_TYPE &_pt0, &_pt1;
 };

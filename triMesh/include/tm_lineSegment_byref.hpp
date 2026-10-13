@@ -203,7 +203,7 @@ inline bool LineSegment_byref<T>::intersectPlane(const POINT_TYPE* pts[3], bool 
 }
 
 template<class T>
-bool LineSegment_byref<T>::projectPoint(const POINT_TYPE& pt, POINT_TYPE projectedPt, SCALAR_TYPE tol, bool mustBeInBounds) const
+bool LineSegment_byref<T>::projectPoint(const POINT_TYPE& pt, POINT_TYPE& projectedPt, SCALAR_TYPE tol, bool mustBeInBounds) const
 {
 	auto dir = _pt1 - _pt0;
 	auto len = dir.norm();
@@ -215,8 +215,9 @@ bool LineSegment_byref<T>::projectPoint(const POINT_TYPE& pt, POINT_TYPE project
 	auto v = pt - _pt0;
 	auto dist = v.dot(dir);
 	projectedPt = _pt0 + dir * dist;
-	if (!mustBeInBounds)
+
+	if (mustBeInBounds && (-tol < dist && dist < len + tol))
 		return true;
 
-	return -tol < dist && dist < len + tol;
+	return false;
 }
