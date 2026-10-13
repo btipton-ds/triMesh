@@ -2565,3 +2565,23 @@ bool CMesh::testSqueezeEdge(size_t idx)
 	return true;
 }
 
+void CMesh::createSphere(int numSteps, double r, double phiRange, CMesh& mesh)
+{
+	for (int j = 0; j < numSteps; j++) {
+		double phi0 = EIGEN_PI * (-0.5 + j / ((double)numSteps) * phiRange);
+		double phi1 = EIGEN_PI * (-0.5 + (j + 1) / ((double)numSteps) * phiRange);
+		for (int i = 0; i < numSteps; i++) {
+			double theta0 = 2.0 * EIGEN_PI * i / ((double)numSteps);
+			double theta1 = 2.0 * EIGEN_PI * (i + 1) / ((double)numSteps);
+
+			Vector3d pts[4];
+			pts[0] = r * Vector3d(cos(theta0) * cos(phi0), sin(theta0) * cos(phi0), sin(phi0));
+			pts[1] = r * Vector3d(cos(theta1) * cos(phi0), sin(theta1) * cos(phi0), sin(phi0));
+			pts[2] = r * Vector3d(cos(theta1) * cos(phi1), sin(theta1) * cos(phi1), sin(phi1));
+			pts[3] = r * Vector3d(cos(theta0) * cos(phi1), sin(theta0) * cos(phi1), sin(phi1));
+
+			mesh.addQuad(pts[0], pts[1], pts[2], pts[3]);
+		}
+	}
+
+}

@@ -39,28 +39,9 @@ This file is part of the TriMesh library.
 
 using namespace std;
 
-void makeSphere(int numSteps, double r, double phiRange, TriMesh::CMesh& mesh) {
-	for (int j = 0; j < numSteps; j++) {
-		double phi0 = EIGEN_PI * (-0.5 + j / ((double)numSteps) * phiRange);
-		double phi1 = EIGEN_PI * (-0.5 + (j + 1) / ((double)numSteps) * phiRange);
-		for (int i = 0; i < numSteps; i++) {
-			double theta0 = 2.0 * EIGEN_PI * i / ((double)numSteps);
-			double theta1 = 2.0 * EIGEN_PI * (i + 1) / ((double)numSteps);
-
-			Vector3d pts[4];
-			pts[0] = r * Vector3d(cos(theta0) * cos(phi0), sin(theta0) * cos(phi0), sin(phi0));
-			pts[1] = r * Vector3d(cos(theta1) * cos(phi0), sin(theta1) * cos(phi0), sin(phi0));
-			pts[2] = r * Vector3d(cos(theta1) * cos(phi1), sin(theta1) * cos(phi1), sin(phi1));
-			pts[3] = r * Vector3d(cos(theta0) * cos(phi1), sin(theta0) * cos(phi1), sin(phi1));
-
-			mesh.addQuad(pts[0], pts[1], pts[2], pts[3]);
-		}
-	}
-}
-
 bool test0() {
 	TriMesh::CMesh mesh(Vector3d(-2, -2, -2), Vector3d(2, 2, 2));
-	makeSphere(10, 2.0, 1, mesh);
+	TriMesh::CMesh::createSphere(10, 2.0, 1, mesh);
 
 	TEST_EQUAL(mesh.numVertices(), 92, "Correct number of vertices?");
 	TEST_EQUAL(mesh.numEdges(), 270, "Correct number of edges?");
@@ -74,7 +55,7 @@ bool test0() {
 
 bool test1() {
 	TriMesh::CMesh mesh(Vector3d(-2, -2, -2), Vector3d(2, 2, 2));
-	makeSphere(100, 2.0, 1, mesh);
+	TriMesh::CMesh::createSphere(100, 2.0, 1, mesh);
 
 	TEST_EQUAL(mesh.numVertices(), 9902, "Correct number of vertices?");
 	TEST_EQUAL(mesh.numEdges(), 29700, "Correct number of edges?");
@@ -88,7 +69,7 @@ bool test1() {
 
 bool test2() {
 	TriMesh::CMesh mesh(Vector3d(-2, -2, -2), Vector3d(2, 2, 2));
-	makeSphere(10, 2.0, 0.5, mesh);
+	TriMesh::CMesh::createSphere(10, 2.0, 0.5, mesh);
 
 	TEST_EQUAL(mesh.numVertices(), 101, "Correct number of vertices?");
 	TEST_EQUAL(mesh.numEdges(), 290, "Correct number of edges?");

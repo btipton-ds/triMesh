@@ -87,6 +87,8 @@ namespace TriMesh {
 			// OPT_NEXT = 4, etc
 		};
 
+		static void createSphere(int numSteps, double r, double phiRange, CMesh& mesh);
+
 		CMesh();
 		CMesh(const BoundingBox& bbox);
 		CMesh(const Vector3d& min, const Vector3d& max);
