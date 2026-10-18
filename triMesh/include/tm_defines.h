@@ -72,9 +72,9 @@ inline std::string removePath(const std::string& filename)
 
 struct TMSourceLine
 {
-	inline TMSourceLine(const std::string& filename,
+	inline TMSourceLine(const char* filename,
 		int lineNumber)
-		: _filename(removePath(filename))
+		: _filename(removePath(std::string(filename)))
 		, _lineNumber(lineNumber)
 	{}
 

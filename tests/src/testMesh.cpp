@@ -41,7 +41,8 @@ using namespace std;
 
 bool test0() {
 	TriMesh::CMesh mesh(Vector3d(-2, -2, -2), Vector3d(2, 2, 2));
-	TriMesh::CMesh::createSphere(10, 2.0, 1, mesh);
+	Vector3d origin(0, 0, 0);
+	TriMesh::CMesh::createSphere(10, origin, 2.0, 1, mesh);
 
 	TEST_EQUAL(mesh.numVertices(), 92, "Correct number of vertices?");
 	TEST_EQUAL(mesh.numEdges(), 270, "Correct number of edges?");
@@ -55,7 +56,8 @@ bool test0() {
 
 bool test1() {
 	TriMesh::CMesh mesh(Vector3d(-2, -2, -2), Vector3d(2, 2, 2));
-	TriMesh::CMesh::createSphere(100, 2.0, 1, mesh);
+	Vector3d origin(0, 0, 0);
+	TriMesh::CMesh::createSphere(100, origin, 2.0, 1, mesh);
 
 	TEST_EQUAL(mesh.numVertices(), 9902, "Correct number of vertices?");
 	TEST_EQUAL(mesh.numEdges(), 29700, "Correct number of edges?");
@@ -69,7 +71,8 @@ bool test1() {
 
 bool test2() {
 	TriMesh::CMesh mesh(Vector3d(-2, -2, -2), Vector3d(2, 2, 2));
-	TriMesh::CMesh::createSphere(10, 2.0, 0.5, mesh);
+	Vector3d origin(0, 0, 0);
+	TriMesh::CMesh::createSphere(10, origin, 2.0, 0.5, mesh);
 
 	TEST_EQUAL(mesh.numVertices(), 101, "Correct number of vertices?");
 	TEST_EQUAL(mesh.numEdges(), 290, "Correct number of edges?");
