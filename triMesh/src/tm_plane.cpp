@@ -70,7 +70,7 @@ Plane<T>::Plane(const POINT_TYPE& pt0, const POINT_TYPE& pt1, const POINT_TYPE& 
 	_origin = pt0;
 	POINT_TYPE v0 = pt1 - pt0;
 	POINT_TYPE v1 = pt2 - pt0;
-	_normal = v1.cross(v0);
+	_normal = v0.cross(v1);
 	_normal.normalize();
 	if (initXRef) {
 		_xRef = (pt1 - pt0).normalized();

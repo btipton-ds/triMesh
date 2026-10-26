@@ -89,10 +89,27 @@ inline std::iostream& operator << (std::iostream& out, const TMSourceLine& sl)
 	return out;
 }
 
+#if ENABLE_STACK_TRACE
 #define THROW_RUNTIME(MSG) \
 {\
 TMSourceLine sl(__FILE__, __LINE__);\
 std::stringstream ss; \
-ss << sl << " " << MSG;\
-throw std::runtime_error(ss.str()); \
+ss << sl << " " << MSG << "\n"; \
+::DFHM::Utils::CallStack cs; \
+::std::vector<::std::string> arr; \
+cs.getReadable(arr); \
+if (!arr.empty())\
+ss << "  CallStack:\n"; \
+for (const auto& str : arr)\
+ss << "    " << str << "\n"; \
+throw ::std::runtime_error(ss.str()); \
 }
+#else
+#define THROW_RUNTIME(MSG) \
+{\
+TMSourceLine sl(__FILE__, __LINE__);\
+	std::stringstream ss; \
+	ss << sl << " " << MSG;\
+	throw std::runtime_error(ss.str()); \
+}
+#endif
