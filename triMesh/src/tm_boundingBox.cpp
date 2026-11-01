@@ -133,6 +133,18 @@ inline typename CBoundingBox3D<SCALAR_TYPE>::POINT_TYPE CBoundingBox3D<SCALAR_TY
 }
 
 template <class SCALAR_TYPE>
+SCALAR_TYPE CBoundingBox3D<SCALAR_TYPE>::distanceToBoundingSphere(const POINT_TYPE& pt) const
+{
+	if (_radius < 0) {
+		_center = (_min + _max) * (SCALAR_TYPE)0.5;
+		auto vR = _max - _center;
+		_radius = vR.norm();
+	}
+	auto v = pt - _center;
+	return v.norm() - _radius;
+}
+
+template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::contains(const POINT_TYPE& pt, SCALAR_TYPE tol) const {
 	const SCALAR_TYPE lpt[] = { pt[0], pt[1], pt[2] };
 
@@ -427,15 +439,14 @@ inline bool CBoundingBox3D<SCALAR_TYPE>::intersectsInnerZ(const POINT_TYPE& plan
 
 template <class SCALAR_TYPE>
 bool CBoundingBox3D<SCALAR_TYPE>::intersects(const Ray<SCALAR_TYPE>& ray, SCALAR_TYPE tol) const {
-	if (_radiusSquared < 0) {
+	if (_radius < 0) {
 		_center = (_min + _max) * (SCALAR_TYPE)0.5;
 		auto vR = _max - _center;
-		vR += POINT_TYPE(tol, tol, tol);
-		_radiusSquared = vR.squaredNorm();
+		_radius = vR.norm();
 	}
 
-	auto distSqr = ray.distToPtSquared(_center);
-	if (distSqr > _radiusSquared)
+	auto dist = ray.distToPt(_center);
+	if (dist > _radius + tol)
 		return false;
 
 	if (intersectsInnerX(_min, ray, tol)) return true;

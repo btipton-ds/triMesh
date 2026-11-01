@@ -54,6 +54,7 @@ public:
 	const POINT_TYPE& getMax() const;
 	void getCornerPts(std::vector<POINT_TYPE>& pts) const;
 	POINT_TYPE range() const;
+	SCALAR_TYPE distanceToBoundingSphere(const POINT_TYPE& pt) const;
 	bool contains(const POINT_TYPE& pt, SCALAR_TYPE tol) const;
 	bool contains(const CBoundingBox3D& other, SCALAR_TYPE tol) const;
 	bool tolerantEquals(const CBoundingBox3D& other, SCALAR_TYPE tol) const;
@@ -93,7 +94,7 @@ private:
 	void cornerPoints(POINT_TYPE pts[8]) const;
 
 	POINT_TYPE _min, _max;
-	mutable SCALAR_TYPE _radiusSquared = -1;
+	mutable SCALAR_TYPE _radius = -1;
 	mutable POINT_TYPE _center;
 };
 
